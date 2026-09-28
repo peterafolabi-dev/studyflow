@@ -1,6 +1,7 @@
 {% load static %}<!doctype html>
 <html lang="en" class="scroll-pt-20">
 <head>
+  <meta name="view-transition" content="same-origin">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}StudyFlow{% endblock %}</title>
@@ -268,5 +269,16 @@
       });
     })();
   </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if(!CSS.supports('animation-delay: calc(sibling-index() * 0.1s)')) {
+        document.querySelectorAll('.grid, .tasks, .flex.gap-3').forEach(container => {
+          [...container.children].forEach((el, index) => el.style.setProperty('--sibling-index', index + 1));
+        });
+      }
+    });
+  </script>
+
 </body>
 </html>
