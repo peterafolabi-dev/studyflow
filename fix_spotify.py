@@ -1,4 +1,6 @@
-{% extends 'base.html' %}
+import os
+
+study_room_html = '''{% extends 'base.html' %}
 {% block title %}Lo-Fi Study Room · StudyFlow{% endblock %}
 {% block content %}
 <div class="mb-6 fade-in-up">
@@ -111,4 +113,8 @@
         resetBtn.classList.add('hidden');
     });
 </script>
-{% endblock %}
+{% endblock %}'''
+
+with open('templates/planner/study_room.html', 'w', encoding='utf-8') as f:
+    f.write(study_room_html)
+print('Fixed Study Room!')
