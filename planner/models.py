@@ -69,3 +69,21 @@ class TimetableEntry(models.Model):
 
     def __str__(self):
         return f'{self.title} ({self.get_day_of_week_display()})'
+
+from django.conf import settings
+
+class StudySession(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='study_sessions')
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='study_sessions')
+    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name='study_sessions')
+    duration_minutes = models.PositiveIntegerField()
+    date = models.DateField(auto_now_add=True)
+
+class FlashcardDeck(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='flashcard_decks')
+    title = models.CharField(max_length=200)
+
+class Flashcard(models.Model):
+    deck = models.ForeignKey(FlashcardDeck, on_delete=models.CASCADE, related_name='cards')
+    front = models.TextField()
+    back = models.TextField()

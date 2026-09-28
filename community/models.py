@@ -45,3 +45,19 @@ class Post(models.Model):
         if self.is_anonymous:
             return 'Anonymous'
         return self.user.username if self.user else 'a student'
+
+from django.conf import settings
+
+class StudyBuddyRequest(models.Model):
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='buddy_requests_sent')
+    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='buddy_requests_received')
+    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class ThreadVote(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='votes')
+    value = models.SmallIntegerField() # 1 or -1
+    
+    class Meta:
+        unique_together = ('user', 'thread')
