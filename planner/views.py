@@ -47,6 +47,7 @@ def dashboard(request):
             last_downloaded_at__gte=timezone.now() - timedelta(days=7)
         ).order_by('-download_count')[:5],
         'quick_links': [
+            ('Break Room', '🎮', 'break_room'),
             ('Catalogue', '📚', 'catalogue'),
             ('My Library', '🔖', 'my_library'),
             ('Past Questions', '📝', 'past_questions'),
@@ -56,7 +57,6 @@ def dashboard(request):
             ('IBB Library', '🏛️', 'ibb_library'),
             ('Postgraduate', '🧑\u200d🎓', 'postgraduate'),
             ('Timetable', '🗓️', 'timetable'),
-        ('Break Room', '🎮', 'break_room'),
             ('GPA Calculator', '🧮', 'gpa_calculator'),
             ('Study Groups', '💬', 'thread_list'),
             ('Research', '🔬', 'research'),
