@@ -1,0 +1,125 @@
+import os
+
+study_room_html = '''{% extends 'base.html' %}
+{% block title %}Lo-Fi Study Room · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-6 fade-in-up">
+  <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Lo-Fi Study Room</h1>
+  <p class="text-slate-500 dark:text-slate-400 mt-1">Put your headphones on, start the timer, and focus.</p>
+</div>
+
+<div class="grid lg:grid-cols-5 gap-6">
+  
+  <!-- Video Player Column -->
+  <div class="lg:col-span-3 rounded-3xl overflow-hidden border border-brand-200 dark:border-slate-800 shadow-lg bg-black fade-in-up flex flex-col">
+    <div class="relative w-full pb-[56.25%] flex-grow">
+      <iframe class="absolute top-0 left-0 w-full h-full" 
+              src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&controls=1&rel=0" 
+              frameborder="0" 
+              allow="autoplay; encrypted-media" 
+              allowfullscreen>
+      </iframe>
+    </div>
+    <div class="p-4 bg-white dark:bg-slate-900 border-t border-brand-100 dark:border-slate-800 text-sm text-slate-500">
+      Streaming 24/7 Lo-Fi beats. If the video doesn't auto-play (due to browser policy), click play on the video.
+    </div>
+  </div>
+
+  <!-- Timer Column -->
+  <div class="lg:col-span-2 relative overflow-hidden rounded-3xl border border-brand-200 dark:border-slate-800 shadow-lg bg-brand-50 dark:bg-slate-900/80 p-8 flex flex-col items-center justify-center fade-in-up" style="animation-delay: 0.1s">
+    
+    <h2 class="font-display text-2xl font-bold text-slate-800 dark:text-white mb-2">Pomodoro Timer</h2>
+    
+    <div class="text-7xl font-display font-bold text-brand-600 dark:text-brand-400 my-8 tracking-tight font-mono tabular-nums" id="timer-display">
+        25:00
+    </div>
+
+    <div class="flex w-full gap-3 mb-8">
+        <button id="start-btn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-4 py-3 rounded-xl font-medium transition-colors shadow-md">
+            Start Focus
+        </button>
+        <button id="reset-btn" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl font-medium transition-colors hidden">
+            Reset
+        </button>
+    </div>
+
+    <hr class="w-full border-brand-200 dark:border-slate-700 mb-6">
+
+    <form method="post" action="{% url 'log_study' %}" id="log-form" class="w-full">
+        {% csrf_token %}
+        <input type="hidden" name="duration" id="duration-input" value="25">
+        <div class="text-left mb-4">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Log Focus Time To:</label>
+            <select name="course_id" class="w-full bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                <option value="">General Study</option>
+                {% for c in courses %}
+                <option value="{{ c.id }}">{{ c.code }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl font-medium transition-colors shadow-md" id="log-btn">
+            Save Session (25m)
+        </button>
+    </form>
+  </div>
+</div>
+
+<script>
+    let timeLeft = 25 * 60;
+    let timerId = null;
+    let isRunning = false;
+    
+    const display = document.getElementById('timer-display');
+    const startBtn = document.getElementById('start-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
+    function updateDisplay() {
+        const m = Math.floor(timeLeft / 60);
+        const s = timeLeft % 60;
+        display.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    startBtn.addEventListener('click', () => {
+        if (!isRunning) {
+            isRunning = true;
+            startBtn.textContent = 'Pause';
+            startBtn.classList.replace('bg-brand-600', 'bg-amber-500');
+            startBtn.classList.replace('hover:bg-brand-700', 'hover:bg-amber-600');
+            resetBtn.classList.remove('hidden');
+            
+            timerId = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                } else {
+                    clearInterval(timerId);
+                    isRunning = false;
+                    startBtn.textContent = 'Done!';
+                    alert('Focus session complete! Great job.');
+                }
+            }, 1000);
+        } else {
+            isRunning = false;
+            clearInterval(timerId);
+            startBtn.textContent = 'Resume';
+            startBtn.classList.replace('bg-amber-500', 'bg-brand-600');
+            startBtn.classList.replace('hover:bg-amber-600', 'hover:bg-brand-700');
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        isRunning = false;
+        clearInterval(timerId);
+        timeLeft = 25 * 60;
+        updateDisplay();
+        startBtn.textContent = 'Start Focus';
+        startBtn.classList.replace('bg-amber-500', 'bg-brand-600');
+        startBtn.classList.replace('hover:bg-amber-600', 'hover:bg-brand-700');
+        resetBtn.classList.add('hidden');
+    });
+</script>
+{% endblock %}'''
+
+with open('templates/planner/study_room.html', 'w', encoding='utf-8') as f:
+    f.write(study_room_html)
+print('Fixed Study Room!')
