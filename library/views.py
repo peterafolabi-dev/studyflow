@@ -74,11 +74,24 @@ def postgraduate(request):
 def my_library(request):
     """Books this user has saved, grouped by reading progress."""
     saved = SavedBook.objects.filter(user=request.user).select_related('book')
+    try:
+        from accounts.models import Profile
+        profile = Profile.objects.filter(user=request.user).first()
+        goal = profile.reading_goal if profile else 0
+    except ImportError:
+        goal = 0
+
+    finished_count = saved.filter(status='finished').count()
+    progress_percent = min(100, int((finished_count / goal) * 100)) if goal > 0 else 0
+
     context = {
         'reading': saved.filter(status='reading'),
         'to_read': saved.filter(status='to_read'),
         'finished': saved.filter(status='finished'),
         'total': saved.count(),
+        'reading_goal': goal,
+        'finished_count': finished_count,
+        'progress_percent': progress_percent,
     }
     return render(request, 'library/my_library.html', context)
 
@@ -200,3 +213,21 @@ def update_status(request, pk):
 
     next_url = request.POST.get('next') or 'my_library'
     return redirect(next_url)
+
+@login_required
+@require_POST
+def update_progress(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    entry, _created = SavedBook.objects.get_or_create(user=request.user, book=book)
+    notes = request.POST.get('notes', '')
+    try:
+        page = int(request.POST.get('current_page', 0))
+    except ValueError:
+        page = 0
+    
+    entry.notes = notes
+    entry.current_page = page
+    entry.save(update_fields=['notes', 'current_page', 'updated_at'])
+    messages.success(request, f'Progress and notes saved for "{book.title}".')
+    
+    return redirect('my_library')

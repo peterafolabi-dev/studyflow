@@ -1,3 +1,5 @@
+html { scroll-behavior: smooth; }
+
 /* StudyFlow — student deadline planner
    Palette: purple. page #F5F3FF, ink #1E1B2E, muted #6B6280, line #E4DEFB, primary #7C3AED,
    late #C0223B, soon #A85F00. Each course gets one of six accent colours. */
@@ -273,5 +275,24 @@ h2 { font-size: 1.2rem; }
     box-shadow: none !important;
     background: transparent !important;
     border-color: #ccc !important;
+  }
+}
+
+/* 2026 Modern Scroll Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-timeline: view();
+  animation-range: entry 10% cover 25%;
+}
+
+@supports not (animation-timeline: view()) {
+  .fade-in-up {
+    animation-timeline: auto;
+    animation-range: normal;
   }
 }

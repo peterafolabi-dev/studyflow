@@ -65,6 +65,8 @@ class SavedBook(models.Model):
     )
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='saved_by')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='to_read')
+    current_page = models.PositiveIntegerField(default=0)
+    notes = models.TextField(blank=True)
     saved_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
