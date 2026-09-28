@@ -150,11 +150,11 @@ h2 { font-size: 1.2rem; }
 .form { max-width: 420px; }
 .field { margin-bottom: 1.1rem; }
 .field label { display: block; font-weight: 600; margin-bottom: 0.3rem; }
-.field input {
+.field input, .field textarea, .field select {
   width: 100%; padding: 0.6rem 0.75rem; font: inherit; color: var(--ink);
   background: var(--surface); border: 1px solid #b9c1de; border-radius: 6px;
 }
-.field input:focus { outline: 3px solid rgba(47, 63, 209, 0.35); border-color: var(--primary); }
+.field input:focus, .field textarea:focus, .field select:focus { outline: 3px solid rgba(47, 63, 209, 0.35); border-color: var(--primary); }
 .help { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
 .help ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
 .errors { list-style: none; margin: 0.35rem 0 0; padding: 0; color: var(--late); font-size: 0.9rem; }
