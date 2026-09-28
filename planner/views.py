@@ -56,6 +56,7 @@ def dashboard(request):
             ('IBB Library', '🏛️', 'ibb_library'),
             ('Postgraduate', '🧑\u200d🎓', 'postgraduate'),
             ('Timetable', '🗓️', 'timetable'),
+        ('Break Room', '🎮', 'break_room'),
             ('GPA Calculator', '🧮', 'gpa_calculator'),
             ('Study Groups', '💬', 'thread_list'),
             ('Research', '🔬', 'research'),
@@ -329,3 +330,7 @@ def ai_chat_api(request):
         except Exception as e:
             return JsonResponse({'reply': str(e)}, status=500)
     return JsonResponse({'error': 'Invalid method'}, status=405)
+
+@login_required
+def break_room(request):
+    return render(request, 'planner/break_room.html')
