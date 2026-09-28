@@ -1,12 +1,23 @@
 {% extends 'base.html' %}
-{% block title %}Edit Profile{% endblock %}
+{% block title %}Edit Profile · StudyFlow{% endblock %}
 {% block content %}
-<div class="page">
-    <h2>Edit Profile</h2>
-    <form method="post" class="form section-block">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn">Save Profile</button>
-    </form>
+<header class="mb-8">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-display font-bold text-slate-900 dark:text-white">Edit Profile</h1>
+      <p class="text-slate-500 mt-2">Customize your identity and goals.</p>
+    </div>
+    <a href="{% url 'profile' %}" class="btn ghost">Cancel</a>
+  </div>
+</header>
+
+<div class="section-block max-w-2xl">
+  <form method="post" class="form" novalidate>
+    {% csrf_token %}
+    {% include 'planner/_fields.html' %}
+    <div class="mt-8">
+      <button type="submit" class="btn primary w-full md:w-auto">Save Changes</button>
+    </div>
+  </form>
 </div>
 {% endblock %}
