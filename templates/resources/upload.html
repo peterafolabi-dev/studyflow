@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Upload a resource · StudyFlow{% endblock %}
+{% block content %}
+  <div class="max-w-xl">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-1">Share a resource</h1>
+    <p class="text-slate-500 dark:text-slate-400 mb-6">Past questions, notes, theses, papers or lecture slides — anyone can add one.</p>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-4" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="rounded-lg bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 px-4 py-2 text-sm">
+          {% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block font-medium text-sm mb-1">{{ field.label }}</label>
+          <div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2 [&_input]:text-sm
+                      [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-brand-200 dark:[&_select]:border-slate-700 [&_select]:bg-white dark:[&_select]:bg-slate-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm
+                      [&_textarea]:w-full [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-brand-200 dark:[&_textarea]:border-slate-700 [&_textarea]:bg-white dark:[&_textarea]:bg-slate-900 [&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:text-sm">
+            {{ field }}
+          </div>
+          {% if field.help_text %}<p class="text-xs text-slate-400 mt-1">{{ field.help_text|safe }}</p>{% endif %}
+          {% if field.errors %}
+            <ul class="text-xs text-rose-600 dark:text-rose-400 mt-1">
+              {% for e in field.errors %}<li>{{ e }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Upload</button>
+        <a href="{% url 'notes_list' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

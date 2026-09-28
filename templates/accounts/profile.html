@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}My Profile · StudyFlow{% endblock %}
+{% block content %}
+  <div class="max-w-2xl">
+    <div class="flex items-center gap-4 mb-4">
+      <span class="h-16 w-16 rounded-full bg-brand-600 text-white flex items-center justify-center text-2xl font-semibold shrink-0">
+        {{ user.username|slice:":1"|upper }}
+      </span>
+      <div>
+        <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">{{ user.username }}</h1>
+        <p class="text-slate-500 dark:text-slate-400">{{ user.email|default:"No email on file" }}</p>
+      </div>
+    </div>
+
+    <div class="inline-flex items-center gap-2 rounded-full bg-brand-100 dark:bg-slate-800 text-brand-700 dark:text-brand-200 text-sm font-semibold px-4 py-1.5 mb-8">
+      <span>{{ rank_emoji }}</span>
+      <span>{{ rank }}</span>
+      <span class="text-brand-500 dark:text-brand-400 font-normal">&middot; {{ finished_count }} book{{ finished_count|pluralize }} finished</span>
+    </div>
+
+    <div class="grid grid-cols-4 gap-3 mb-8">
+      <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-center">
+        <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ course_count }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Courses</div>
+      </div>
+      <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-center">
+        <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ open_task_count }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Open tasks</div>
+      </div>
+      <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-center">
+        <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ reading_count }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Reading now</div>
+      </div>
+      <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-center">
+        <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ saved_book_count }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Saved books</div>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 divide-y divide-brand-100 dark:divide-slate-800">
+      <a href="{% url 'my_library' %}" class="flex items-center justify-between px-5 py-4 hover:bg-brand-50 dark:hover:bg-slate-800">
+        <span class="font-medium">My Library</span>
+        <span class="text-slate-400">&rarr;</span>
+      </a>
+      <a href="{% url 'catalogue' %}" class="flex items-center justify-between px-5 py-4 hover:bg-brand-50 dark:hover:bg-slate-800">
+        <span class="font-medium">Reading Hub Catalogue</span>
+        <span class="text-slate-400">&rarr;</span>
+      </a>
+      <a href="{% url 'postgraduate' %}" class="flex items-center justify-between px-5 py-4 hover:bg-brand-50 dark:hover:bg-slate-800">
+        <span class="font-medium">Postgraduate Hub</span>
+        <span class="text-slate-400">&rarr;</span>
+      </a>
+      <div class="flex items-center justify-between px-5 py-4">
+        <span class="font-medium">Dark mode</span>
+        <button type="button" id="profile-theme-toggle" aria-pressed="false"
+                class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-300 dark:bg-brand-600 transition-colors">
+          <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 dark:translate-x-6"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-6 flex gap-2">
+      <a href="{% url 'export_my_data' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
+        ⬇ Export my data
+      </a>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="rounded-lg border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-300 font-medium px-4 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20">
+          Log out
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var toggle = document.getElementById('profile-theme-toggle');
+      if (!toggle) return;
+      var root = document.documentElement;
+      toggle.setAttribute('aria-pressed', String(root.classList.contains('dark')));
+      toggle.addEventListener('click', function () {
+        var isDark = root.classList.toggle('dark');
+        localStorage.setItem('studyflow-theme', isDark ? 'dark' : 'light');
+        toggle.setAttribute('aria-pressed', String(isDark));
+      });
+    })();
+  </script>
+{% endblock %}

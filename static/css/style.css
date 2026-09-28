@@ -1,0 +1,277 @@
+/* StudyFlow — student deadline planner
+   Palette: purple. page #F5F3FF, ink #1E1B2E, muted #6B6280, line #E4DEFB, primary #7C3AED,
+   late #C0223B, soon #A85F00. Each course gets one of six accent colours. */
+
+:root {
+  --page: #f5f3ff;
+  --surface: #ffffff;
+  --ink: #1e1b2e;
+  --muted: #6b6280;
+  --line: #e4defb;
+  --primary: #7c3aed;
+  --primary-dark: #6d28d9;
+  --late: #c0223b;
+  --late-bg: #fdecef;
+  --soon: #a85f00;
+  --soon-bg: #fff3df;
+  --ok-bg: #ede9fe;
+  --done: #8b91ad;
+
+  --c0: #7c3aed;
+  --c1: #0f8f6e;
+  --c2: #c2410c;
+  --c3: #b1237a;
+  --c4: #4f46e5;
+  --c5: #0e7c9b;
+
+  --font-body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-head: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+}
+
+/* Dark mode: redefines the same custom properties, so every component below
+   (cards, tasks, forms, chips...) adapts automatically — no duplicate rules. */
+html.dark {
+  --page: #0f0b1f;
+  --surface: #1c1730;
+  --ink: #f2eefd;
+  --muted: #a99fc9;
+  --line: #352c54;
+  --primary: #a78bfa;
+  --primary-dark: #c4b5fd;
+  --late: #fb7185;
+  --late-bg: #3f1524;
+  --soon: #fbbf24;
+  --soon-bg: #3a2c0d;
+  --ok-bg: #2e2350;
+  --done: #6f6690;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+a { color: var(--primary); }
+a:hover { color: var(--primary-dark); }
+
+:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+h1, h2 {
+  font-family: var(--font-head);
+  line-height: 1.15;
+  margin: 0 0 0.5rem;
+}
+h1 { font-size: 2rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.2rem; }
+
+.muted { color: var(--muted); }
+.summary { color: var(--muted); margin: 0 0 1.75rem; }
+
+/* ---------- Top bar ---------- */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.topbar-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+.brand {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.nav { display: flex; gap: 1rem; flex: 1; }
+.nav a { color: var(--muted); text-decoration: none; font-weight: 500; padding: 0.25rem 0; }
+.nav a:hover { color: var(--ink); }
+.logout { display: flex; align-items: center; gap: 0.75rem; margin: 0; }
+.who { color: var(--muted); font-size: 0.9rem; }
+.link-button {
+  background: none; border: 0; padding: 0; font: inherit;
+  color: var(--primary); cursor: pointer; text-decoration: underline;
+}
+
+/* ---------- Page ---------- */
+.page { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+.block { margin-top: 2rem; }
+.crumb { margin: 0 0 0.5rem; font-size: 0.9rem; }
+
+.page-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.page-head.small { align-items: center; margin-bottom: 0.75rem; }
+.page-head h1, .page-head h2, .page-head p { margin-bottom: 0; }
+.head-actions { display: flex; gap: 0.5rem; }
+
+.messages { list-style: none; padding: 0; margin: 0 0 1.5rem; }
+.message {
+  background: var(--ok-bg); border-left: 4px solid var(--primary);
+  padding: 0.6rem 0.9rem; border-radius: 4px;
+}
+.message.error { background: var(--late-bg); border-color: var(--late); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block;
+  background: var(--primary); color: #fff;
+  border: 1px solid var(--primary); border-radius: 6px;
+  padding: 0.55rem 1rem; font: inherit; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+}
+.btn:hover { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+.btn.ghost { background: transparent; color: var(--primary); }
+.btn.ghost:hover { background: var(--ok-bg); color: var(--primary-dark); }
+.btn.danger { color: var(--late); border-color: var(--late); }
+.btn.danger:hover { background: var(--late-bg); color: var(--late); }
+.btn.danger-solid { background: var(--late); border-color: var(--late); }
+.btn.danger-solid:hover { background: #9c1a30; border-color: #9c1a30; }
+.btn.wide { width: 100%; margin-top: 0.5rem; }
+
+/* ---------- Forms ---------- */
+.form { max-width: 420px; }
+.field { margin-bottom: 1.1rem; }
+.field label { display: block; font-weight: 600; margin-bottom: 0.3rem; }
+.field input {
+  width: 100%; padding: 0.6rem 0.75rem; font: inherit; color: var(--ink);
+  background: var(--surface); border: 1px solid #b9c1de; border-radius: 6px;
+}
+.field input:focus { outline: 3px solid rgba(47, 63, 209, 0.35); border-color: var(--primary); }
+.help { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+.help ul { margin: 0.3rem 0 0; padding-left: 1.1rem; }
+.errors { list-style: none; margin: 0.35rem 0 0; padding: 0; color: var(--late); font-size: 0.9rem; }
+.form-actions { display: flex; gap: 0.5rem; margin-top: 1.25rem; }
+.auth { max-width: 420px; margin: 1.5rem auto 0; }
+.auth .muted { margin-top: 1.25rem; }
+
+/* ---------- Tasks ---------- */
+.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.late-heading { color: var(--late); }
+
+.task {
+  --accent: var(--c0);
+  display: flex; align-items: center; gap: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.7rem 0.9rem;
+}
+.task-main { flex: 1; min-width: 0; }
+.task-title { font-weight: 600; overflow-wrap: anywhere; }
+.task-course { font-size: 0.85rem; color: var(--muted); text-decoration: none; }
+.task-course:hover { text-decoration: underline; }
+.task.is-done .task-title { color: var(--done); text-decoration: line-through; }
+.task.is-done { border-left-color: var(--line); }
+
+.toggle-form { margin: 0; }
+.toggle {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--accent); background: var(--surface);
+  cursor: pointer; padding: 0; flex-shrink: 0;
+}
+.toggle:hover { background: var(--ok-bg); }
+.task.is-done .toggle {
+  background: var(--done); border-color: var(--done);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+  background-size: 70%; background-position: center; background-repeat: no-repeat;
+}
+
+.chip {
+  font-size: 0.8rem; font-weight: 600; white-space: nowrap;
+  padding: 0.15rem 0.6rem; border-radius: 999px;
+}
+.chip.ok { background: var(--ok-bg); color: var(--primary-dark); }
+.chip.soon { background: var(--soon-bg); color: var(--soon); }
+.chip.late { background: var(--late-bg); color: var(--late); }
+.chip.done { background: #eceef5; color: var(--done); }
+
+.row-actions { display: flex; gap: 0.75rem; font-size: 0.85rem; }
+.row-actions a { color: var(--muted); }
+.row-actions a:hover { color: var(--ink); }
+
+/* ---------- Courses ---------- */
+.courses { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.course {
+  --accent: var(--c0);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: 6px;
+}
+.course a {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: 0.85rem 1rem; text-decoration: none; color: var(--ink);
+}
+.course a:hover { background: var(--page); }
+.course-name { font-weight: 600; }
+.course-code { color: var(--muted); font-size: 0.9rem; }
+
+.c0 { --accent: var(--c0); }
+.c1 { --accent: var(--c1); }
+.c2 { --accent: var(--c2); }
+.c3 { --accent: var(--c3); }
+.c4 { --accent: var(--c4); }
+.c5 { --accent: var(--c5); }
+
+.empty {
+  background: var(--surface); border: 1px dashed #b9c1de; border-radius: 6px;
+  padding: 1.5rem; max-width: 520px;
+}
+.empty p { margin-top: 0; }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 560px) {
+  h1 { font-size: 1.6rem; }
+  .task { flex-wrap: wrap; }
+  .task-main { flex-basis: calc(100% - 50px); }
+  .chip { margin-left: 40px; }
+  .row-actions { margin-left: auto; }
+  .form { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* ---------- Print ---------- */
+/* Strips chrome (nav, header, footer, buttons, forms) so past questions,
+   notes, and read-online pages print cleanly on paper. */
+@media print {
+  header, footer, .messages, nav, button, form, .no-print {
+    display: none !important;
+  }
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  a { color: #000000 !important; text-decoration: underline; }
+  * {
+    box-shadow: none !important;
+    background: transparent !important;
+    border-color: #ccc !important;
+  }
+}

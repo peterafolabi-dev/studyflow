@@ -1,0 +1,24 @@
+<div class="rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5 flex flex-col">
+  <div class="h-2 w-10 rounded-full mb-3 c{{ entry.book.accent }}" style="background: var(--accent);"></div>
+  <span class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">
+    {% if entry.book.is_postgraduate %}Postgraduate{% else %}Level {{ entry.book.level }}{% endif %}
+  </span>
+  <a href="{% url 'book_detail' entry.book.pk %}" class="font-display font-bold text-lg mt-1 mb-1 hover:text-brand-600 dark:hover:text-brand-300">{{ entry.book.title }}</a>
+  {% if entry.book.author %}<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ entry.book.author }}</p>{% endif %}
+
+  <div class="mt-auto flex gap-2">
+    <a href="{% url 'read_online' entry.book.pk %}"
+       class="flex-1 text-center rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium py-2 text-sm">
+      Read
+    </a>
+    <a href="{% url 'download_pdf' entry.book.pk %}"
+       class="flex-1 text-center rounded-lg border border-brand-300 dark:border-slate-600 font-medium py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
+      PDF
+    </a>
+  </div>
+  <form method="post" action="{% url 'toggle_save' entry.book.pk %}" class="mt-2">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'my_library' %}">
+    <button class="w-full text-xs text-rose-500 hover:underline">Remove from library</button>
+  </form>
+</div>

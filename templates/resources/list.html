@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load resources_extras %}
+{% block title %}{{ label }} · StudyFlow{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
+    <div>
+      <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">{{ label }}</h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1">Shared by students, for students. Everyone can contribute.</p>
+    </div>
+    <a href="{% url 'resource_upload' %}?type={% if rtype == 'research' %}thesis{% else %}{{ rtype }}{% endif %}"
+       class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm shrink-0">
+      + Upload {{ label }}
+    </a>
+  </div>
+
+  <form method="get" class="flex gap-2 mb-6">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by title, course code or description&hellip;"
+           class="flex-1 rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+    <button class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2">Search</button>
+  </form>
+
+  {% if trending %}
+    <section class="mb-8">
+      <h2 class="font-display font-bold text-base mb-3 flex items-center gap-2">🔥 Trending this week</h2>
+      <div class="flex gap-3 overflow-x-auto pb-1">
+        {% for r in trending %}
+          <div class="shrink-0 w-56 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-900/20 p-4">
+            <p class="font-semibold text-sm mb-1 line-clamp-2">{{ r.title }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ r.download_count }} download{{ r.download_count|pluralize }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if resources %}
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {% for r in resources %}
+        {% include 'resources/_resource_card.html' with r=r my_rating=my_ratings|get_item:r.pk %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">
+      <p class="mb-3">Nothing here yet.</p>
+      <a href="{% url 'resource_upload' %}?type={% if rtype == 'research' %}thesis{% else %}{{ rtype }}{% endif %}"
+         class="inline-block rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">
+        Be the first to upload
+      </a>
+    </div>
+  {% endif %}
+{% endblock %}

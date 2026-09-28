@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}My Library · StudyFlow{% endblock %}
+{% block content %}
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">My Library</h1>
+    <p class="text-slate-500 dark:text-slate-400 mt-1">Everything you've saved, sorted by progress.</p>
+  </div>
+
+  {% if total %}
+    {% if reading %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">📖 Continue reading</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {% for entry in reading %}
+            {% include 'library/_saved_card.html' %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if to_read %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">🔖 To read</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {% for entry in to_read %}
+            {% include 'library/_saved_card.html' %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if finished %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">✅ Finished</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {% for entry in finished %}
+            {% include 'library/_saved_card.html' %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% else %}
+    <div class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">
+      <p class="mb-3">Your library is empty.</p>
+      <a href="{% url 'catalogue' %}" class="inline-block rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Browse the catalogue</a>
+    </div>
+  {% endif %}
+{% endblock %}

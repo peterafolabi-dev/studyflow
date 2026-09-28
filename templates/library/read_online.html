@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Reading: {{ book.title }} · StudyFlow{% endblock %}
+{% block content %}
+  <div class="max-w-3xl mx-auto">
+    <a href="{% url 'book_detail' book.pk %}" class="text-sm text-brand-600 dark:text-brand-300 hover:underline">&larr; Back to book</a>
+
+    <div class="flex items-center justify-between flex-wrap gap-3 mt-3 mb-6">
+      <div>
+        <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">{{ book.title }}</h1>
+        {% if book.author %}<p class="text-slate-500 dark:text-slate-400 text-sm">{{ book.author }}</p>{% endif %}
+      </div>
+      <a href="{% url 'download_pdf' book.pk %}"
+         class="rounded-lg border border-brand-300 dark:border-slate-600 text-brand-700 dark:text-brand-200 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
+        ⬇ Download PDF
+      </a>
+      <button type="button" onclick="window.print()"
+              class="no-print rounded-lg border border-brand-300 dark:border-slate-600 text-brand-700 dark:text-brand-200 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
+        🖨️ Print
+      </button>
+    </div>
+
+    <div class="rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 sm:p-10 prose-like">
+      {% for chapter in chapters %}
+        <h2 class="font-display font-bold text-xl mb-3 {% if not forloop.first %}mt-8{% endif %} text-brand-700 dark:text-brand-300">
+          {{ forloop.counter }}. {{ chapter.title }}
+        </h2>
+        {% for para in chapter.paragraphs %}
+          <p class="text-slate-700 dark:text-slate-300 leading-relaxed mb-3">{{ para }}</p>
+        {% endfor %}
+      {% endfor %}
+    </div>
+
+    <form method="post" action="{% url 'update_status' book.pk %}" class="mt-6 flex justify-end">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'read_online' book.pk %}">
+      <button name="status" value="finished"
+              class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2.5 text-sm">
+        ✓ Mark as finished
+      </button>
+    </form>
+  </div>
+{% endblock %}

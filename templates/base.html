@@ -1,0 +1,258 @@
+{% load static %}<!doctype html>
+<html lang="en" class="scroll-pt-20">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}StudyFlow{% endblock %}</title>
+  <link rel="manifest" href="{% url 'pwa_manifest' %}">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="StudyFlow">
+  <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Set the dark/light class before first paint, so there's no flash -->
+  <script>
+    (function () {
+      var saved = localStorage.getItem('studyflow-theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
+  <!-- Tailwind CSS (latest, via CDN) with a purple theme + class-based dark mode -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Instrument Sans', 'system-ui', 'sans-serif'],
+            display: ['Bricolage Grotesque', 'Instrument Sans', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
+              400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
+              800: '#5b21b6', 900: '#4c1d95',
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="min-h-screen flex flex-col bg-brand-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors">
+
+  <header class="sticky top-0 z-30 border-b border-brand-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
+    <div class="mx-auto max-w-6xl flex items-center gap-4 px-4 py-3">
+      <a href="{% url 'dashboard' %}" class="font-display font-bold text-lg text-brand-700 dark:text-brand-300 shrink-0">StudyFlow</a>
+
+      {% if user.is_authenticated %}
+        <nav class="hidden sm:flex items-center gap-1 text-sm font-medium ml-2" aria-label="Main">
+          <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'dashboard' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">This week</a>
+          <a href="{% url 'course_list' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if 'course' in request.resolver_match.url_name %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">Courses</a>
+          <a href="{% url 'catalogue' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'catalogue' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">Catalogue</a>
+
+          <div class="relative" id="resources-menu-wrapper">
+            <button id="resources-menu-btn" type="button"
+                    class="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800"
+                    aria-haspopup="true" aria-expanded="false">
+              Resources
+              <svg class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+            </button>
+            <div id="resources-menu" role="menu"
+                 class="hidden absolute left-0 mt-2 w-48 rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg py-2 text-sm z-40">
+              <a href="{% url 'past_questions' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Past Questions</a>
+              <a href="{% url 'notes_list' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Notes</a>
+              <a href="{% url 'theses_papers' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Theses &amp; Papers</a>
+              <a href="{% url 'lecture_slides' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Lecture Slides</a>
+              <a href="{% url 'research' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Research</a>
+            </div>
+          </div>
+
+          <a href="{% url 'ibb_library' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'ibb_library' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">IBB Library</a>
+          <a href="{% url 'postgraduate' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'postgraduate' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">Postgraduate</a>
+        </nav>
+
+        <form method="get" action="{% url 'global_search' %}" class="hidden lg:block ml-4 w-56">
+          <input type="text" name="q" placeholder="Search StudyFlow&hellip;"
+                 class="w-full rounded-full border border-brand-200 dark:border-slate-700 bg-brand-50 dark:bg-slate-800 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </form>
+
+        <div class="ml-auto relative" id="profile-menu-wrapper">
+          <button id="profile-menu-btn" type="button"
+                  class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-brand-200 dark:border-slate-700 hover:bg-brand-100 dark:hover:bg-slate-800"
+                  aria-haspopup="true" aria-expanded="false">
+            <span class="h-7 w-7 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-semibold">
+              {{ user.username|slice:":1"|upper }}
+            </span>
+            <span class="hidden md:inline text-sm font-medium">{{ user.username }}</span>
+            <svg class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+          </button>
+
+          <div id="profile-menu" role="menu"
+               class="hidden absolute right-0 mt-2 w-56 rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg py-2 text-sm">
+            <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">My Profile</a>
+            <a href="{% url 'my_library' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">My Library</a>
+            <a href="{% url 'my_loans' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">
+              My Loans
+              {% if overdue_loan_count %}<span class="ml-1 inline-block h-2 w-2 rounded-full bg-rose-500 align-middle"></span>{% endif %}
+            </a>
+            <a href="{% url 'timetable' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Timetable</a>
+            <a href="{% url 'gpa_calculator' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">GPA Calculator</a>
+            <a href="{% url 'thread_list' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Study Groups</a>
+            <a href="{% url 'export_calendar' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Export calendar (.ics)</a>
+            <a href="{% url 'postgraduate' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Postgraduate</a>
+
+            <div class="flex items-center justify-between px-4 py-2">
+              <span>Dark mode</span>
+              <button type="button" id="theme-toggle" aria-pressed="false"
+                      class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-300 dark:bg-brand-600 transition-colors">
+                <span id="theme-toggle-dot" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 dark:translate-x-6"></span>
+              </button>
+            </div>
+
+            <hr class="my-1 border-brand-100 dark:border-slate-700">
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="w-full text-left px-4 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800">Log out</button>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if user.is_authenticated %}
+      <nav class="flex sm:hidden overflow-x-auto gap-1 px-4 pb-2 text-sm font-medium" aria-label="Main mobile">
+        <a href="{% url 'global_search' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">🔍 Search</a>
+        <a href="{% url 'dashboard' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">This week</a>
+        <a href="{% url 'course_list' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Courses</a>
+        <a href="{% url 'catalogue' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Catalogue</a>
+        <a href="{% url 'my_library' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">My Library</a>
+        <a href="{% url 'past_questions' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Past Questions</a>
+        <a href="{% url 'notes_list' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Notes</a>
+        <a href="{% url 'theses_papers' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Theses &amp; Papers</a>
+        <a href="{% url 'lecture_slides' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Lecture Slides</a>
+        <a href="{% url 'research' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Research</a>
+        <a href="{% url 'ibb_library' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">IBB Library</a>
+        <a href="{% url 'postgraduate' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Postgraduate</a>
+      </nav>
+    {% endif %}
+  </header>
+
+  {% if overdue_loan_count %}
+    <div class="bg-rose-600 text-white text-sm text-center py-2 px-4">
+      ⚠️ You have {{ overdue_loan_count }} overdue IBB Library loan{{ overdue_loan_count|pluralize }}.
+      <a href="{% url 'my_loans' %}" class="underline font-medium">Return it now</a>
+    </div>
+  {% endif %}
+
+  <main class="mx-auto max-w-6xl px-4 py-6 flex-1 w-full">
+    {% if messages %}
+      <ul class="messages mb-4 space-y-2" role="status">
+        {% for message in messages %}
+          <li class="message {{ message.tags }} rounded-lg px-4 py-2 text-sm
+                     {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300
+                     {% elif message.tags == 'error' %}bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300
+                     {% else %}bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-200{% endif %}">
+            {{ message }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-brand-100 dark:border-slate-800 mt-12">
+    <div class="mx-auto max-w-6xl px-4 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 dark:text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="font-display font-bold text-brand-700 dark:text-brand-300">StudyFlow</span>
+        <span>&middot; built for FUT Minna students</span>
+      </div>
+
+      {% if user.is_authenticated %}
+        <nav class="flex flex-wrap items-center gap-x-4 gap-y-1 justify-center" aria-label="Footer">
+          <a href="{% url 'catalogue' %}" class="hover:text-brand-600 dark:hover:text-brand-300">Catalogue</a>
+          <a href="{% url 'ibb_library' %}" class="hover:text-brand-600 dark:hover:text-brand-300">IBB Library</a>
+          <a href="{% url 'thread_list' %}" class="hover:text-brand-600 dark:hover:text-brand-300">Study Groups</a>
+          <a href="{% url 'resource_upload' %}" class="hover:text-brand-600 dark:hover:text-brand-300">Upload a resource</a>
+          <a href="{% url 'gpa_calculator' %}" class="hover:text-brand-600 dark:hover:text-brand-300">GPA Calculator</a>
+        </nav>
+      {% endif %}
+
+      <span>&copy; {% now "Y" %} StudyFlow</span>
+    </div>
+  </footer>
+
+
+  <script>
+    // Profile dropdown
+    (function () {
+      var btn = document.getElementById('profile-menu-btn');
+      var menu = document.getElementById('profile-menu');
+      if (!btn || !menu) return;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isOpen = !menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        btn.setAttribute('aria-expanded', String(!isOpen));
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.contains(e.target) && e.target !== btn) menu.classList.add('hidden');
+      });
+    })();
+
+    // Resources dropdown
+    (function () {
+      var btn = document.getElementById('resources-menu-btn');
+      var menu = document.getElementById('resources-menu');
+      if (!btn || !menu) return;
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isOpen = !menu.classList.contains('hidden');
+        menu.classList.toggle('hidden');
+        btn.setAttribute('aria-expanded', String(!isOpen));
+      });
+      document.addEventListener('click', function (e) {
+        if (!menu.contains(e.target) && e.target !== btn) menu.classList.add('hidden');
+      });
+    })();
+
+    // Register the (minimal) service worker so the app is installable
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('{% url "pwa_service_worker" %}', { scope: '/' }).catch(function () {});
+      });
+    }
+
+    // Close any open dropdown on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      document.querySelectorAll('#profile-menu, #resources-menu').forEach(function (menu) {
+        menu.classList.add('hidden');
+      });
+    });
+
+    // Light/dark toggle
+    (function () {
+      var toggle = document.getElementById('theme-toggle');
+      if (!toggle) return;
+      var root = document.documentElement;
+      toggle.setAttribute('aria-pressed', String(root.classList.contains('dark')));
+      toggle.addEventListener('click', function () {
+        var isDark = root.classList.toggle('dark');
+        localStorage.setItem('studyflow-theme', isDark ? 'dark' : 'light');
+        toggle.setAttribute('aria-pressed', String(isDark));
+      });
+    })();
+  </script>
+</body>
+</html>

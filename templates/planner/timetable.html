@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Timetable · StudyFlow{% endblock %}
+{% block content %}
+  <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
+    <div>
+      <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Timetable</h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1">Your weekly class schedule.</p>
+    </div>
+    <a href="{% url 'timetable_create' %}" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm shrink-0">
+      + Add class
+    </a>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {% for num, label, day_entries in days %}
+      <div class="rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+        <h2 class="font-display font-bold text-sm uppercase tracking-wide text-brand-600 dark:text-brand-300 mb-3">{{ label }}</h2>
+        {% if day_entries %}
+          <div class="space-y-2">
+            {% for e in day_entries %}
+              <div class="rounded-lg bg-brand-50 dark:bg-slate-800 p-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div>
+                    <p class="font-medium text-sm">{{ e.title }}</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      {{ e.start_time|time:"g:i A" }}&ndash;{{ e.end_time|time:"g:i A" }}
+                      {% if e.location %}&middot; {{ e.location }}{% endif %}
+                    </p>
+                  </div>
+                  <form method="post" action="{% url 'timetable_delete' e.pk %}">
+                    {% csrf_token %}
+                    <button class="text-xs text-rose-500 hover:underline">Remove</button>
+                  </form>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-xs text-slate-400">Nothing scheduled.</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

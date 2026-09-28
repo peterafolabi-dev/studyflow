@@ -1,0 +1,21 @@
+{% load planner_extras %}
+<li class="task c{{ task.course.color_index }}{% if task.is_done %} is-done{% endif %}">
+  <form method="post" action="{% url 'task_toggle' task.pk %}" class="toggle-form">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="toggle" aria-label="{% if task.is_done %}Mark {{ task.title }} as not done{% else %}Mark {{ task.title }} as done{% endif %}"></button>
+  </form>
+  <div class="task-main">
+    <div class="task-title">{{ task.title }}</div>
+    {% if show_course %}
+      <a class="task-course" href="{% url 'course_detail' task.course.pk %}">{{ task.course.name }}</a>
+    {% endif %}
+  </div>
+  <span class="chip {{ task|due_state }}">{{ task|due_label }}</span>
+  {% if show_actions %}
+    <div class="row-actions">
+      <a href="{% url 'task_update' task.pk %}">Edit</a>
+      <a href="{% url 'task_delete' task.pk %}">Delete</a>
+    </div>
+  {% endif %}
+</li>

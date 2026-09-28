@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Search · StudyFlow{% endblock %}
+{% block content %}
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Search</h1>
+    <form method="get" class="flex gap-2 mt-3">
+      <input type="text" name="q" value="{{ query }}" autofocus placeholder="Search books, resources, courses, discussions&hellip;"
+             class="flex-1 rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <button class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2">Search</button>
+    </form>
+  </div>
+
+  {% if query %}
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">{{ total }} result{{ total|pluralize }} for "{{ query }}"</p>
+
+    {% if results.books %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">📚 Reading Hub</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {% for b in results.books %}
+            <a href="{% url 'book_detail' b.pk %}" class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 hover:shadow-sm">
+              <p class="font-semibold text-sm">{{ b.title }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ b.author }} &middot; Level {{ b.level }}</p>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if results.resources %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">📄 Resources</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {% for r in results.resources %}
+            <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ r.get_resource_type_display }}</p>
+                <p class="font-medium text-sm">{{ r.title }}</p>
+              </div>
+              {% if r.file %}<a href="{% url 'resource_download' r.pk %}" class="shrink-0 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium px-3 py-1.5">Download</a>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if results.courses %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">🎒 Your Courses</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {% for c in results.courses %}
+            <a href="{% url 'course_detail' c.pk %}" class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 hover:shadow-sm">
+              <p class="font-semibold text-sm">{{ c.name }}</p>
+              {% if c.code %}<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ c.code }}</p>{% endif %}
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if results.threads %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">💬 Study Groups</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {% for t in results.threads %}
+            <a href="{% url 'thread_detail' t.pk %}" class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 hover:shadow-sm">
+              <p class="font-semibold text-sm">{{ t.title }}</p>
+              {% if t.course_code %}<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ t.course_code }}</p>{% endif %}
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    {% if not total %}
+      <div class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">
+        No results for "{{ query }}".
+      </div>
+    {% endif %}
+  {% endif %}
+{% endblock %}

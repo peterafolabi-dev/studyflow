@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.name }} · StudyFlow{% endblock %}
+{% block content %}
+  <p class="crumb"><a href="{% url 'course_list' %}">Courses</a></p>
+  <div class="page-head">
+    <div>
+      <h1>{{ course.name }}</h1>
+      {% if course.code %}<p class="muted">{{ course.code }}</p>{% endif %}
+    </div>
+    <div class="head-actions">
+      <a class="btn ghost" href="{% url 'course_update' course.pk %}">Edit</a>
+      <a class="btn ghost danger" href="{% url 'course_delete' course.pk %}">Delete</a>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="page-head small">
+      <h2>Tasks</h2>
+      <a class="btn" href="{% url 'task_create' course.pk %}">Add task</a>
+    </div>
+    {% if tasks %}
+      <ul class="tasks">
+        {% for task in tasks %}
+          {% include 'planner/_task_row.html' with next=request.path show_actions=True %}
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No tasks yet. Add an assignment, test, or reading with its due date.</p>
+    {% endif %}
+  </section>
+
+  {% if course.code %}
+    <section class="block">
+      <h2 class="mb-3">Related resources <span class="text-slate-400 font-normal text-sm">&middot; {{ course.code }}</span></h2>
+      {% if related_resources %}
+        <div class="grid gap-3 sm:grid-cols-2">
+          {% for r in related_resources %}
+            <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ r.get_resource_type_display }}</p>
+                <p class="font-medium text-sm">{{ r.title }}</p>
+              </div>
+              {% if r.file %}
+                <a href="{% url 'resource_download' r.pk %}" class="shrink-0 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium px-3 py-1.5">Download</a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">No shared resources tagged {{ course.code }} yet. <a class="underline" href="{% url 'resource_upload' %}?type=notes">Upload one</a>?</p>
+      {% endif %}
+    </section>
+
+    <section class="block">
+      <div class="page-head small">
+        <h2>Study group</h2>
+        <a class="btn ghost" href="{% url 'thread_list' %}?course={{ course.code }}">View all &rarr;</a>
+      </div>
+      {% if threads %}
+        <ul class="tasks">
+          {% for t in threads %}
+            <li><a href="{% url 'thread_detail' t.pk %}">{{ t.title }}</a> <span class="muted">&middot; {{ t.posts.count }} repl{{ t.posts.count|pluralize:"y,ies" }}</span></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No discussion for {{ course.code }} yet. <a class="underline" href="{% url 'thread_create' %}?course={{ course.code }}">Start one</a>?</p>
+      {% endif %}
+    </section>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Delete {{ course.name }} · StudyFlow{% endblock %}
+{% block content %}
+  <h1>Delete {{ course.name }}?</h1>
+  <p>This also deletes its {{ course.tasks.count }} task{{ course.tasks.count|pluralize }}. You can't undo it.</p>
+  <form method="post" class="form-actions">
+    {% csrf_token %}
+    <button type="submit" class="btn danger-solid">Delete course</button>
+    <a class="btn ghost" href="{% url 'course_detail' course.pk %}">Cancel</a>
+  </form>
+{% endblock %}

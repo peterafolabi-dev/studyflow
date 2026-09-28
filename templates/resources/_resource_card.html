@@ -1,0 +1,48 @@
+<div class="rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-5 flex flex-col">
+  <span class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">
+    {{ r.get_resource_type_display }}{% if r.course_code %} &middot; {{ r.course_code }}{% endif %}
+  </span>
+  <h2 class="font-display font-bold text-lg mt-1 mb-1">
+    <a href="{% url 'resource_detail' r.pk %}" class="hover:text-brand-600 dark:hover:text-brand-300">{{ r.title }}</a>
+  </h2>
+  {% if r.description %}<p class="text-sm text-slate-600 dark:text-slate-300 mb-3 flex-1">{{ r.description }}</p>{% endif %}
+
+  <div class="flex items-center gap-2 mb-2">
+    <form method="post" action="{% url 'rate_resource' r.pk %}" class="flex items-center gap-0.5">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      {% for i in "12345" %}
+        <button name="stars" value="{{ forloop.counter }}" type="submit"
+                class="text-sm {% if my_rating and forloop.counter <= my_rating %}text-amber-500{% else %}text-slate-300 dark:text-slate-600{% endif %} hover:text-amber-500">★</button>
+      {% endfor %}
+    </form>
+    {% if r.average_rating %}<span class="text-xs text-slate-400">{{ r.average_rating }} ({{ r.rating_count }})</span>{% endif %}
+  </div>
+
+  <p class="text-xs text-slate-400 dark:text-slate-500 mb-4">
+    Uploaded by {{ r.uploaded_by.username|default:"a student" }} &middot; {{ r.download_count }} download{{ r.download_count|pluralize }}
+  </p>
+
+  <div class="mt-auto flex gap-2">
+    <a href="{% url 'resource_detail' r.pk %}"
+       class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium py-2 px-3 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
+      💬 {{ r.comments.count }}
+    </a>
+    {% if r.file %}
+      <a href="{% url 'resource_download' r.pk %}"
+         class="flex-1 text-center rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium py-2 text-sm">
+        ⬇ Download
+      </a>
+    {% else %}
+      <span class="flex-1 text-center rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-slate-400 py-2 text-sm">No file yet</span>
+    {% endif %}
+    {% if r.uploaded_by_id == request.user.id or request.user.is_staff %}
+      <form method="post" action="{% url 'resource_delete' r.pk %}">
+        {% csrf_token %}
+        <button class="rounded-lg border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-300 font-medium py-2 px-3 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20">
+          Remove
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>

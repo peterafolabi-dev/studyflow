@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Start a discussion · StudyFlow{% endblock %}
+{% block content %}
+  <div class="max-w-xl">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-6">Start a discussion</h1>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block font-medium text-sm mb-1">Course code</label>
+        <input type="text" name="course_code" value="{{ default_course }}" placeholder="e.g. CPE 205"
+               class="w-full rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block font-medium text-sm mb-1">Title</label>
+        <input type="text" name="title" required placeholder="What do you want to discuss?"
+               class="w-full rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block font-medium text-sm mb-1">Opening message (optional)</label>
+        <textarea name="body" rows="4" placeholder="Kick off the conversation&hellip;"
+                  class="w-full rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"></textarea>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <input type="checkbox" name="is_anonymous" class="rounded border-brand-300">
+        Start this discussion anonymously
+      </label>
+      <div class="flex gap-2">
+        <button type="submit" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Start discussion</button>
+        <a href="{% url 'thread_list' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

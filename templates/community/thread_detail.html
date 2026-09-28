@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}{{ thread.title }} · StudyFlow{% endblock %}
+{% block content %}
+  <div class="max-w-2xl">
+    <a href="{% url 'thread_list' %}" class="text-sm text-brand-600 dark:text-brand-300 hover:underline">&larr; Study Groups</a>
+
+    <div class="flex items-start justify-between gap-3 mt-3 mb-6">
+      <div>
+        {% if thread.course_code %}<span class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ thread.course_code }}</span><br>{% endif %}
+        <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">{{ thread.title }}</h1>
+        <p class="text-xs text-slate-400 mt-1">Started by {{ thread.starter_name }} &middot; {{ thread.created_at|date:"d M Y" }}</p>
+      </div>
+      {% if thread.created_by_id == request.user.id or request.user.is_staff %}
+        <form method="post" action="{% url 'thread_delete' thread.pk %}">
+          {% csrf_token %}
+          <button class="text-xs text-rose-500 hover:underline shrink-0">Delete</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <div class="space-y-3 mb-6">
+      {% for post in posts %}
+        <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+          <p class="text-sm text-slate-700 dark:text-slate-300">{{ post.body }}</p>
+          <p class="text-xs text-slate-400 mt-2">{{ post.display_name }} &middot; {{ post.created_at|date:"d M, g:i a" }}</p>
+        </div>
+      {% empty %}
+        <p class="text-slate-500 dark:text-slate-400 text-sm">No replies yet — be the first.</p>
+      {% endfor %}
+    </div>
+
+    <form method="post" class="space-y-2">
+      {% csrf_token %}
+      <div class="flex gap-2">
+        <input type="text" name="body" required placeholder="Write a reply&hellip;"
+               class="flex-1 rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm">
+        <button class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2">Reply</button>
+      </div>
+      <label class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <input type="checkbox" name="is_anonymous" class="rounded border-brand-300">
+        Post anonymously (other students won't see your name)
+      </label>
+    </form>
+  </div>
+{% endblock %}

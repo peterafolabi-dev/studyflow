@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}{{ book.title }} · StudyFlow{% endblock %}
+{% block content %}
+  <a href="{% if book.is_postgraduate %}{% url 'postgraduate' %}{% else %}{% url 'catalogue' %}{% endif %}"
+     class="text-sm text-brand-600 dark:text-brand-300 hover:underline">&larr; Back</a>
+
+  <div class="mt-4 grid gap-8 md:grid-cols-3">
+    <div class="md:col-span-2">
+      <div class="h-2 w-14 rounded-full mb-4 c{{ book.accent }}" style="background: var(--accent);"></div>
+      <span class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">
+        {% if book.is_postgraduate %}Postgraduate{% else %}Level {{ book.level }}{% endif %}{% if book.subject %} &middot; {{ book.subject }}{% endif %}
+      </span>
+      <h1 class="font-display text-3xl font-bold mt-1 mb-2 text-brand-800 dark:text-brand-200">{{ book.title }}</h1>
+      {% if book.author %}<p class="text-slate-500 dark:text-slate-400 mb-2">by {{ book.author }}</p>{% endif %}
+
+      <div class="flex items-center gap-3 mb-4">
+        {% if book.average_rating %}
+          <span class="text-amber-500 text-sm">{% for i in "12345" %}{% if forloop.counter <= book.average_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          <span class="text-sm text-slate-500 dark:text-slate-400">{{ book.average_rating }} ({{ book.rating_count }} rating{{ book.rating_count|pluralize }})</span>
+        {% else %}
+          <span class="text-sm text-slate-400">No ratings yet</span>
+        {% endif %}
+      </div>
+
+      <form method="post" action="{% url 'rate_book' book.pk %}" class="flex items-center gap-1 mb-4">
+        {% csrf_token %}
+        <span class="text-sm text-slate-500 dark:text-slate-400 mr-2">Rate this:</span>
+        {% for i in "12345" %}
+          <button name="stars" value="{{ forloop.counter }}" type="submit"
+                  class="text-xl {% if my_rating and forloop.counter <= my_rating.stars %}text-amber-500{% else %}text-slate-300 dark:text-slate-600{% endif %} hover:text-amber-500">★</button>
+        {% endfor %}
+      </form>
+
+      <p class="text-slate-700 dark:text-slate-300 leading-relaxed">
+        {{ book.description|default:"No description yet — open Read Online for a study-notes style preview of this title." }}
+      </p>
+
+      {% if entry %}
+        <div class="mt-6">
+          <span class="text-sm font-medium mr-2">Your progress:</span>
+          <form method="post" action="{% url 'update_status' book.pk %}" class="inline-flex gap-2 mt-2">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'book_detail' book.pk %}">
+            {% for value, label in entry.STATUS_CHOICES %}
+              <button name="status" value="{{ value }}"
+                      class="px-3 py-1.5 rounded-full text-xs font-semibold border
+                             {% if entry.status == value %}bg-brand-600 text-white border-brand-600{% else %}border-brand-200 dark:border-slate-700 hover:bg-brand-100 dark:hover:bg-slate-800{% endif %}">
+                {{ label }}
+              </button>
+            {% endfor %}
+          </form>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 h-fit space-y-3">
+      <a href="{% url 'read_online' book.pk %}"
+         class="block text-center rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium py-2.5 text-sm">
+        📖 Read online
+      </a>
+      <a href="{% url 'download_pdf' book.pk %}"
+         class="block text-center rounded-lg border border-brand-300 dark:border-slate-600 text-brand-700 dark:text-brand-200 font-medium py-2.5 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
+        ⬇ Download PDF
+      </a>
+      <form method="post" action="{% url 'toggle_save' book.pk %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'book_detail' book.pk %}">
+        {% if entry %}
+          <button class="w-full rounded-lg bg-brand-100 dark:bg-slate-800 text-brand-700 dark:text-brand-200 font-medium py-2.5 text-sm">✓ In My Library</button>
+        {% else %}
+          <button class="w-full rounded-lg border border-brand-300 dark:border-slate-600 font-medium py-2.5 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">Save to My Library</button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  {% if similar %}
+    <div class="mt-10">
+      <h2 class="font-display font-bold text-lg mb-3">Similar reading</h2>
+      <div class="grid gap-4 sm:grid-cols-3">
+        {% for s in similar %}
+          <a href="{% url 'book_detail' s.pk %}" class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 hover:shadow-sm">
+            <div class="h-1.5 w-8 rounded-full mb-2 c{{ s.accent }}" style="background: var(--accent);"></div>
+            <p class="font-semibold text-sm">{{ s.title }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ s.author }}</p>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

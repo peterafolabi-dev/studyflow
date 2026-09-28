@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}GPA Calculator · StudyFlow{% endblock %}
+{% block content %}
+  <div class="max-w-3xl">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-1">GPA Calculator</h1>
+    <p class="text-slate-500 dark:text-slate-400 mb-6">
+      Uses the 5-point scale (A=5, B=4, C=3, D=2, E=1, F=0). Add a row per course this semester.
+    </p>
+
+    <div class="rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-6">
+      <div id="gpa-rows" class="space-y-2 mb-4"></div>
+
+      <button id="gpa-add-row" type="button"
+              class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
+        + Add course
+      </button>
+
+      <div class="mt-6 pt-4 border-t border-brand-100 dark:border-slate-700 flex items-center justify-between">
+        <div>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Total units: <span id="gpa-units">0</span></p>
+          <p class="font-display text-2xl font-bold text-brand-700 dark:text-brand-300 mt-1">GPA: <span id="gpa-result">0.00</span></p>
+        </div>
+        <button id="gpa-clear" type="button" class="text-sm text-rose-500 hover:underline">Clear all</button>
+      </div>
+    </div>
+  </div>
+
+  <template id="gpa-row-template">
+    <div class="gpa-row flex flex-wrap gap-2 items-center">
+      <input type="text" placeholder="Course (e.g. CPE 205)"
+             class="gpa-course flex-1 min-w-[140px] rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+      <input type="number" min="0" max="10" placeholder="Units" value="3"
+             class="gpa-units-input w-20 rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+      <select class="gpa-grade rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+        <option value="5">A (5)</option>
+        <option value="4">B (4)</option>
+        <option value="3">C (3)</option>
+        <option value="2">D (2)</option>
+        <option value="1">E (1)</option>
+        <option value="0">F (0)</option>
+      </select>
+      <button type="button" class="gpa-remove text-rose-500 hover:underline text-sm px-2">Remove</button>
+    </div>
+  </template>
+
+  <script>
+    (function () {
+      var rowsEl = document.getElementById('gpa-rows');
+      var template = document.getElementById('gpa-row-template');
+      var STORAGE_KEY = 'studyflow-gpa-rows';
+
+      function addRow(course, units, grade) {
+        var node = template.content.cloneNode(true);
+        var row = node.querySelector('.gpa-row');
+        if (course) row.querySelector('.gpa-course').value = course;
+        if (units) row.querySelector('.gpa-units-input').value = units;
+        if (grade !== undefined) row.querySelector('.gpa-grade').value = grade;
+
+        row.querySelector('.gpa-remove').addEventListener('click', function () {
+          row.remove();
+          recalc();
+        });
+        row.querySelectorAll('input, select').forEach(function (el) {
+          el.addEventListener('input', recalc);
+          el.addEventListener('change', recalc);
+        });
+        rowsEl.appendChild(row);
+      }
+
+      function recalc() {
+        var totalUnits = 0;
+        var totalPoints = 0;
+        rowsEl.querySelectorAll('.gpa-row').forEach(function (row) {
+          var units = parseFloat(row.querySelector('.gpa-units-input').value) || 0;
+          var grade = parseFloat(row.querySelector('.gpa-grade').value) || 0;
+          totalUnits += units;
+          totalPoints += units * grade;
+        });
+        document.getElementById('gpa-units').textContent = totalUnits;
+        document.getElementById('gpa-result').textContent = totalUnits ? (totalPoints / totalUnits).toFixed(2) : '0.00';
+        save();
+      }
+
+      function save() {
+        var data = [];
+        rowsEl.querySelectorAll('.gpa-row').forEach(function (row) {
+          data.push({
+            course: row.querySelector('.gpa-course').value,
+            units: row.querySelector('.gpa-units-input').value,
+            grade: row.querySelector('.gpa-grade').value,
+          });
+        });
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+      }
+
+      function load() {
+        var saved = [];
+        try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) {}
+        if (saved.length) {
+          saved.forEach(function (r) { addRow(r.course, r.units, r.grade); });
+        } else {
+          addRow(); addRow();
+        }
+        recalc();
+      }
+
+      document.getElementById('gpa-add-row').addEventListener('click', function () {
+        addRow();
+      });
+      document.getElementById('gpa-clear').addEventListener('click', function () {
+        rowsEl.innerHTML = '';
+        addRow();
+        recalc();
+      });
+
+      load();
+    })();
+  </script>
+{% endblock %}

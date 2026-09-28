@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}My Loans · StudyFlow{% endblock %}
+{% block content %}
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">My Loans</h1>
+    <p class="text-slate-500 dark:text-slate-400 mt-1">Physical books you've reserved from the IBB Library.</p>
+  </div>
+
+  <section class="mb-8">
+    <h2 class="font-display font-bold text-lg mb-3">Currently borrowed</h2>
+    {% if active_loans %}
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {% for loan in active_loans %}
+          <div class="rounded-2xl border {% if loan.is_overdue %}border-rose-300 dark:border-rose-800{% else %}border-brand-100 dark:border-slate-700{% endif %} bg-white dark:bg-slate-900 shadow-sm p-5 flex flex-col">
+            <p class="font-semibold">{{ loan.holding.title }}</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-3">{{ loan.holding.author }}</p>
+            <p class="text-xs mb-4 {% if loan.is_overdue %}text-rose-600 dark:text-rose-400 font-semibold{% else %}text-slate-500 dark:text-slate-400{% endif %}">
+              {% if loan.is_overdue %}Overdue &mdash; was due {{ loan.due_at|date:"d M Y" }}{% else %}Due {{ loan.due_at|date:"d M Y" }}{% endif %}
+            </p>
+            <form method="post" action="{% url 'return_holding' loan.holding.pk %}" class="mt-auto">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{% url 'my_loans' %}">
+              <button class="w-full rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium py-2 text-sm">Return</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-6 text-center text-slate-500 dark:text-slate-400">
+        <p class="mb-3">Nothing borrowed right now.</p>
+        <a href="{% url 'ibb_library' %}" class="inline-block rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Browse the IBB Library</a>
+      </div>
+    {% endif %}
+  </section>
+
+  {% if past_loans %}
+    <section>
+      <h2 class="font-display font-bold text-lg mb-3">Loan history</h2>
+      <div class="overflow-x-auto rounded-2xl border border-brand-100 dark:border-slate-700">
+        <table class="w-full text-sm">
+          <thead class="bg-brand-50 dark:bg-slate-800 text-left">
+            <tr>
+              <th class="px-4 py-3 font-semibold">Title</th>
+              <th class="px-4 py-3 font-semibold">Borrowed</th>
+              <th class="px-4 py-3 font-semibold">Returned</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-brand-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+            {% for loan in past_loans %}
+              <tr>
+                <td class="px-4 py-3 font-medium">{{ loan.holding.title }}</td>
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ loan.borrowed_at|date:"d M Y" }}</td>
+                <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ loan.returned_at|date:"d M Y" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

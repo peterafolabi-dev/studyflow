@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Courses · StudyFlow{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>Courses</h1>
+    <a class="btn" href="{% url 'course_create' %}">Add course</a>
+  </div>
+
+  {% if courses %}
+    <ul class="courses">
+      {% for course in courses %}
+        <li class="course c{{ course.color_index }}">
+          <a href="{% url 'course_detail' course.pk %}">
+            <span class="course-name">{{ course.name }}</span>
+            {% if course.code %}<span class="course-code">{{ course.code }}</span>{% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty">
+      <p>No courses yet. Add the ones you're taking this semester.</p>
+      <a class="btn" href="{% url 'course_create' %}">Add your first course</a>
+    </div>
+  {% endif %}
+{% endblock %}

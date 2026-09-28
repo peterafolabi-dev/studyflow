@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Add to timetable · StudyFlow{% endblock %}
+{% block content %}
+  <div class="max-w-xl">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-6">Add a class</h1>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {% for field in form %}
+        <div>
+          <label for="{{ field.id_for_label }}" class="block font-medium text-sm mb-1">{{ field.label }}</label>
+          <div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2 [&_input]:text-sm
+                      [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-brand-200 dark:[&_select]:border-slate-700 [&_select]:bg-white dark:[&_select]:bg-slate-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm">
+            {{ field }}
+          </div>
+          {% if field.errors %}
+            <ul class="text-xs text-rose-600 dark:text-rose-400 mt-1">
+              {% for e in field.errors %}<li>{{ e }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <div class="flex gap-2 pt-2">
+        <button type="submit" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Add</button>
+        <a href="{% url 'timetable' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
