@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import F, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -154,20 +155,19 @@ def ibb_library(request):
 
 @login_required
 @require_POST
-from django.db import transaction
 def reserve_holding(request, pk):
     with transaction.atomic():
         holding = get_object_or_404(PhysicalHolding.objects.select_for_update(), pk=pk)
         if not holding.is_available:
-        messages.error(request, f'"{holding.title}" is currently on loan to someone else.')
-    else:
-        due_at = timezone.now() + timedelta(days=Loan.LOAN_PERIOD_DAYS)
-        Loan.objects.create(user=request.user, holding=holding, due_at=due_at)
-        holding.is_available = False
-        holding.save(update_fields=['is_available'])
-        messages.success(
-            request, f'"{holding.title}" reserved — due back {due_at.strftime("%d %b %Y")}.'
-        )
+            messages.error(request, f'"{holding.title}" is currently on loan to someone else.')
+        else:
+            due_at = timezone.now() + timedelta(days=Loan.LOAN_PERIOD_DAYS)
+            Loan.objects.create(user=request.user, holding=holding, due_at=due_at)
+            holding.is_available = False
+            holding.save(update_fields=['is_available'])
+            messages.success(
+                request, f'"{holding.title}" reserved — due back {due_at.strftime("%d %b %Y")}.'
+            )
     return redirect('ibb_library')
 
 
