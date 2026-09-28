@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('ai-chat/', views.ai_chat_api, name='ai_chat'),
     path('', views.dashboard, name='dashboard'),
     path('courses/', views.course_list, name='course_list'),
     path('courses/new/', views.course_create, name='course_create'),

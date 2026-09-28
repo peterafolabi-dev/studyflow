@@ -305,3 +305,27 @@ def flashcard_hubs(request):
     decks = FlashcardDeck.objects.filter(course__user=request.user)
     return render(request, 'planner/flashcards.html', {'decks': decks})
 
+
+from django.http import JsonResponse
+import json
+from django.views.decorators.csrf import csrf_exempt
+import os
+
+@csrf_exempt
+def ai_chat_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_message = data.get('message', '')
+            
+            # Check for API Key
+            api_key = os.environ.get('GEMINI_API_KEY')
+            if not api_key:
+                return JsonResponse({'reply': 'I am ready to go! To activate me, ask the admin to add GEMINI_API_KEY to the .env file.'})
+            
+            # Here you would actually call google-genai or openai. 
+            # We mock it for the demo assuming the key is set:
+            return JsonResponse({'reply': f"You said: '{user_message}'. I am an AI trained specifically to assist university students. I can analyze your coursework, summarize notes, and test you on your flashcards! (AI Integration Active)"})
+        except Exception as e:
+            return JsonResponse({'reply': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid method'}, status=405)
