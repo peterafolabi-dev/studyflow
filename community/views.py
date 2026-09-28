@@ -104,6 +104,7 @@ def vote_thread(request, pk):
     return redirect('thread_detail', pk=pk)
 
 
+
 from django.http import JsonResponse
 import json
 
@@ -115,31 +116,24 @@ def global_chat(request):
 def chat_api(request):
     room = request.GET.get('room', 'global')
     if request.method == 'POST':
-        data = json.loads(request.body)
-        text = data.get('text', '').strip()
-        room = data.get('room', 'global')
-        if text:
-            ChatMessage.objects.create(user=request.user, text=text, room=room)
-            return JsonResponse({'status': 'ok'})
-        return JsonResponse({'status': 'error'}, status=400)\n    
-    messages = ChatMessage.objects.filter(room=room)[:50]
+        try:
+            data = json.loads(request.body)
+            text = data.get('text', '').strip()
+            room = data.get('room', 'global')
+            if text:
+                ChatMessage.objects.create(user=request.user, text=text, room=room)
+                return JsonResponse({'status': 'ok'})
+        except Exception as e:
+            pass
+        return JsonResponse({'status': 'error'}, status=400)
+    
+    messages = ChatMessage.objects.filter(room=room).order_by('-created_at')[:50]
     data = []
     for msg in reversed(messages):
         data.append({
             'username': msg.user.username,
             'text': msg.text,
-            'time': msg.created_at.strftime("%H:%M"),
-            'is_me': msg.user == request.user
-        })
-    return JsonResponse({'messages': data})
-        return JsonResponse({'status': 'error'}, status=400)\n    
-    messages = ChatMessage.objects.all()[:50]
-    data = []
-    for msg in reversed(messages):
-        data.append({
-            'username': msg.user.username,
-            'text': msg.text,
-            'time': msg.created_at.strftime("%H:%M"),
+            'time': msg.created_at.strftime('%H:%M'),
             'is_me': msg.user == request.user
         })
     return JsonResponse({'messages': data})
