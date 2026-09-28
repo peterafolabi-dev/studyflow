@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .models import Post, Thread
+from .models import Post, Thread, ChatMessage
 
 
 @login_required
