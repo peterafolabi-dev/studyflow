@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Flashcards{% endblock %}
+{% block content %}
+<div class="page">
+    <h2>My Flashcard Decks</h2>
+    <ul class="courses">
+    {% for d in decks %}
+        <li class="course"><a href="#">
+            <span class="course-name">{{ d.title }}</span>
+            <span class="course-code">{{ d.course.code }}</span>
+        </a></li>
+    {% empty %}
+        <li class="empty">No decks yet.</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}

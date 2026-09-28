@@ -121,3 +121,35 @@ def export_my_data(request):
     response = JsonResponse(data, json_dumps_params={'indent': 2})
     response['Content-Disposition'] = f'attachment; filename="studyflow-{user.username}-data.json"'
     return response
+
+
+from django.shortcuts import get_object_or_404
+from .models import Profile, Notification
+from .forms import ProfileForm
+
+@login_required
+def edit_profile(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, 'accounts/edit_profile.html', {'form': form})
+
+@login_required
+def public_profile(request, username):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    target_user = get_object_or_404(User, username=username)
+    profile, _ = Profile.objects.get_or_create(user=target_user)
+    return render(request, 'accounts/public_profile.html', {'target_user': target_user, 'profile': profile})
+
+@login_required
+def notifications_view(request):
+    notifs = Notification.objects.filter(user=request.user)
+    notifs.update(is_read=True)
+    return render(request, 'accounts/notifications.html', {'notifications': notifs})
+

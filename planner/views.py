@@ -281,3 +281,27 @@ def global_search(request):
 
     total = sum(len(v) for v in results.values())
     return render(request, 'planner/search.html', {'query': query, 'results': results, 'total': total})
+
+
+from .models import StudySession, FlashcardDeck, Flashcard
+
+@login_required
+def study_room(request):
+    courses = Course.objects.filter(user=request.user)
+    return render(request, 'planner/study_room.html', {'courses': courses})
+
+@login_required
+@require_POST
+def log_study(request):
+    duration = int(request.POST.get('duration', 0))
+    course_id = request.POST.get('course_id')
+    if duration > 0:
+        course = Course.objects.filter(id=course_id, user=request.user).first() if course_id else None
+        StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
+    return redirect('study_room')
+
+@login_required
+def flashcard_hubs(request):
+    decks = FlashcardDeck.objects.filter(course__user=request.user)
+    return render(request, 'planner/flashcards.html', {'decks': decks})
+

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page">
+    <h2>Notifications</h2>
+    <ul class="tasks">
+    {% for n in notifications %}
+        <li class="task"><div class="task-main">{{ n.message }} <span class="muted">- {{ n.created_at|date }}</span></div></li>
+    {% empty %}
+        <li class="empty">No notifications yet.</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}

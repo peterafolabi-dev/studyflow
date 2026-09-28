@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Study Room{% endblock %}
+{% block content %}
+<div class="page">
+    <h2>Pomodoro Timer</h2>
+    <div style="font-size: 4rem; margin: 2rem 0; font-family: var(--font-head); font-weight: bold; color: var(--primary);" id="timer">25:00</div>
+    <form method="post" action="{% url 'log_study' %}" class="form">
+        {% csrf_token %}
+        <input type="hidden" name="duration" value="25">
+        <div class="field">
+            <label>Log time to course (optional)</label>
+            <select name="course_id" style="width: 100%; padding: 0.6rem; border-radius: 6px;">
+                <option value="">No specific course</option>
+                {% for c in courses %}
+                <option value="{{ c.id }}">{{ c.code }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn">Log 25 Minutes</button>
+    </form>
+</div>
+{% endblock %}

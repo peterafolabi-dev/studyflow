@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Study Buddies{% endblock %}
+{% block content %}
+<div class="page">
+    <h2>Study Buddy Matcher</h2>
+    <ul class="tasks">
+    {% for b in buddies %}
+        <li class="task">
+            <div class="task-main">
+                <a href="{% url 'public_profile' b.user.username %}" class="task-title" style="color: var(--primary);">{{ b.user.username }}</a>
+                <p class="task-course">Shared courses: {{ b.overlap|join:", " }}</p>
+            </div>
+            <button class="btn ghost">Send Request</button>
+        </li>
+    {% empty %}
+        <li class="empty">No matches found right now. Add more courses!</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}

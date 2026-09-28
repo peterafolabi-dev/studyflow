@@ -75,3 +75,31 @@ def thread_delete(request, pk):
     thread.delete()
     messages.info(request, 'Discussion deleted.')
     return redirect('thread_list')
+
+
+from .models import ThreadVote
+from django.contrib.auth import get_user_model
+from planner.models import Course
+
+@login_required
+def find_buddies(request):
+    User = get_user_model()
+    my_courses = set(Course.objects.filter(user=request.user).values_list('code', flat=True))
+    buddies = []
+    if my_courses:
+        other_users = User.objects.exclude(id=request.user.id)
+        for u in other_users:
+            u_courses = set(Course.objects.filter(user=u).values_list('code', flat=True))
+            overlap = my_courses.intersection(u_courses)
+            if overlap:
+                buddies.append({'user': u, 'overlap': overlap})
+    return render(request, 'community/find_buddies.html', {'buddies': buddies})
+
+@login_required
+@require_POST
+def vote_thread(request, pk):
+    thread = get_object_or_404(Thread, pk=pk)
+    val = int(request.POST.get('value', 1))
+    ThreadVote.objects.update_or_create(user=request.user, thread=thread, defaults={'value': val})
+    return redirect('thread_detail', pk=pk)
+
