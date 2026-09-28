@@ -111,7 +111,7 @@ h2 { font-size: 1.2rem; }
 
 /* ---------- Page ---------- */
 .page { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-.block { margin-top: 2rem; }
+.section-block { margin-top: 2rem; }
 .crumb { margin: 0 0 0.5rem; font-size: 0.9rem; }
 
 .page-head {

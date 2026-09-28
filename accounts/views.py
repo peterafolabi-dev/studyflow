@@ -79,7 +79,7 @@ def export_my_data(request):
                 'title': t.title, 'course': t.course.name, 'due_date': t.due_date.isoformat(),
                 'is_done': t.is_done,
             }
-            for t in Task.objects.filter(course__user=user)
+            for t in Task.objects.filter(course__user=user).select_related('course')
         ],
         'saved_books': [
             {
@@ -88,7 +88,7 @@ def export_my_data(request):
             for s in SavedBook.objects.filter(user=user).select_related('book')
         ],
         'book_ratings': [
-            {'book': r.book.title, 'stars': r.stars} for r in BookRating.objects.filter(user=user)
+            {'book': r.book.title, 'stars': r.stars} for r in BookRating.objects.filter(user=user).select_related('book')
         ],
         'uploaded_resources': [
             {
@@ -98,7 +98,7 @@ def export_my_data(request):
             for r in Resource.objects.filter(uploaded_by=user)
         ],
         'resource_ratings': [
-            {'resource': r.resource.title, 'stars': r.stars} for r in ResourceRating.objects.filter(user=user)
+            {'resource': r.resource.title, 'stars': r.stars} for r in ResourceRating.objects.filter(user=user).select_related('resource')
         ],
         'library_loans': [
             {

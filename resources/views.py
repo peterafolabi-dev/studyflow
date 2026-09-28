@@ -124,6 +124,8 @@ def resource_delete(request, pk):
     else:
         reverse_type = 'thesis_paper' if resource.resource_type in ('thesis', 'paper') else resource.resource_type
         title = resource.title
+        if resource.file:
+            resource.file.delete(save=False)
         resource.delete()
         messages.info(request, f'Removed "{title}".')
         _, _, url_name = TYPE_GROUPS.get(reverse_type, (None, None, 'notes_list'))
@@ -152,9 +154,11 @@ def ibb_library(request):
 
 @login_required
 @require_POST
+from django.db import transaction
 def reserve_holding(request, pk):
-    holding = get_object_or_404(PhysicalHolding, pk=pk)
-    if not holding.is_available:
+    with transaction.atomic():
+        holding = get_object_or_404(PhysicalHolding.objects.select_for_update(), pk=pk)
+        if not holding.is_available:
         messages.error(request, f'"{holding.title}" is currently on loan to someone else.')
     else:
         due_at = timezone.now() + timedelta(days=Loan.LOAN_PERIOD_DAYS)
@@ -204,7 +208,7 @@ def rate_resource(request, pk):
     resource = get_object_or_404(Resource, pk=pk)
     try:
         stars = int(request.POST.get('stars', 0))
-    except ValueError:
+    except (ValueError, TypeError):
         stars = 0
     if stars not in range(1, 6):
         messages.error(request, 'Pick a rating from 1 to 5 stars.')

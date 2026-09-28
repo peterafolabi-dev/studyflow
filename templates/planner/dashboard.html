@@ -36,7 +36,7 @@
     {{ done_count }} finished so far.
   </p>
 
-  <section class="block mb-8">
+  <section class="section-block mb-8">
     <h2 class="scroll-mt-24 font-display font-bold text-lg mb-3">Quick access</h2>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {% for label, icon, url_name in quick_links %}
@@ -49,7 +49,7 @@
   </section>
 
   {% if trending_resources %}
-    <section class="block mb-8">
+    <section class="section-block mb-8">
       <h2 class="scroll-mt-24 font-display font-bold text-lg mb-3">🔥 Trending materials this week</h2>
       <div class="flex gap-3 overflow-x-auto pb-1">
         {% for r in trending_resources %}
@@ -70,7 +70,7 @@
     </div>
   {% else %}
     {% if overdue %}
-      <section class="block mb-8">
+      <section class="section-block mb-8">
         <h2 class="late-heading scroll-mt-24 font-display font-bold text-lg mb-3 text-rose-600 dark:text-rose-400">Overdue</h2>
         <ul class="tasks space-y-2">
           {% for task in overdue %}
@@ -80,7 +80,7 @@
       </section>
     {% endif %}
 
-    <section class="block mb-8">
+    <section class="section-block mb-8">
       <h2 class="scroll-mt-24 font-display font-bold text-lg mb-3">Due in the next 7 days</h2>
       {% if due_soon %}
         <ul class="tasks space-y-2">
