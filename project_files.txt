@@ -1,0 +1,290 @@
+Folder PATH listing
+Volume serial number is 2A4A-F472
+C:.
+¦   .gitignore
+¦   db.sqlite3
+¦   manage.py
+¦   project_files.txt
+¦   README.md
+¦   requirements.txt
+¦   
++---accounts
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   forms.py
+¦   ¦   models.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-312.pyc
+¦           apps.cpython-312.pyc
+¦           forms.cpython-312.pyc
+¦           models.cpython-312.pyc
+¦           urls.cpython-312.pyc
+¦           views.cpython-312.pyc
+¦           __init__.cpython-312.pyc
+¦           
++---community
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   models.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_post_is_anonymous.py
+¦   ¦   ¦   0003_alter_post_id_alter_thread_id.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-312.pyc
+¦   ¦           0002_post_is_anonymous.cpython-312.pyc
+¦   ¦           0003_alter_post_id_alter_thread_id.cpython-312.pyc
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-312.pyc
+¦           apps.cpython-312.pyc
+¦           models.cpython-312.pyc
+¦           urls.cpython-312.pyc
+¦           views.cpython-312.pyc
+¦           __init__.cpython-312.pyc
+¦           
++---library
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   content.py
+¦   ¦   models.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---management
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---commands
+¦   ¦   ¦       seed_library.py
+¦   ¦   ¦       __init__.py
+¦   ¦   ¦       
+¦   ¦   +---__pycache__
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_reading_progress.py
+¦   ¦   ¦   0003_bookrating.py
+¦   ¦   ¦   0004_alter_book_id_alter_bookrating_id_alter_savedbook_id.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-312.pyc
+¦   ¦           0002_reading_progress.cpython-312.pyc
+¦   ¦           0003_bookrating.cpython-312.pyc
+¦   ¦           0004_alter_book_id_alter_bookrating_id_alter_savedbook_id.cpython-312.pyc
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-312.pyc
+¦           apps.cpython-312.pyc
+¦           content.cpython-312.pyc
+¦           models.cpython-312.pyc
+¦           urls.cpython-312.pyc
+¦           views.cpython-312.pyc
+¦           __init__.cpython-312.pyc
+¦           
++---media
+¦       .gitkeep
+¦       
++---planner
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   forms.py
+¦   ¦   models.py
+¦   ¦   tests.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---management
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---commands
+¦   ¦   ¦       seed_demo.py
+¦   ¦   ¦       __init__.py
+¦   ¦   ¦       
+¦   ¦   +---__pycache__
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_timetableentry.py
+¦   ¦   ¦   0003_alter_course_id_alter_task_id_and_more.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-312.pyc
+¦   ¦           0002_timetableentry.cpython-312.pyc
+¦   ¦           0003_alter_course_id_alter_task_id_and_more.cpython-312.pyc
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---templatetags
+¦   ¦   ¦   planner_extras.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           planner_extras.cpython-312.pyc
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-312.pyc
+¦           apps.cpython-312.pyc
+¦           forms.cpython-312.pyc
+¦           models.cpython-312.pyc
+¦           urls.cpython-312.pyc
+¦           views.cpython-312.pyc
+¦           __init__.cpython-312.pyc
+¦           
++---resources
+¦   ¦   admin.py
+¦   ¦   apps.py
+¦   ¦   context_processors.py
+¦   ¦   forms.py
+¦   ¦   models.py
+¦   ¦   urls.py
+¦   ¦   views.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---management
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---commands
+¦   ¦   ¦       import_csv.py
+¦   ¦   ¦       seed_resources.py
+¦   ¦   ¦       __init__.py
+¦   ¦   ¦       
+¦   ¦   +---__pycache__
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---migrations
+¦   ¦   ¦   0001_initial.py
+¦   ¦   ¦   0002_loan.py
+¦   ¦   ¦   0003_resourcerating.py
+¦   ¦   ¦   0004_resourcecomment.py
+¦   ¦   ¦   0005_alter_loan_id_alter_physicalholding_id_and_more.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           0001_initial.cpython-312.pyc
+¦   ¦           0002_loan.cpython-312.pyc
+¦   ¦           0003_resourcerating.cpython-312.pyc
+¦   ¦           0004_resourcecomment.cpython-312.pyc
+¦   ¦           0005_alter_loan_id_alter_physicalholding_id_and_more.cpython-312.pyc
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---templatetags
+¦   ¦   ¦   resources_extras.py
+¦   ¦   ¦   __init__.py
+¦   ¦   ¦   
+¦   ¦   +---__pycache__
+¦   ¦           resources_extras.cpython-312.pyc
+¦   ¦           __init__.cpython-312.pyc
+¦   ¦           
+¦   +---__pycache__
+¦           admin.cpython-312.pyc
+¦           apps.cpython-312.pyc
+¦           context_processors.cpython-312.pyc
+¦           forms.cpython-312.pyc
+¦           models.cpython-312.pyc
+¦           urls.cpython-312.pyc
+¦           views.cpython-312.pyc
+¦           __init__.cpython-312.pyc
+¦           
++---sample_data
+¦       books_sample.csv
+¦       holdings_sample.csv
+¦       
++---screenshots
+¦       01-login.png
+¦       02-dashboard.png
+¦       03-courses.png
+¦       04-course-detail.png
+¦       05-dashboard-mobile.png
+¦       
++---static
+¦   +---css
+¦   ¦       style.css
+¦   ¦       
+¦   +---icons
+¦           icon-192.png
+¦           icon-512.png
+¦           
++---studyflow
+¦   ¦   asgi.py
+¦   ¦   pwa.py
+¦   ¦   settings.py
+¦   ¦   urls.py
+¦   ¦   wsgi.py
+¦   ¦   __init__.py
+¦   ¦   
+¦   +---__pycache__
+¦           pwa.cpython-312.pyc
+¦           settings.cpython-312.pyc
+¦           urls.cpython-312.pyc
+¦           wsgi.cpython-312.pyc
+¦           __init__.cpython-312.pyc
+¦           
++---templates
+    ¦   base.html
+    ¦   
+    +---accounts
+    ¦       login.html
+    ¦       profile.html
+    ¦       signup.html
+    ¦       
+    +---community
+    ¦       thread_detail.html
+    ¦       thread_form.html
+    ¦       thread_list.html
+    ¦       
+    +---library
+    ¦       book_detail.html
+    ¦       catalogue.html
+    ¦       my_library.html
+    ¦       postgraduate.html
+    ¦       read_online.html
+    ¦       _saved_card.html
+    ¦       
+    +---planner
+    ¦       course_confirm_delete.html
+    ¦       course_detail.html
+    ¦       course_form.html
+    ¦       course_list.html
+    ¦       dashboard.html
+    ¦       gpa_calculator.html
+    ¦       search.html
+    ¦       task_confirm_delete.html
+    ¦       task_form.html
+    ¦       timetable.html
+    ¦       timetable_form.html
+    ¦       _fields.html
+    ¦       _task_row.html
+    ¦       
+    +---resources
+            ibb_library.html
+            list.html
+            my_loans.html
+            resource_detail.html
+            upload.html
+            _resource_card.html
+            
