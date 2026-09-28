@@ -13,7 +13,7 @@
     </div>
   </div>
 
-  <section class="section-block">
+  <section class="section-block fade-in-up">
     <div class="page-head small">
       <h2>Tasks</h2>
       <a class="btn" href="{% url 'task_create' course.pk %}">Add task</a>
@@ -30,7 +30,7 @@
   </section>
 
   {% if course.code %}
-    <section class="section-block">
+    <section class="section-block fade-in-up">
       <h2 class="mb-3">Related resources <span class="text-slate-400 font-normal text-sm">&middot; {{ course.code }}</span></h2>
       {% if related_resources %}
         <div class="grid gap-3 sm:grid-cols-2">
@@ -51,7 +51,7 @@
       {% endif %}
     </section>
 
-    <section class="section-block">
+    <section class="section-block fade-in-up">
       <div class="page-head small">
         <h2>Study group</h2>
         <a class="btn ghost" href="{% url 'thread_list' %}?course={{ course.code }}">View all &rarr;</a>
