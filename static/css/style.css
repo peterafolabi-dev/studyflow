@@ -1,4 +1,34 @@
-html { scroll-behavior: smooth; }
+
+/* 2026 Ultra-Modern Base Styles */
+body {
+  background: radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.08), transparent 25%),
+              radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+  background-attachment: fixed;
+}
+.dark body {
+  background: radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.15), transparent 25%),
+              radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%),
+              #020617; /* slate-950 */
+  background-attachment: fixed;
+}
+
+/* Make all cards glassmorphic automatically */
+.rounded-xl, .rounded-2xl, .rounded-3xl, .section-block {
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.05);
+}
+.dark .rounded-xl, .dark .rounded-2xl, .dark .rounded-3xl, .dark .section-block {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Make headings tighter and punchier */
+h1, h2, h3, .font-display {
+  letter-spacing: -0.03em;
+}
+\nhtml { scroll-behavior: smooth; }
 
 /* StudyFlow — student deadline planner
    Palette: purple. page #F5F3FF, ink #1E1B2E, muted #6B6280, line #E4DEFB, primary #7C3AED,
