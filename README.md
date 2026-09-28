@@ -29,6 +29,8 @@ Built solo with Django. Created with FUT Minna students in mind (the physical li
 - Weekly class timetable
 - GPA calculator (5-point scale)
 - Export task deadlines to a `.ics` file for Google, Apple or Outlook Calendar
+- **Pomodoro Timer & Study Sessions:** Log focused study time directly to your courses
+- **Flashcards:** Create, manage, and study custom flashcard decks
 
 **Reading hub**
 - Catalogue of books across levels 100 to 500, plus a separate Postgraduate shelf
@@ -37,6 +39,7 @@ Built solo with Django. Created with FUT Minna students in mind (the physical li
 - Read online (in-browser reader) and download as PDF
 - My Library with reading progress: To read, Reading, Finished
 - Reader rank badge (Newcomer, Scholar, Bookworm, Legendary Reader)
+- **Rich Profiles:** Public user profiles with avatars, bios, reading goals, and department info
 
 **Shared resources**
 - Past questions, notes, theses and papers, lecture slides, and a combined Research page
@@ -52,8 +55,11 @@ Built solo with Django. Created with FUT Minna students in mind (the physical li
 
 **Community**
 - Study Groups: open discussion threads by course code, with an option to post anonymously
+- **Study Buddy Matcher:** Automatically find peers sharing your exact course load
+- **Upvoting System:** Reddit-style +1/-1 voting on community threads to surface the best discussions
 
 **Everywhere**
+- **Notification Center:** In-app bell alerts for replies, upcoming deadlines, and overdue books
 - Global search across books, resources, your courses and discussions
 - Quick-access grid on the dashboard
 - Light/dark mode toggle that remembers your choice
@@ -62,7 +68,7 @@ Built solo with Django. Created with FUT Minna students in mind (the physical li
 
 ## Tech stack
 
-Python, Django 6.1, SQLite, Tailwind CSS (via CDN), vanilla JavaScript, ReportLab (PDF generation).
+Python, Django 6.1, PostgreSQL (via psycopg/dj-database-url), Tailwind CSS (via CDN), vanilla JavaScript, WhiteNoise, ReportLab (PDF generation).
 
 ## How it is built
 
@@ -70,11 +76,11 @@ Five Django apps:
 
 | App | Responsibility |
 |---|---|
-| `accounts` | Sign up, log in, profile, data export |
-| `planner` | Courses, tasks, dashboard, timetable, GPA calculator, calendar export, global search |
+| `accounts` | Sign up, log in, profile, notifications, data export |
+| `planner` | Courses, tasks, Pomodoro, flashcards, timetable, GPA calculator, global search |
 | `library` | Books, saved books and reading progress, book ratings, read online, PDF download |
 | `resources` | Shared uploads, ratings and comments, IBB Library holdings and loans |
-| `community` | Study group threads and posts |
+| `community` | Study group threads, upvotes, study buddy matching |
 
 Design decisions worth calling out:
 
@@ -84,6 +90,7 @@ Design decisions worth calling out:
 - **Anonymous posts hide the author in every template**, including the thread list and search, not just on the post itself.
 - **The service worker never caches pages.** Pages are per-user and behind login, so caching could show one student's data to another on a shared device. It only shows a friendly offline message.
 - **The book "read online" and "download PDF" content is generated placeholder text.** The catalogue is sample data, not a licensed book supplier.
+- **Production-Ready Base:** Static files are served via WhiteNoise and the database falls back gracefully to SQLite if `DATABASE_URL` is omitted.
 
 ## Run it locally
 
@@ -135,13 +142,14 @@ Copy `.env.example` for a reference list.
 | `SECRET_KEY` | Django secret key. Required in production. |
 | `DEBUG` | Set to `False` in production. Defaults to `True`. |
 | `ALLOWED_HOSTS` | Comma-separated domains, e.g. `studyflow.onrender.com` |
+| `DATABASE_URL` | PostgreSQL connection URL (e.g. `postgres://user:pass@host/db`). Falls back to SQLite locally. |
+| `EMAIL_HOST`, `EMAIL_PORT` | SMTP configurations for sending outgoing emails. |
 
 ## Known limitations
 
-- Uploaded files are stored on local disk (`media/`). Fine for development; production needs cloud storage.
-- SQLite is used for simplicity; a real deployment should use PostgreSQL.
+- Uploaded files are stored on local disk (`media/`). Fine for development; production needs cloud storage (e.g., AWS S3 or Cloudinary).
 - Uploads are validated by extension and size only, not by scanning file contents.
-- No email or push notifications yet; the overdue-loan warning is in-app only.
+- Email integration is wired up for production, but actual push notifications are in-app only for now.
 - No moderation tools beyond deleting your own content (admins can delete anything).
 
 ## Project structure
