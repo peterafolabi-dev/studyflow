@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}This week · StudyFlow{% endblock %}
 {% block content %}
-  <div id="onboarding" class="hidden no-print mb-8 rounded-2xl border border-brand-200 dark:border-brand-800 bg-brand-100/60 dark:bg-brand-900/30 p-5">
+  <div id="onboarding" class="fade-in-up hidden no-print mb-8 rounded-2xl border border-brand-200 dark:border-brand-800 bg-brand-100/60 dark:bg-brand-900/30 p-5">
     <div class="flex items-start justify-between gap-3">
       <div>
         <h2 class="font-display font-bold text-lg mb-1">👋 Welcome to StudyFlow</h2>
@@ -30,13 +30,15 @@
     })();
   </script>
 
-  <h1 class="scroll-mt-24 font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-1">This week</h1>
-  <p class="summary text-slate-500 dark:text-slate-400 mb-6">
-    {{ open_count }} open task{{ open_count|pluralize }} across {{ course_count }} course{{ course_count|pluralize }}.
-    {{ done_count }} finished so far.
-  </p>
+  <div class="mb-6 fade-in-up">
+    <h1 class="scroll-mt-24 font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-1">This week</h1>
+    <p class="summary text-slate-500 dark:text-slate-400">
+      {{ open_count }} open task{{ open_count|pluralize }} across {{ course_count }} course{{ course_count|pluralize }}.
+      {{ done_count }} finished so far.
+    </p>
+  </div>
 
-  <section class="section-block mb-8">
+  <section class="section-block mb-8 fade-in-up">
     <h2 class="scroll-mt-24 font-display font-bold text-lg mb-3">Quick access</h2>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {% for label, icon, url_name in quick_links %}
@@ -49,7 +51,7 @@
   </section>
 
   {% if trending_resources %}
-    <section class="section-block mb-8">
+    <section class="section-block mb-8 fade-in-up">
       <h2 class="scroll-mt-24 font-display font-bold text-lg mb-3">🔥 Trending materials this week</h2>
       <div class="flex gap-3 overflow-x-auto pb-1">
         {% for r in trending_resources %}
@@ -64,13 +66,13 @@
   {% endif %}
 
   {% if not course_count %}
-    <div class="empty rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">
+    <div class="empty fade-in-up rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">
       <p class="mb-3">You haven't added any courses yet. Start with one, then add its assignments and deadlines.</p>
       <a class="btn inline-block rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm" href="{% url 'course_create' %}">Add your first course</a>
     </div>
   {% else %}
     {% if overdue %}
-      <section class="section-block mb-8">
+      <section class="section-block mb-8 fade-in-up">
         <h2 class="late-heading scroll-mt-24 font-display font-bold text-lg mb-3 text-rose-600 dark:text-rose-400">Overdue</h2>
         <ul class="tasks space-y-2">
           {% for task in overdue %}
@@ -80,7 +82,7 @@
       </section>
     {% endif %}
 
-    <section class="section-block mb-8">
+    <section class="section-block mb-8 fade-in-up">
       <h2 class="scroll-mt-24 font-display font-bold text-lg mb-3">Due in the next 7 days</h2>
       {% if due_soon %}
         <ul class="tasks space-y-2">
