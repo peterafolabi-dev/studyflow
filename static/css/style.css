@@ -344,3 +344,13 @@ h2 { font-size: 1.2rem; }
 @media (prefers-reduced-motion: reduce){
   .grid > *, .tasks > *, .flex.gap-3 > * { animation: none; }
 }
+\n
+/* Fix dropdown menus being too transparent */
+#profile-menu, #resources-menu {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(16px) !important;
+    z-index: 9999 !important;
+}
+.dark #profile-menu, .dark #resources-menu {
+    background-color: rgba(15, 23, 42, 0.95) !important;
+}
