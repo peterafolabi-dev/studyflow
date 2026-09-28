@@ -121,8 +121,7 @@ def chat_api(request):
         if text:
             ChatMessage.objects.create(user=request.user, text=text, room=room)
             return JsonResponse({'status': 'ok'})
-        return JsonResponse({'status': 'error'}, status=400)
-    
+        return JsonResponse({'status': 'error'}, status=400)\n    
     messages = ChatMessage.objects.filter(room=room)[:50]
     data = []
     for msg in reversed(messages):
@@ -133,8 +132,7 @@ def chat_api(request):
             'is_me': msg.user == request.user
         })
     return JsonResponse({'messages': data})
-        return JsonResponse({'status': 'error'}, status=400)
-    
+        return JsonResponse({'status': 'error'}, status=400)\n    
     messages = ChatMessage.objects.all()[:50]
     data = []
     for msg in reversed(messages):
