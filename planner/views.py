@@ -47,6 +47,7 @@ def dashboard(request):
             last_downloaded_at__gte=timezone.now() - timedelta(days=7)
         ).order_by('-download_count')[:5],
         'quick_links': [
+            ('Campus Chat', '💬', 'global_chat'),
             ('Break Room', '🎮', 'break_room'),
             ('Catalogue', '📚', 'catalogue'),
             ('My Library', '🔖', 'my_library'),

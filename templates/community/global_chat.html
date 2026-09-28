@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Campus Chat · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-6 fade-in-up">
+  <h1 class="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Campus Chat 💬</h1>
+  <p class="text-slate-500 dark:text-slate-400 mt-1">Real-time global chat room for all FUT Minna students.</p>
+</div>
+
+<div class="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-3xl shadow-xl overflow-hidden flex flex-col fade-in-up h-[600px]">
+    
+    <div class="bg-brand-600 px-6 py-4 border-b border-brand-700 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <h2 class="font-bold text-white font-display text-lg">Global Room</h2>
+        </div>
+        <span class="text-brand-200 text-xs font-medium bg-brand-800/50 px-2 py-1 rounded-md">Live</span>
+    </div>
+
+    <!-- Messages Area -->
+    <div id="chat-messages" class="flex-1 p-6 overflow-y-auto flex flex-col gap-4 bg-slate-50/50 dark:bg-slate-950/30">
+        <!-- JS will populate -->
+    </div>
+
+    <!-- Input Area -->
+    <div class="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+        <form id="chat-form" class="flex gap-3">
+            {% csrf_token %}
+            <input type="text" id="chat-input" class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none transition-all" placeholder="Type your message..." autocomplete="off">
+            <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white p-3 rounded-2xl transition-transform hover:scale-105 shadow-md shadow-brand-500/20">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    let isScrolledToBottom = true;
+
+    chatMessages.addEventListener('scroll', () => {
+        isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 10;
+    });
+
+    async function fetchMessages() {
+        try {
+            const res = await fetch("{% url 'chat_api' %}");
+            const data = await res.json();
+            
+            chatMessages.innerHTML = data.messages.map(msg => `
+                <div class="flex flex-col max-w-[75%] ${msg.is_me ? 'self-end items-end' : 'self-start items-start'}">
+                    <span class="text-[10px] font-medium text-slate-400 mb-1 px-1">${msg.is_me ? 'You' : msg.username} • ${msg.time}</span>
+                    <div class="${msg.is_me ? 'bg-brand-600 text-white rounded-tl-2xl rounded-tr-sm rounded-b-2xl' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-tr-2xl rounded-tl-sm rounded-b-2xl'} px-4 py-2.5 text-sm shadow-sm">
+                        ${msg.text}
+                    </div>
+                </div>
+            `).join('');
+
+            if(isScrolledToBottom) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if(!text) return;
+        
+        chatInput.value = '';
+        try {
+            await fetch("{% url 'chat_api' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ text })
+            });
+            isScrolledToBottom = true;
+            fetchMessages();
+        } catch (e) { console.error(e); }
+    });
+
+    // Poll every 2 seconds
+    fetchMessages();
+    setInterval(fetchMessages, 2000);
+</script>
+{% endblock %}

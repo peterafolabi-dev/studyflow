@@ -103,3 +103,31 @@ def vote_thread(request, pk):
     ThreadVote.objects.update_or_create(user=request.user, thread=thread, defaults={'value': val})
     return redirect('thread_detail', pk=pk)
 
+
+from django.http import JsonResponse
+import json
+
+@login_required
+def global_chat(request):
+    return render(request, 'community/global_chat.html')
+
+@login_required
+def chat_api(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        text = data.get('text', '').strip()
+        if text:
+            ChatMessage.objects.create(user=request.user, text=text)
+            return JsonResponse({'status': 'ok'})
+        return JsonResponse({'status': 'error'}, status=400)
+    
+    messages = ChatMessage.objects.all()[:50]
+    data = []
+    for msg in reversed(messages):
+        data.append({
+            'username': msg.user.username,
+            'text': msg.text,
+            'time': msg.created_at.strftime("%H:%M"),
+            'is_me': msg.user == request.user
+        })
+    return JsonResponse({'messages': data})
