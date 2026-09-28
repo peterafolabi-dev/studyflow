@@ -296,3 +296,42 @@ h2 { font-size: 1.2rem; }
     animation-range: normal;
   }
 }
+
+/* Cascading (staggered) animations for grids and lists */
+.stagger-grid > * {
+  opacity: 0;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.stagger-grid > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-grid > *:nth-child(2) { animation-delay: 0.15s; }
+.stagger-grid > *:nth-child(3) { animation-delay: 0.25s; }
+.stagger-grid > *:nth-child(4) { animation-delay: 0.35s; }
+.stagger-grid > *:nth-child(5) { animation-delay: 0.45s; }
+.stagger-grid > *:nth-child(6) { animation-delay: 0.55s; }
+.stagger-grid > *:nth-child(n+7) { animation-delay: 0.65s; }
+
+/* Apply to common grid wrappers */
+.grid, .tasks, .flex.gap-3 {
+  opacity: 1; /* override any parent fading */
+}
+.grid > *, .tasks > *, .flex.gap-3 > * {
+  opacity: 0;
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.grid > *:nth-child(1), .tasks > *:nth-child(1), .flex.gap-3 > *:nth-child(1) { animation-delay: 0.05s; }
+.grid > *:nth-child(2), .tasks > *:nth-child(2), .flex.gap-3 > *:nth-child(2) { animation-delay: 0.12s; }
+.grid > *:nth-child(3), .tasks > *:nth-child(3), .flex.gap-3 > *:nth-child(3) { animation-delay: 0.19s; }
+.grid > *:nth-child(4), .tasks > *:nth-child(4), .flex.gap-3 > *:nth-child(4) { animation-delay: 0.26s; }
+.grid > *:nth-child(5), .tasks > *:nth-child(5), .flex.gap-3 > *:nth-child(5) { animation-delay: 0.33s; }
+.grid > *:nth-child(6), .tasks > *:nth-child(6), .flex.gap-3 > *:nth-child(6) { animation-delay: 0.40s; }
+.grid > *:nth-child(n+7), .tasks > *:nth-child(n+7), .flex.gap-3 > *:nth-child(n+7) { animation-delay: 0.47s; }
+
+/* Let items animate when they enter viewport if scroll-timeline is supported */
+@supports (animation-timeline: view()) {
+  .grid > *, .tasks > *, .flex.gap-3 > *, .fade-in-up {
+    animation-timeline: view();
+    animation-range: entry 5% cover 15%;
+    animation-delay: 0s !important; /* Stagger is naturally handled by scrolling */
+  }
+}
