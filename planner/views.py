@@ -326,12 +326,8 @@ def ai_chat_api(request):
             
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(user_message)
-            except Exception:
-                model = genai.GenerativeModel('gemini-pro')
-                response = model.generate_content(user_message)
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content(user_message)
             
             return JsonResponse({'reply': response.text})
         except Exception as e:
