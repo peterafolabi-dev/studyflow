@@ -8,3 +8,4 @@ whitenoise
 gunicorn
 google-generativeai
 django-allauth
+python-dotenv
