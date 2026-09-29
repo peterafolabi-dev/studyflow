@@ -6,7 +6,7 @@ from django.urls import include, path
 from . import pwa
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),\n    path('accounts/', include('allauth.urls')),
     path('manifest.webmanifest', pwa.manifest, name='pwa_manifest'),
     path('sw.js', pwa.service_worker, name='pwa_service_worker'),
     path('', include('accounts.urls')),
