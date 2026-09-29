@@ -206,3 +206,6 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# Fix for Render HTTPS proxy (prevents OAuth callback 500 errors)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
