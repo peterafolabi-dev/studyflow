@@ -326,14 +326,12 @@ def ai_chat_api(request):
             
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            prompt = f"""You are a highly intelligent, friendly AI study assistant inside a university app called StudyFlow. 
-You help students with their homework, explain complex topics, and give study advice. 
-Keep your answers concise, encouraging, and formatted with HTML tags (like <b>, <i>, <br>, <ul>, <li>) so it looks good in a chat bubble. Do not use markdown backticks or markdown headers, just use raw text and simple HTML tags.
-Student's message: {user_message}"""
-
-            response = model.generate_content(prompt)
+            try:
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(prompt)
+            except Exception:
+                model = genai.GenerativeModel('gemini-pro')
+                response = model.generate_content(prompt)
             
             return JsonResponse({'reply': response.text})
         except Exception as e:
