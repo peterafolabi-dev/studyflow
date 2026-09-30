@@ -154,49 +154,115 @@
 
         <div class="ml-auto relative" id="profile-menu-wrapper">
           <button id="profile-menu-btn" type="button"
-                  class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-brand-200 dark:border-slate-700 hover:bg-brand-100 dark:hover:bg-slate-800"
+                  class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-brand-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 hover:bg-brand-50 dark:hover:bg-slate-800 transition shadow-sm"
                   aria-haspopup="true" aria-expanded="false">
-            <span class="h-7 w-7 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-semibold">
+            <span class="h-7 w-7 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-bold shadow-sm shadow-brand-500/20">
               {{ user.username|slice:":1"|upper }}
             </span>
-            <span class="hidden md:inline text-sm font-medium">{{ user.username }}</span>
+            <span class="hidden md:inline text-sm font-semibold text-slate-800 dark:text-slate-200">{{ user.username }}</span>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-700">
+              Free
+            </span>
             <svg class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
           </button>
 
           <div id="profile-menu" role="menu"
-               class="hidden absolute right-0 mt-2 w-56 rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg py-2 text-sm max-h-[70vh] overflow-y-auto">
-            <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">My Profile</a>
-            <a href="{% url 'edit_profile' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Edit Profile</a>
-            <a href="{% url 'notifications' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Notifications</a>
+               class="hidden absolute right-0 mt-2 w-64 rounded-2xl border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl py-2 text-sm max-h-[80vh] overflow-y-auto z-50 custom-scrollbar origin-top-right">
             
-            <a href="{% url 'break_room' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Break Room 🎮</a>
-            <a href="{% url 'study_room' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Pomodoro Timer</a>
-            <a href="{% url 'flashcards' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Flashcards</a>
-            <a href="{% url 'find_buddies' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Find Buddies</a>
-            <a href="{% url 'my_library' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">My Library</a>
-            <a href="{% url 'my_loans' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">
-              My Loans
-              {% if overdue_loan_count %}<span class="ml-1 inline-block h-2 w-2 rounded-full bg-rose-500 align-middle"></span>{% endif %}
-            </a>
-            <a href="{% url 'timetable' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Timetable</a>
-            <a href="{% url 'gpa_calculator' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">GPA Calculator</a>
-            <a href="{% url 'thread_list' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Study Groups</a>
-            <a href="{% url 'export_calendar' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Export calendar (.ics)</a>
-            <a href="{% url 'postgraduate' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Postgraduate</a>
-
-            <div class="flex items-center justify-between px-4 py-2">
-              <span>Dark mode</span>
-              <button type="button" id="theme-toggle" aria-pressed="false"
-                      class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-300 dark:bg-brand-600 transition-colors">
-                <span id="theme-toggle-dot" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 dark:translate-x-6"></span>
-              </button>
+            <!-- User Info Card with Free badge -->
+            <div class="px-4 py-3 border-b border-brand-100 dark:border-slate-800 bg-brand-50/60 dark:bg-slate-800/60 mb-1">
+              <div class="flex items-center gap-3">
+                <span class="h-9 w-9 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold shadow-md shadow-brand-500/20 shrink-0">
+                  {{ user.username|slice:":1"|upper }}
+                </span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-1">
+                    <p class="font-bold text-sm text-slate-800 dark:text-white truncate">{{ user.username }}</p>
+                    <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-300 dark:border-emerald-800 shrink-0">
+                      Free
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ user.email|default:"FUT Minna Student" }}</p>
+                </div>
+              </div>
             </div>
 
-            <hr class="my-1 border-brand-100 dark:border-slate-700">
-            <form method="post" action="{% url 'logout' %}">
-              {% csrf_token %}
-              <button type="submit" class="w-full text-left px-4 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800">Log out</button>
-            </form>
+            <div class="px-1.5 py-1 space-y-0.5">
+              <a href="{% url 'profile' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">👤</span> <span>My Profile</span>
+              </a>
+              <a href="{% url 'edit_profile' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">✏️</span> <span>Edit Profile</span>
+              </a>
+              <a href="{% url 'notifications' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">🔔</span> <span>Notifications</span>
+              </a>
+            </div>
+
+            <div class="my-1 border-t border-brand-100 dark:border-slate-800"></div>
+
+            <div class="px-1.5 py-1 space-y-0.5">
+              <a href="{% url 'break_room' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">🎮</span> <span>Break Room</span>
+              </a>
+              <a href="{% url 'study_room' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">⏱️</span> <span>Pomodoro Timer</span>
+              </a>
+              <a href="{% url 'flashcards' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">🃏</span> <span>Flashcards</span>
+              </a>
+              <a href="{% url 'find_buddies' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">👥</span> <span>Find Buddies</span>
+              </a>
+              <a href="{% url 'my_library' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">📖</span> <span>My Library</span>
+              </a>
+              <a href="{% url 'my_loans' %}" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="flex items-center gap-2.5">
+                  <span class="text-base">🏛️</span> <span>My Loans</span>
+                </span>
+                {% if overdue_loan_count %}
+                  <span class="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
+                {% endif %}
+              </a>
+              <a href="{% url 'timetable' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">🗓️</span> <span>Timetable</span>
+              </a>
+              <a href="{% url 'gpa_calculator' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">📊</span> <span>GPA Calculator</span>
+              </a>
+              <a href="{% url 'thread_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">💬</span> <span>Study Groups</span>
+              </a>
+              <a href="{% url 'export_calendar' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">📅</span> <span>Export calendar (.ics)</span>
+              </a>
+              <a href="{% url 'postgraduate' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">🎓</span> <span>Postgraduate</span>
+              </a>
+            </div>
+
+            <div class="my-1 border-t border-brand-100 dark:border-slate-800"></div>
+
+            <div class="px-1.5 py-1">
+              <div class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-slate-800 transition font-medium">
+                <span class="flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
+                  <span class="text-base">🌙</span> <span>Dark mode</span>
+                </span>
+                <button type="button" id="theme-toggle" aria-pressed="false"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-300 dark:bg-brand-600 transition-colors focus:outline-none">
+                  <span id="theme-toggle-dot" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 dark:translate-x-6"></span>
+                </button>
+              </div>
+
+              <form method="post" action="{% url 'logout' %}" class="mt-1">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition text-left font-medium">
+                  <span class="text-base">🚪</span> <span>Log out</span>
+                </button>
+              </form>
+            </div>
+
           </div>
         </div>
       {% endif %}
@@ -275,19 +341,69 @@
 
 
   <script>
+    // Framer Motion helper for fluid spring dropdowns
+    function openFramerDropdown(menu) {
+      menu.classList.remove('hidden');
+      if (window.Motion && window.Motion.animate) {
+        window.Motion.animate(
+          menu,
+          { opacity: [0, 1], scale: [0.93, 1], y: [-10, 0] },
+          { duration: 0.25, easing: [0.16, 1, 0.3, 1] }
+        );
+        var items = menu.querySelectorAll('a, form, .user-badge');
+        if (items.length) {
+          window.Motion.animate(
+            items,
+            { opacity: [0, 1], x: [-6, 0] },
+            { delay: window.Motion.stagger(0.012, { start: 0.03 }), duration: 0.18, easing: [0.16, 1, 0.3, 1] }
+          );
+        }
+      }
+    }
+
+    function closeFramerDropdown(menu, callback) {
+      if (menu.classList.contains('hidden')) return;
+      if (window.Motion && window.Motion.animate) {
+        var anim = window.Motion.animate(
+          menu,
+          { opacity: [1, 0], scale: [1, 0.95], y: [0, -6] },
+          { duration: 0.16, easing: [0.32, 0, 0.67, 0] }
+        );
+        anim.finished.then(function () {
+          menu.classList.add('hidden');
+          if (callback) callback();
+        }).catch(function () {
+          menu.classList.add('hidden');
+        });
+      } else {
+        menu.classList.add('hidden');
+        if (callback) callback();
+      }
+    }
+
     // Profile dropdown
     (function () {
       var btn = document.getElementById('profile-menu-btn');
       var menu = document.getElementById('profile-menu');
       if (!btn || !menu) return;
+
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
-        var isOpen = !menu.classList.contains('hidden');
-        menu.classList.toggle('hidden');
-        btn.setAttribute('aria-expanded', String(!isOpen));
+        var isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+          openFramerDropdown(menu);
+          btn.setAttribute('aria-expanded', 'true');
+        } else {
+          closeFramerDropdown(menu);
+          btn.setAttribute('aria-expanded', 'false');
+        }
       });
+
       document.addEventListener('click', function (e) {
-        if (!menu.contains(e.target) && e.target !== btn) menu.classList.add('hidden');
+        if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+          closeFramerDropdown(menu);
+          btn.setAttribute('aria-expanded', 'false');
+        }
       });
     })();
 
@@ -296,30 +412,50 @@
       var btn = document.getElementById('resources-menu-btn');
       var menu = document.getElementById('resources-menu');
       if (!btn || !menu) return;
+
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
-        var isOpen = !menu.classList.contains('hidden');
-        menu.classList.toggle('hidden');
-        btn.setAttribute('aria-expanded', String(!isOpen));
+        var isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+          openFramerDropdown(menu);
+          btn.setAttribute('aria-expanded', 'true');
+        } else {
+          closeFramerDropdown(menu);
+          btn.setAttribute('aria-expanded', 'false');
+        }
       });
+
       document.addEventListener('click', function (e) {
-        if (!menu.contains(e.target) && e.target !== btn) menu.classList.add('hidden');
+        if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+          closeFramerDropdown(menu);
+          btn.setAttribute('aria-expanded', 'false');
+        }
       });
     })();
 
-    // Register the (minimal) service worker so the app is installable
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('{% url "pwa_service_worker" %}', { scope: '/' }).catch(function () {});
-      });
-    }
-
-    // Close any open dropdown on Escape
+    // Close on Escape
     document.addEventListener('keydown', function (e) {
       if (e.key !== 'Escape') return;
       document.querySelectorAll('#profile-menu, #resources-menu').forEach(function (menu) {
-        menu.classList.add('hidden');
+        closeFramerDropdown(menu);
       });
+    });
+
+    // Framer Motion spring interactions on buttons and interactive cards
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.Motion && window.Motion.animate) {
+        document.querySelectorAll('button:not(#theme-toggle):not(#profile-theme-toggle), .btn, a.btn, .sf-flashcard').forEach(function (el) {
+          el.addEventListener('pointerdown', function () {
+            window.Motion.animate(el, { scale: 0.96 }, { duration: 0.1, easing: [0.16, 1, 0.3, 1] });
+          });
+          el.addEventListener('pointerup', function () {
+            window.Motion.animate(el, { scale: 1 }, { duration: 0.2, easing: [0.16, 1, 0.3, 1] });
+          });
+          el.addEventListener('pointerleave', function () {
+            window.Motion.animate(el, { scale: 1 }, { duration: 0.2, easing: [0.16, 1, 0.3, 1] });
+          });
+        });
+      }
     });
 
     // Light/dark toggle

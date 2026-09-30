@@ -13,7 +13,7 @@
         Create custom decks, add revision questions, and quiz yourself with active recall.
       </p>
     </div>
-    <button onclick="document.getElementById('new-deck-modal').style.display='flex'"
+    <button onclick="openNewDeckModal()"
             class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2.5 text-sm shrink-0 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transition-all hover:-translate-y-0.5 flex items-center gap-2">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
@@ -30,7 +30,7 @@
       <p class="text-sm max-w-sm mb-6 text-slate-500 dark:text-slate-400">
         Flashcards help you memorize course definitions, formulas, and concepts fast.
       </p>
-      <button onclick="document.getElementById('new-deck-modal').style.display='flex'"
+      <button onclick="openNewDeckModal()"
               class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2.5 text-sm shadow-lg shadow-brand-500/20 transition-all hover:scale-105">
         + Create Your First Deck
       </button>
@@ -187,7 +187,7 @@
           New Flashcard Deck
         </h3>
       </div>
-      <button onclick="document.getElementById('new-deck-modal').style.display='none'"
+      <button onclick="closeNewDeckModal()"
               class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center text-xs text-slate-500 dark:text-slate-400 transition">
         ✕
       </button>
