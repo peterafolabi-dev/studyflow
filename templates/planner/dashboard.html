@@ -10,6 +10,35 @@
     </p>
   </div>
 
+  {% if due_flashcards_count > 0 %}
+    <div class="mb-8 rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-r from-amber-50/90 via-orange-50/60 to-amber-50/40 dark:from-amber-950/40 dark:via-slate-900 dark:to-orange-950/30 p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm fade-in-up">
+      <div class="flex items-center gap-3.5">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-md shadow-amber-500/25 shrink-0">
+          🃏
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200">
+              Spaced Repetition
+            </span>
+            <span class="text-xs text-amber-600 dark:text-amber-400 font-semibold animate-pulse">&bull; Due Today</span>
+          </div>
+          <h2 class="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-white mt-0.5">
+            {{ due_flashcards_count }} Flashcard{{ due_flashcards_count|pluralize }} Ready for Review
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Reinforce retention with SM-2 scheduled active recall.
+          </p>
+        </div>
+      </div>
+
+      <a href="{% url 'flashcards' %}?queue=due"
+         class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-105 shrink-0">
+        <span>🚀</span> Review Due Cards ({{ due_flashcards_count }}) &rarr;
+      </a>
+    </div>
+  {% endif %}
+
   <!-- BENTO BOX GRID LAYOUT -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
