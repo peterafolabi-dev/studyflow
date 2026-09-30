@@ -329,6 +329,27 @@ function flipCard(cardId) {
   document.getElementById('inner-' + cardId).classList.toggle('flipped');
 }
 
+function openNewDeckModal() {
+  const m = document.getElementById('new-deck-modal');
+  m.style.display = 'flex';
+  const panel = m.querySelector('div');
+  if (window.Motion && window.Motion.animate) {
+    window.Motion.animate(m, { opacity: [0, 1] }, { duration: 0.2 });
+    window.Motion.animate(panel, { opacity: [0, 1], scale: [0.92, 1], y: [16, 0] }, { duration: 0.28, easing: [0.16, 1, 0.3, 1] });
+  }
+}
+
+function closeNewDeckModal() {
+  const m = document.getElementById('new-deck-modal');
+  const panel = m.querySelector('div');
+  if (window.Motion && window.Motion.animate) {
+    window.Motion.animate(panel, { opacity: [1, 0], scale: [1, 0.95], y: [0, 10] }, { duration: 0.16 });
+    window.Motion.animate(m, { opacity: [1, 0] }, { duration: 0.16 }).finished.then(() => m.style.display = 'none');
+  } else {
+    m.style.display = 'none';
+  }
+}
+
 // ── Quiz Mode ──
 let quizCards = [], quizIdx = 0, quizShowingBack = false;
 
@@ -341,7 +362,13 @@ function startQuiz(deckId) {
   }));
   if (!quizCards.length) return;
   quizIdx = 0; quizShowingBack = false;
-  document.getElementById('quiz-modal').style.display = 'flex';
+  const m = document.getElementById('quiz-modal');
+  m.style.display = 'flex';
+  const panel = m.querySelector('div');
+  if (window.Motion && window.Motion.animate) {
+    window.Motion.animate(m, { opacity: [0, 1] }, { duration: 0.2 });
+    window.Motion.animate(panel, { opacity: [0, 1], scale: [0.92, 1], y: [16, 0] }, { duration: 0.28, easing: [0.16, 1, 0.3, 1] });
+  }
   renderQuizCard();
 }
 
@@ -376,7 +403,14 @@ function quizNav(dir) {
 }
 
 function closeQuiz() {
-  document.getElementById('quiz-modal').style.display = 'none';
+  const m = document.getElementById('quiz-modal');
+  const panel = m.querySelector('div');
+  if (window.Motion && window.Motion.animate) {
+    window.Motion.animate(panel, { opacity: [1, 0], scale: [1, 0.95], y: [0, 10] }, { duration: 0.16 });
+    window.Motion.animate(m, { opacity: [1, 0] }, { duration: 0.16 }).finished.then(() => m.style.display = 'none');
+  } else {
+    m.style.display = 'none';
+  }
 }
 </script>
 {% endblock %}
