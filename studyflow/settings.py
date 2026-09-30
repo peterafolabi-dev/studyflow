@@ -234,3 +234,5 @@ LOGGING = {
 }
 
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.DebugSocialAccountAdapter'
