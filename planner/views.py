@@ -351,13 +351,13 @@ Respond in PLAIN TEXT ONLY. Do not use Markdown, HTML tags, or code blocks. Keep
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message}
             ],
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
         )
         reply = chat_completion.choices[0].message.content
         return JsonResponse({'reply': reply})
     except Exception as e:
         logger.error('AI chat error: %s', e, exc_info=True)
-        return JsonResponse({'reply': 'Oops, I encountered an error: ' + str(e)}, status=500)
+        return JsonResponse({'reply': 'Oops, I encountered an error connecting to Groq! Check your API key or model.'}, status=500)
 
 
 @login_required
