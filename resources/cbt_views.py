@@ -167,7 +167,11 @@ def cbt_submit(request, bank_id):
         completed_at=timezone.now(),
     )
 
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+    if (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('Accept', '')
+        or getattr(request, 'content_type', '') == 'application/json'
+    ):
         return JsonResponse({
             'success': True,
             'attempt_id': attempt.id,
