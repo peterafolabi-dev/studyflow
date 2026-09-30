@@ -10,61 +10,55 @@ StudyFlow is an all-in-one study companion that combines smart planning, AI assi
 
 | Feature | Description |
 |---|---|
-| 🤖 AI Study Coach | Groq-powered chatbot (Llama 3.1) with full conversation memory, math rendering, and flashcard generation |
-| 📋 Dashboard | Bento-style overview of tasks, courses, recent resources, and quick links |
+| 🤖 AI Study Coach | Groq-powered assistant with conversation memory, LaTeX math rendering, and active recall assistance |
+| 📋 Dashboard | Bento-style overview of tasks, courses, recent resources, and quick tools |
 | 📚 Catalogue | Global library of books students can browse, save, and read online |
 | 🏛️ IBB Library | Reserve physical books at FUT Minna's IBB Library — track loans in real time |
 | 📁 Resources | Upload and download Past Questions, Notes, Theses, and Lecture Slides |
 | ⏱️ Pomodoro Timer | Study Room with a focus timer, Deep Focus + Lo-Fi Spotify playlists, and session logging |
-| 🃏 Flashcards | Create, flip, and quiz yourself on your own flashcard decks |
-| 📊 GPA Calculator | Calculate your semester and cumulative GPA by course |
+| 🃏 Flashcards | Create custom decks, flip cards with 3D animation, and quiz yourself with active recall |
+| 💬 Campus Chat & Groups | Live campus chat rooms and course-based study groups with 24/7 AI Coach answers |
+| 📊 GPA Calculator | 5.0 scale calculator with localStorage persistence |
 | 🗓️ Timetable | Build and manage your weekly class timetable |
-| 👥 Study Groups | Join or create groups for specific courses |
-| 🎮 Break Room | Mini-games for mental breaks between study sessions |
-| 🔔 Notifications | In-app notification system |
-| 👤 User Profiles | Public profiles, edit profile, find study buddies |
-| 🔐 Google OAuth | Sign in with Google via django-allauth |
-| 🌙 Dark Mode | Toggle between light and dark themes, persisted in localStorage |
-| 📱 PWA | Installable as a Progressive Web App on mobile devices |
+| 🎮 Break Room | 2048 mini-game with persistent high score for 5-minute Pomodoro breaks |
+| 🔐 Google OAuth | 1-tap sign in with Google via django-allauth |
+| 🌙 Dark Mode | Instant light/dark theme toggle, persisted in localStorage |
+| ✨ Framer Motion | Fluid spring physics animations and micro-interactions throughout |
+| 📱 Mobile & Desktop | Fully responsive layout optimized for smartphones, tablets, and laptops |
 
 ---
 
-## 🤖 AI Study Coach (Details)
+## 🤖 24/7 AI Study Coach
 
-The AI assistant is powered by **Groq API** (ultra-fast LLM inference) running **Llama 3.1**.
+The AI assistant is powered by **Groq API** (ultra-fast LLM inference) running `openai/gpt-oss-20b`.
 
-It is trained to:
-- Answer questions on any academic subject (math, science, engineering, coding)
-- Render **LaTeX math equations** using **KaTeX** directly in the chat
-- Generate flashcards in a clean structured format
-- Create personalized study plans and Pomodoro schedules
-- Summarize readings and explain concepts step by step
-- Know every feature inside StudyFlow and guide students to the right tool
-
-**Security:**
-- Endpoint protected with `@login_required` — no unauthenticated access
-- Conversation history stored client-side and sent per-turn for full multi-turn memory
-- HTML output sanitized with **DOMPurify** to prevent XSS
+It is designed to:
+- Answer academic questions across engineering, math, coding, and sciences
+- Step into study group discussions when classmates aren't online
+- Render **LaTeX math equations** using **KaTeX** ($...$ for inline, $$...$$ for display)
+- Generate revision flashcards with structured question-answer pairs
+- Guide students through derivations step-by-step
+- Run seamlessly without requiring upfront login
 
 ---
 
 ## 🔒 File Upload Security
 
-Resource uploads are validated at **two layers**:
+Resource uploads are strictly validated at **two layers**:
 
 **Frontend (immediate feedback):**
 - File extension and MIME type checked in JavaScript before submission
-- Max file size enforced (default 10 MB) with a friendly error message
-- Drag-and-drop zone with visual feedback
+- Max file size enforced (default 10 MB) with clear validation errors
+- Drag-and-drop zone with instant visual feedback
 
 **Backend (authoritative):**
 - Extension and MIME type validated against configurable allowlist
-- **Magic bytes** checked (e.g. `%PDF-` for PDFs) — renamed `.exe` files are rejected
-- A **random UUID filename** is generated server-side — original client filename is never used for storage
-- Returns HTTP 400 with a clear error message on rejection
+- **Magic bytes** inspected (e.g. `%PDF-` for PDFs) — renamed `.exe` files are blocked immediately
+- A **random UUID filename** is generated server-side — client filenames are never used for storage
+- Returns HTTP 400 with a clear error message on invalid files
 
-Allowed types are configured in one place (`.env`):
-```
+Allowed types are configured in `.env`:
+```env
 ALLOWED_TYPES=PDF
 # or: ALLOWED_TYPES=PDF, PNG, JPG, JPEG
 MAX_UPLOAD_SIZE_MB=10
@@ -77,16 +71,32 @@ MAX_UPLOAD_SIZE_MB=10
 | Layer | Technology |
 |---|---|
 | Backend | Python 3.12, Django 6.1.1 |
-| AI / LLM | Groq API (llama-3.1-8b) |
-| Frontend | Tailwind CSS (CDN), Vanilla JS |
+| AI / LLM | Groq API (`openai/gpt-oss-20b`) |
+| Frontend | Tailwind CSS, Framer Motion (Motion engine), Vanilla JS |
 | Auth | django-allauth (Google OAuth + Email) |
 | Database | SQLite (dev) / PostgreSQL (production) |
-| Deployment | Render (Web Service + PostgreSQL) |
+| Deployment | Render (Web Service + Managed PostgreSQL) |
 | Static Files | WhiteNoise |
 | PDF Generation | ReportLab |
 | Math Rendering | KaTeX |
 | Markdown | marked.js + DOMPurify |
-| PWA | Django PWA manifest + service worker |
+| PWA | Web App Manifest + Service Worker |
+
+---
+
+## 📸 Screenshots
+
+| Landing & Mobile Experience | Courses Hub |
+|:---:|:---:|
+| ![Landing & Mobile](screenshots/01-landing-mobile.png) | ![Courses](screenshots/02-courses-mobile.png) |
+
+| Academic Research Hub | Lecture Slides Hub |
+|:---:|:---:|
+| ![Research Papers](screenshots/03-research.png) | ![Lecture Slides](screenshots/04-lecture-slides.png) |
+
+| Theses & Papers Repository |
+|:---:|
+| ![Theses & Papers](screenshots/05-theses-papers.png) |
 
 ---
 
@@ -101,7 +111,7 @@ MAX_UPLOAD_SIZE_MB=10
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/studyflow.git
+git clone https://github.com/peterafolabi-dev/studyflow.git
 cd studyflow
 ```
 
@@ -126,7 +136,7 @@ cp .env.example .env
 ```env
 # AI
 GROQ_API_KEY=your_groq_api_key_here
-MODEL_NAME=openai/gpt-oss-20b    # or any active Groq model
+MODEL_NAME=openai/gpt-oss-20b
 
 # Upload restrictions
 ALLOWED_TYPES=PDF
@@ -168,13 +178,13 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
 ```
 studyflow/
 ├── accounts/          # User auth, profiles, notifications
-├── community/         # Study groups, thread discussions, find buddies
+├── community/         # Study groups, thread discussions, find buddies, campus chat
 ├── library/           # Digital catalogue and book reading
-├── planner/           # Dashboard, tasks, courses, flashcards, GPA, study room
+├── planner/           # Dashboard, tasks, courses, flashcards, GPA, study room, break room
 ├── resources/         # File uploads (past questions, notes, etc.), IBB Library
 ├── studyflow/         # Django project settings and upload config
 ├── templates/         # All Django HTML templates
-├── static/            # CSS and PWA icons
+├── static/            # CSS, custom scrollbars, and PWA icons
 ├── screenshots/       # App screenshots for the README
 ├── requirements.txt
 ├── build.sh
@@ -183,25 +193,12 @@ studyflow/
 
 ---
 
-## 📸 Screenshots
-
-| Dashboard | Courses |
-|---|---|
-| ![Dashboard](screenshots/02-dashboard.png) | ![Courses](screenshots/03-courses.png) |
-
-| Course Detail | Mobile |
-|---|---|
-| ![Course Detail](screenshots/04-course-detail.png) | ![Mobile](screenshots/05-dashboard-mobile.png) |
-
----
-
 ## 🛡️ Security Highlights
 
-- **AI endpoint:** Protected by `@login_required` + `@require_POST` — no anonymous access
 - **CSRF:** Django CSRF tokens enforced on all state-changing requests
-- **XSS:** AI chat output sanitized with DOMPurify before DOM insertion
-- **Upload security:** Magic-byte file content validation + UUID safe filenames
-- **OAuth:** Handled via django-allauth with PyJWT
+- **XSS Prevention:** AI chat output sanitized with DOMPurify before DOM insertion
+- **Upload Security:** Magic-byte file content validation + UUID safe filenames
+- **OAuth 2.0:** Handled securely via django-allauth with PyJWT
 - **HTTPS:** Enforced in production via Render + Django secure settings (`SECURE_SSL_REDIRECT`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`)
 
 ---
@@ -214,6 +211,6 @@ MIT License — free to use, modify, and distribute.
 
 ## 🙏 Built by
 
-A FUT Minna Computer Science student building tools that actually help students win. ⚔️
+A FUT Minna **Engineering** student building tools that actually help students win. ⚔️
 
 > *"Every student who opens this app is an athlete in training, and their studies are the arena."*
