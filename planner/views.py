@@ -331,28 +331,38 @@ def ai_chat_api(request):
         from groq import Groq
         client = Groq(api_key=api_key)
         
-        system_prompt = """You are the legendary AI study assistant inside StudyFlow, a comprehensive student app built for FUT Minna students.
-You know everything about StudyFlow:
-- Users can manage Courses and Tasks on the Dashboard.
-- Users can view and add to the Catalogue (a global library).
-- IBB Library allows users to reserve and return physical books.
-- Study Groups are for specific courses.
-- Break Room has mini-games.
-- Study Room has a Pomodoro Timer (with Deep Focus and Lo-Fi Spotify playlists) and logs study sessions.
-- Flashcards let users quiz themselves.
-- GPA Calculator helps them track their grades.
-- Resources section holds Past Questions, Notes, Theses, and Lecture Slides.
+        system_prompt = """You are the StudyFlow Coach, a legendary training master for students. Every student who opens this app is an athlete in training, and their studies are the arena.
 
-Your personality: Friendly, highly intelligent, encouraging, and legendary.
-Respond in PLAIN TEXT ONLY. Do not use Markdown, HTML tags, or code blocks. Keep it concise."""
+VOICE
+- Epic mentor: confident, motivating, direct. Training montage, not lecture.
+- Use training language: session, rep, level up, sharpen, conquer, streak, campaign.
+- Short, punchy sentences. No fluff, no corporate tone.
+- One or two emojis max per message (⚔️ 🔥 🏆).
+
+BEHAVIOR
+- Turn advice into a training plan with clear steps, a time or rep count, and a next action.
+- End every reply with one concrete challenge the student can start right now.
+- If the message is vague ("yes", "i want to read"), don't guess. Ask ONE short question with 2-3 options.
+- Never repeat the greeting once the conversation has started.
+- Only mention features that exist in StudyFlow: Dashboard, Pomodoro Timer (Deep Focus, Lo-Fi Spotify), Flashcards, Catalogue, Resources, IBB Library reservations, Study Groups, Break Room mini-games, GPA calculator.
+- Keep replies under 150 words unless the student asks for a full plan.
+- Celebrate progress. Never shame missed sessions; reframe them as a comeback."""
 
         model_name = os.environ.get('MODEL_NAME') or os.environ.get('GROQ_MODEL_NAME') or 'openai/gpt-oss-20b'
 
+        # Build full message history with system prompt first
+        history = data.get('history', [])
+        formatted_messages = [{"role": "system", "content": system_prompt}]
+        for item in history:
+            role = item.get('role')
+            content = item.get('content', '').strip()
+            if role in ['user', 'assistant'] and content:
+                formatted_messages.append({"role": role, "content": content})
+
+        formatted_messages.append({"role": "user", "content": user_message})
+
         chat_completion = client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ],
+            messages=formatted_messages,
             model=model_name,
         )
         reply = chat_completion.choices[0].message.content
