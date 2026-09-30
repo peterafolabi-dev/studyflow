@@ -357,7 +357,7 @@ Respond in PLAIN TEXT ONLY. Do not use Markdown, HTML tags, or code blocks. Keep
         return JsonResponse({'reply': reply})
     except Exception as e:
         logger.error('AI chat error: %s', e, exc_info=True)
-        return JsonResponse({'reply': 'Oops, I encountered an error connecting to Groq! Check your API key or model.'}, status=500)
+        return JsonResponse({'reply': f'Oops, error: {type(e).__name__} - {e}'}, status=500)
 
 
 @login_required
