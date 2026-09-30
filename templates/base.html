@@ -49,6 +49,53 @@
   </script>
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <!-- Markdown parser and sanitizer for AI chat -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <style>
+    .chat-bubble-content {
+      line-height: 1.5;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      max-width: 100%;
+    }
+    .chat-bubble-content p {
+      margin-bottom: 8px;
+    }
+    .chat-bubble-content p:last-child {
+      margin-bottom: 0;
+    }
+    .chat-bubble-content ul, .chat-bubble-content ol {
+      margin-top: 4px;
+      margin-bottom: 8px;
+      padding-left: 20px;
+    }
+    .chat-bubble-content ul {
+      list-style-type: disc;
+    }
+    .chat-bubble-content ol {
+      list-style-type: decimal;
+    }
+    .chat-bubble-content li {
+      margin-bottom: 8px;
+    }
+    .chat-bubble-content li:last-child {
+      margin-bottom: 0;
+    }
+    .chat-bubble-content strong {
+      font-weight: 600;
+    }
+    .chat-bubble-content code {
+      font-family: monospace;
+      background-color: rgba(0,0,0,0.06);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    .dark .chat-bubble-content code {
+      background-color: rgba(255,255,255,0.1);
+    }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col bg-brand-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors">
 
@@ -303,7 +350,7 @@
         </div>
         
         <div id="ai-chat-messages" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 bg-slate-50 dark:bg-slate-950">
-            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-800 dark:text-slate-200 self-start max-w-[85%] shadow-sm">
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-800 dark:text-slate-200 self-start max-w-[85%] shadow-sm chat-bubble-content">
                 Welcome to the arena. I'm your StudyFlow Coach. What are we conquering today? ⚔️
             </div>
         </div>
@@ -335,6 +382,19 @@
         return div.innerHTML;
     }
 
+    function renderMarkdown(rawText) {
+        if (!rawText) return '';
+        try {
+            if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
+                marked.use({ breaks: true, gfm: true });
+                return DOMPurify.sanitize(marked.parse(rawText));
+            }
+        } catch (e) {
+            console.error('Markdown parse error:', e);
+        }
+        return escapeHtml(rawText).replace(/\n/g, '<br>');
+    }
+
     if(chatBtn && chatModal) {
         chatBtn.addEventListener('click', () => {
             chatModal.classList.remove('hidden');
@@ -354,7 +414,7 @@
                 if(!msg) return;
 
                 chatMessages.innerHTML += `
-                    <div class="bg-brand-600 text-white rounded-xl rounded-tr-none p-3 text-sm self-end max-w-[85%] shadow-sm">
+                    <div class="bg-brand-600 text-white rounded-xl rounded-tr-none p-3 text-sm self-end max-w-[85%] shadow-sm whitespace-pre-wrap leading-relaxed">
                         ${escapeHtml(msg)}
                     </div>
                 `;
@@ -388,8 +448,8 @@
                     if (t) t.remove();
                     
                     chatMessages.innerHTML += `
-                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-800 dark:text-slate-200 self-start max-w-[85%] shadow-sm">
-                            ${escapeHtml(data.reply)}
+                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-800 dark:text-slate-200 self-start max-w-[85%] shadow-sm chat-bubble-content">
+                            ${renderMarkdown(data.reply)}
                         </div>
                     `;
                     chatMessages.scrollTop = chatMessages.scrollHeight;
