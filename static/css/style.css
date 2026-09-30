@@ -12,23 +12,66 @@ body {
   background-attachment: fixed;
 }
 
-/* Make all cards glassmorphic automatically */
-div.rounded-xl, div.rounded-2xl, div.rounded-3xl, section.section-block {
+/* Make cards glassmorphic, excluding dropdown menus and modals */
+div.rounded-xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
+div.rounded-2xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
+div.rounded-3xl, section.section-block {
   backdrop-filter: blur(12px);
   background-color: rgba(255, 255, 255, 0.7) !important;
   box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.05);
 }
-.dark div.rounded-xl, .dark div.rounded-2xl, .dark div.rounded-3xl, .dark section.section-block {
+.dark div.rounded-xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
+.dark div.rounded-2xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
+.dark div.rounded-3xl, .dark section.section-block {
   background-color: rgba(15, 23, 42, 0.6) !important;
   border-color: rgba(255,255,255,0.08) !important;
   box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Dropdown menus & dialog panels must be completely solid & high z-index */
+#profile-menu, #resources-menu, #ai-chat-modal, .dropdown-menu {
+  background-color: #ffffff !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(124, 58, 237, 0.15) !important;
+  z-index: 50 !important;
+}
+.dark #profile-menu, .dark #resources-menu, .dark #ai-chat-modal, .dark .dropdown-menu {
+  background-color: #0f172a !important; /* solid slate-900 */
+  backdrop-filter: none !important;
+  border-color: rgba(124, 58, 237, 0.3) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(124, 58, 237, 0.25) !important;
+}
+
+/* Sleek custom scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.25);
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.5);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.25);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.5);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
 }
 
 /* Make headings tighter and punchier */
 h1, h2, h3, .font-display {
   letter-spacing: -0.03em;
 }
-\nhtml { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; }
 
 /* StudyFlow — student deadline planner
    Palette: purple. page #F5F3FF, ink #1E1B2E, muted #6B6280, line #E4DEFB, primary #7C3AED,
