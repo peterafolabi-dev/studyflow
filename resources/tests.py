@@ -170,3 +170,165 @@ class ResourceAIViewsTests(TestCase):
         self.assertTrue(data['success'])
         self.assertEqual(len(data['questions']), 1)
         self.assertEqual(data['questions'][0]['correct_index'], 1)
+
+
+from resources.models import CBTQuestion, QuestionBank, TestAttempt
+
+
+class CBTModeTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        self.user = User.objects.create_user(username='cbt_student', password='password123')
+        self.client.login(username='cbt_student', password='password123')
+
+        self.course = Course.objects.create(user=self.user, name="Physics I", code="PHY101")
+        self.bank = QuestionBank.objects.create(
+            course=self.course,
+            course_code="PHY101",
+            created_by=self.user,
+            title="PHY101 2023 Mock Exam",
+            time_limit_minutes=10,
+        )
+
+        self.q1 = CBTQuestion.objects.create(
+            bank=self.bank,
+            text="What is the SI unit of force?",
+            option_a="Joule",
+            option_b="Newton",
+            option_c="Watt",
+            option_d="Pascal",
+            correct_option="B",
+            explanation="The SI unit of force is the Newton (N = kg*m/s^2).",
+            order=0,
+        )
+
+        self.q2 = CBTQuestion.objects.create(
+            bank=self.bank,
+            text="Acceleration due to gravity on Earth is approximately:",
+            option_a="9.8 m/s^2",
+            option_b="8.9 m/s^2",
+            option_c="10.8 m/s^2",
+            option_d="12.0 m/s^2",
+            correct_option="A",
+            explanation="Standard acceleration due to gravity is 9.80665 m/s^2.",
+            order=1,
+        )
+
+    def test_cbt_models_and_properties(self):
+        self.assertEqual(self.bank.question_count, 2)
+        self.assertEqual(self.q1.get_option_text('B'), "Newton")
+
+        # Test attempt
+        attempt = TestAttempt.objects.create(
+            user=self.user,
+            bank=self.bank,
+            score=2,
+            total_questions=2,
+            time_taken_seconds=125,
+            answers={str(self.q1.id): "B", str(self.q2.id): "A"},
+            is_completed=True,
+        )
+        self.assertEqual(attempt.percentage, 100)
+        self.assertEqual(attempt.formatted_time, "2m 5s")
+        self.assertTrue(attempt.passed)
+
+        detailed = attempt.get_detailed_results()
+        self.assertEqual(len(detailed), 2)
+        self.assertTrue(detailed[0]['is_correct'])
+
+    def test_cbt_home_and_take_views(self):
+        home_res = self.client.get(reverse('cbt_home'))
+        self.assertEqual(home_res.status_code, 200)
+        self.assertContains(home_res, "PHY101 2023 Mock Exam")
+
+        take_res = self.client.get(reverse('cbt_take', args=[self.bank.pk]))
+        self.assertEqual(take_res.status_code, 200)
+        self.assertContains(take_res, "Question Navigator")
+        self.assertContains(take_res, "timer-display")
+
+    def test_cbt_submit_and_results(self):
+        submit_url = reverse('cbt_submit', args=[self.bank.pk])
+        payload = {
+            "answers": {
+                str(self.q1.id): "B", # Correct
+                str(self.q2.id): "D", # Incorrect
+            },
+            "time_taken_seconds": 95,
+        }
+        res = self.client.post(submit_url, data=payload, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['score'], 1)
+        self.assertEqual(data['total'], 2)
+        self.assertEqual(data['percentage'], 50)
+
+        # Check Results page
+        attempt_id = data['attempt_id']
+        result_res = self.client.get(reverse('cbt_result', args=[attempt_id]))
+        self.assertEqual(result_res.status_code, 200)
+        self.assertContains(result_res, "Detailed Answer Breakdown")
+        self.assertContains(result_res, "Explain this answer")
+
+    @patch('resources.cbt_views.explain_cbt_answer_with_ai')
+    def test_cbt_explain_answer_ai(self, mock_explain):
+        mock_explain.return_value = "Option B is correct because Force = mass * acceleration."
+        url = reverse('cbt_explain_answer')
+        res = self.client.post(
+            url,
+            data={"question_id": self.q1.id, "user_choice": "A"},
+            content_type='application/json'
+        )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['success'])
+        self.assertIn("Force = mass * acceleration", data['ai_explanation'])
+
+    @patch('resources.cbt_views.generate_cbt_bank_from_pdf')
+    def test_resource_generate_cbt_from_pdf(self, mock_gen_cbt):
+        mock_gen_cbt.return_value = {
+            "title": "PHY101 Generated Test",
+            "time_limit_minutes": 15,
+            "questions": [
+                {
+                    "question": "What is momentum?",
+                    "option_a": "Mass * velocity",
+                    "option_b": "Force * time",
+                    "option_c": "Energy / time",
+                    "option_d": "None of the above",
+                    "correct_option": "A",
+                    "explanation": "p = m * v"
+                }
+            ]
+        }
+
+        # Create a mock PDF resource
+        from reportlab.pdfgen import canvas
+        buffer = io.BytesIO()
+        c = canvas.Canvas(buffer)
+        c.drawString(100, 700, "Physics past questions exam paper on momentum and kinematics for engineering students.")
+        c.showPage()
+        c.save()
+        buffer.seek(0)
+
+        pdf_file = SimpleUploadedFile("phy101_past_question.pdf", buffer.getvalue(), content_type="application/pdf")
+        resource = Resource.objects.create(
+            title="PHY101 Past Questions 2022",
+            course_code="PHY101",
+            resource_type="past_question",
+            file=pdf_file,
+            uploaded_by=self.user,
+        )
+
+        url = reverse('resource_ai_generate_cbt', args=[resource.pk])
+        res = self.client.post(url)
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['question_count'], 1)
+        self.assertIn("take", data['redirect_url'])
+
+        # Verify QuestionBank and Question created in DB
+        bank = QuestionBank.objects.get(pk=data['bank_id'])
+        self.assertEqual(bank.questions.count(), 1)
+        self.assertEqual(bank.questions.first().correct_option, "A")

@@ -48,6 +48,7 @@ def dashboard(request):
         ).order_by('-download_count')[:5],
         'quick_links': [
             ('Break Room', '🎮', 'break_room'),
+            ('CBT Practice', '🎯', 'cbt_home'),
             ('Catalogue', '📚', 'catalogue'),
             ('My Library', '🔖', 'my_library'),
             ('Past Questions', '📝', 'past_questions'),

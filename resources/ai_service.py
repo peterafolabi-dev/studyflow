@@ -255,3 +255,124 @@ def generate_quiz_from_material(text, title="Study Material", question_count=5):
     if not valid_questions:
         raise AIProcessingError("Could not generate a valid quiz from the provided document.")
     return valid_questions
+
+
+def generate_cbt_bank_from_pdf(text, title="Past Question", count=10, time_limit_minutes=15):
+    """
+    Extracts or synthesizes CBT exam questions from past questions or course materials.
+    """
+    system_prompt = (
+        "You are an expert Nigerian university examination coordinator and CBT test author. "
+        "Analyze the provided document (past questions or lecture materials) and construct "
+        f"a realistic, standardized CBT practice test of {count} questions.\n"
+        "If the document already contains past questions with options, extract and clean them faithfully. "
+        "If it contains notes or study topics without explicit questions, create high-yield multiple-choice test questions "
+        "covering the core concepts.\n\n"
+        "You MUST return strictly valid JSON matching this schema:\n"
+        "{\n"
+        '  "title": "Short title, e.g. MTH101 2022/2023 CBT Practice",\n'
+        f'  "time_limit_minutes": {time_limit_minutes},\n'
+        '  "questions": [\n'
+        '    {\n'
+        '      "question": "Question text here",\n'
+        '      "option_a": "First choice",\n'
+        '      "option_b": "Second choice",\n'
+        '      "option_c": "Third choice",\n'
+        '      "option_d": "Fourth choice",\n'
+        '      "correct_option": "A",\n'
+        '      "explanation": "Clear breakdown of why this option is correct and why the alternatives are incorrect."\n'
+        '    }\n'
+        '  ]\n'
+        "}\n"
+        "Note: correct_option MUST be exactly one of 'A', 'B', 'C', or 'D'.\n"
+        "Return ONLY the raw JSON object with NO surrounding markdown or extra commentary."
+    )
+
+    user_prompt = f"Document Title: {title}\n\nDocument Text:\n{text}"
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ]
+
+    schema_desc = '{"title": "...", "time_limit_minutes": 15, "questions": [{"question": "...", "option_a": "...", "option_b": "...", "option_c": "...", "option_d": "...", "correct_option": "A", "explanation": "..."}]}'
+    data = _call_groq_with_retry(messages, schema_desc, temperature=0.2)
+
+    raw_questions = data.get("questions", [])
+    valid_questions = []
+    for q in raw_questions:
+        if isinstance(q, dict) and q.get("question"):
+            oa = str(q.get("option_a", "")).strip()
+            ob = str(q.get("option_b", "")).strip()
+            oc = str(q.get("option_c", "")).strip()
+            od = str(q.get("option_d", "")).strip()
+            c_opt = str(q.get("correct_option", "A")).strip().upper()
+            if c_opt not in ['A', 'B', 'C', 'D']:
+                c_opt = 'A'
+
+            if oa and ob:
+                valid_questions.append({
+                    "question": str(q["question"]).strip(),
+                    "option_a": oa,
+                    "option_b": ob,
+                    "option_c": oc or "None of the above",
+                    "option_d": od or "All of the above",
+                    "correct_option": c_opt,
+                    "explanation": str(q.get("explanation", "Standard answer according to syllabus.")).strip()
+                })
+
+    if not valid_questions:
+        raise AIProcessingError("Could not generate valid CBT questions from this document.")
+
+    res_title = str(data.get("title") or f"{title} CBT Practice").strip()
+    try:
+        t_limit = int(data.get("time_limit_minutes", time_limit_minutes))
+    except (ValueError, TypeError):
+        t_limit = time_limit_minutes
+
+    return {
+        "title": res_title,
+        "time_limit_minutes": max(5, min(120, t_limit)),
+        "questions": valid_questions
+    }
+
+
+def explain_cbt_answer_with_ai(question_text, option_a, option_b, option_c, option_d, user_choice, correct_choice, base_explanation=""):
+    """
+    Asks the AI Study Coach for a personalized, clear explanation of a test question.
+    """
+    client = get_groq_client()
+    model = get_model_name()
+
+    options_formatted = f"A) {option_a}\nB) {option_b}\nC) {option_c}\nD) {option_d}"
+    prompt = (
+        f"A student took a CBT exam and wants your help understanding this question:\n\n"
+        f"Question:\n{question_text}\n\n"
+        f"Options:\n{options_formatted}\n\n"
+        f"The student selected: Option {user_choice or 'None (skipped)'}\n"
+        f"The correct answer is: Option {correct_choice}\n"
+    )
+    if base_explanation:
+        prompt += f"Preliminary note: {base_explanation}\n"
+
+    system_prompt = (
+        "You are StudyFlow's encouraging, expert university AI Study Coach. "
+        "Explain step-by-step why the correct option is indeed correct, and briefly explain "
+        "where the misconception lies if the student chose the wrong option. "
+        "Write in a warm, motivating tone. Use LaTeX ($...$) for mathematical formulas. "
+        "Keep your entire answer concise, formatted with clear bullets or short paragraphs (under 160 words)."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4,
+            max_tokens=350,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Error fetching AI explanation: {e}")
+        return base_explanation or "The correct option is derived from standard syllabus principles."

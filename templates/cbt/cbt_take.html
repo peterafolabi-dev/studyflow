@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% block title %}CBT Practice: {{ bank.title }} · StudyFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto pb-16">
+  
+  <!-- CBT Fixed / Sticky Header Bar -->
+  <div class="sticky top-14 z-20 mb-6 rounded-2xl border border-brand-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-4 shadow-md">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300">
+            {{ bank.course_code|default:"CBT" }}
+          </span>
+          <h1 class="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md" title="{{ bank.title }}">
+            {{ bank.title }}
+          </h1>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <span id="header-progress-text">Question 1 of {{ questions_count }}</span> &middot;
+          <span id="header-answered-text" class="text-brand-600 dark:text-brand-400 font-medium">0 Answered</span>
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Countdown Timer -->
+        <div id="timer-box" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-brand-200 dark:border-slate-700 bg-brand-50/70 dark:bg-slate-800/80 font-mono font-bold text-base sm:text-lg text-slate-800 dark:text-slate-100 transition-colors">
+          <span id="timer-icon" class="text-brand-600 dark:text-brand-400">⏱️</span>
+          <span id="timer-display">--:--</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="button" onclick="openSubmitModal()"
+                class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-sm transition">
+          Submit Test
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-3">
+      <div id="cbt-progress-bar" class="h-full bg-brand-600 transition-all duration-200" style="width: 0%;"></div>
+    </div>
+  </div>
+
+  <!-- CBT Main Body Layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- LEFT: QUESTION AREA (8 cols) -->
+    <div class="lg:col-span-8 rounded-3xl border border-brand-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm flex flex-col min-h-[480px]">
+      
+      <!-- Top question info row -->
+      <div class="flex items-center justify-between pb-4 border-b border-brand-50 dark:border-slate-800 mb-6">
+        <span id="question-badge" class="font-display font-bold text-base text-brand-700 dark:text-brand-300">
+          Question 1
+        </span>
+        <button type="button" id="btn-flag-question" onclick="toggleFlagCurrentQuestion()"
+                class="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition">
+          <span id="flag-icon">🚩</span> <span id="flag-text">Flag for Review</span>
+        </button>
+      </div>
+
+      <!-- Question Stem -->
+      <div class="mb-8">
+        <p id="question-text" class="text-base sm:text-lg text-slate-900 dark:text-white font-medium leading-relaxed select-none"></p>
+      </div>
+
+      <!-- Options -->
+      <div id="options-list" class="space-y-3 mb-8 flex-1">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Navigation Footer -->
+      <div class="pt-6 border-t border-brand-50 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 mt-auto">
+        <button type="button" id="btn-prev-q" onclick="navigateQuestion(-1)"
+                class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition">
+          &larr; Previous
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="clearCurrentChoice()" class="px-3 py-2 text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+            Clear Choice
+          </button>
+          <button type="button" id="btn-next-q" onclick="navigateQuestion(1)"
+                  class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs sm:text-sm font-semibold shadow-sm transition">
+            Next &rarr;
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: QUESTION NAVIGATOR (4 cols) -->
+    <div class="lg:col-span-4 rounded-3xl border border-brand-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-sm space-y-5">
+      <div>
+        <h3 class="font-display font-bold text-sm text-slate-900 dark:text-white mb-1">
+          Question Navigator
+        </h3>
+        <p class="text-[11px] text-slate-400">Click any number to jump to that question</p>
+      </div>
+
+      <!-- Grid of question buttons -->
+      <div id="nav-matrix" class="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Legend -->
+      <div class="pt-4 border-t border-brand-50 dark:border-slate-800 grid grid-cols-2 gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-brand-600"></span>
+          <span>Answered</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3.5 h-3.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"></span>
+          <span>Unanswered</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3.5 h-3.5 rounded-lg bg-amber-400 text-white flex items-center justify-center text-[9px] font-bold">🚩</span>
+          <span>Flagged</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3.5 h-3.5 rounded-lg border-2 border-brand-600"></span>
+          <span>Current</span>
+        </div>
+      </div>
+
+      <!-- Action -->
+      <button type="button" onclick="openSubmitModal()"
+              class="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition">
+        Submit Examination ✓
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= SUBMIT CONFIRMATION MODAL ================= -->
+<div id="submit-modal" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-brand-200 dark:border-slate-700 p-6 shadow-2xl space-y-4">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">📋</span>
+      <div>
+        <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Submit Examination?</h3>
+        <p class="text-xs text-slate-400">Confirm test completion</p>
+      </div>
+    </div>
+
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-brand-100 dark:border-slate-800 space-y-2 text-xs">
+      <div class="flex justify-between">
+        <span class="text-slate-500">Answered Questions:</span>
+        <strong id="modal-answered-count" class="text-emerald-600 dark:text-emerald-400">0</strong>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">Unanswered Questions:</span>
+        <strong id="modal-unanswered-count" class="text-rose-600 dark:text-rose-400">0</strong>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-slate-500">Flagged for Review:</span>
+        <strong id="modal-flagged-count" class="text-amber-500">0</strong>
+      </div>
+    </div>
+
+    <p id="modal-warning-text" class="text-xs text-slate-500 leading-relaxed"></p>
+
+    <div class="flex items-center justify-end gap-3 pt-2">
+      <button type="button" onclick="closeSubmitModal()"
+              class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+        Keep Practicing
+      </button>
+      <button type="button" id="btn-final-submit" onclick="submitExam(false)"
+              class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition">
+        Yes, Submit Now
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TIMEOUT NOTIFICATION OVERLAY ================= -->
+<div id="timeout-modal" class="fixed inset-0 z-50 hidden bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 border border-rose-500 p-6 shadow-2xl text-center space-y-4">
+    <div class="text-4xl animate-bounce">⏱️</div>
+    <h3 class="font-display font-black text-xl text-rose-600 dark:text-rose-400">Time Has Expired!</h3>
+    <p class="text-xs text-slate-600 dark:text-slate-300">
+      The allocated examination time has elapsed. Your answers are being automatically submitted and graded now...
+    </p>
+    <div class="w-8 h-8 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin mx-auto"></div>
+  </div>
+</div>
+
+<!-- Raw questions data passed securely from Django context -->
+<script>
+  const QUESTIONS = {{ questions_json|safe }};
+  const TOTAL_QUESTIONS = QUESTIONS.length;
+  const TIME_LIMIT_SECONDS = {{ time_limit_seconds }};
+  const BANK_ID = {{ bank.pk }};
+  const SUBMIT_URL = "{% url 'cbt_submit' bank.pk %}";
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken') || '';
+
+  // Test state
+  let currentIndex = 0;
+  let userAnswers = {};  // { questionId: 'A' }
+  let flaggedQuestions = new Set();
+  let secondsRemaining = TIME_LIMIT_SECONDS;
+  let timerInterval = null;
+  let isSubmitting = false;
+
+  // Initialize
+  window.addEventListener('DOMContentLoaded', () => {
+    startTimer();
+    renderCurrentQuestion();
+    renderNavMatrix();
+  });
+
+  // Countdown timer
+  function startTimer() {
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+      secondsRemaining--;
+      updateTimerDisplay();
+
+      if (secondsRemaining <= 0) {
+        clearInterval(timerInterval);
+        autoSubmitOnTimeout();
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    const mins = Math.floor(Math.max(0, secondsRemaining) / 60);
+    const secs = Math.max(0, secondsRemaining) % 60;
+    const str = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    
+    const displayEl = document.getElementById('timer-display');
+    const boxEl = document.getElementById('timer-box');
+    displayEl.textContent = str;
+
+    // Visual warning when running out of time
+    if (secondsRemaining <= 60) {
+      boxEl.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-rose-500 bg-rose-50 dark:bg-rose-950/80 font-mono font-bold text-base sm:text-lg text-rose-600 dark:text-rose-400 animate-pulse';
+    } else if (secondsRemaining <= 180) {
+      boxEl.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-amber-400 bg-amber-50 dark:bg-amber-950/80 font-mono font-bold text-base sm:text-lg text-amber-600 dark:text-amber-400';
+    }
+  }
+
+  function autoSubmitOnTimeout() {
+    if (isSubmitting) return;
+    document.getElementById('timeout-modal').classList.remove('hidden');
+    setTimeout(() => {
+      submitExam(true);
+    }, 1200);
+  }
+
+  function renderCurrentQuestion() {
+    const q = QUESTIONS[currentIndex];
+    const qId = q.id;
+
+    document.getElementById('question-badge').textContent = `Question ${currentIndex + 1} of ${TOTAL_QUESTIONS}`;
+    document.getElementById('header-progress-text').textContent = `Question ${currentIndex + 1} of ${TOTAL_QUESTIONS}`;
+    document.getElementById('question-text').textContent = q.text;
+
+    // Flag status
+    const isFlagged = flaggedQuestions.has(qId);
+    document.getElementById('flag-icon').textContent = isFlagged ? '🚩' : '🏳️';
+    document.getElementById('flag-text').textContent = isFlagged ? 'Flagged' : 'Flag for Review';
+    document.getElementById('btn-flag-question').className = `flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border transition ${
+      isFlagged
+        ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300'
+        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+    }`;
+
+    // Options rendering
+    const optList = document.getElementById('options-list');
+    optList.innerHTML = '';
+    const selectedOption = userAnswers[qId];
+
+    q.options.forEach(opt => {
+      const isSelected = selectedOption === opt.letter;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `w-full text-left p-4 rounded-2xl border transition-all flex items-start gap-3.5 select-none ${
+        isSelected
+          ? 'border-brand-500 bg-brand-50/70 dark:bg-brand-950/40 text-brand-900 dark:text-brand-100 shadow-sm ring-1 ring-brand-500'
+          : 'border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 hover:border-brand-300 dark:hover:border-slate-700'
+      }`;
+
+      btn.innerHTML = `
+        <span class="w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 transition-colors ${
+          isSelected
+            ? 'bg-brand-600 text-white shadow-sm'
+            : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
+        }">${opt.letter}</span>
+        <span class="text-xs sm:text-sm pt-0.5 leading-relaxed">${opt.text}</span>
+      `;
+
+      btn.addEventListener('click', () => {
+        userAnswers[qId] = opt.letter;
+        renderCurrentQuestion();
+        renderNavMatrix();
+      });
+
+      optList.appendChild(btn);
+    });
+
+    // Nav buttons status
+    document.getElementById('btn-prev-q').disabled = (currentIndex === 0);
+    const nextBtn = document.getElementById('btn-next-q');
+    if (currentIndex === TOTAL_QUESTIONS - 1) {
+      nextBtn.textContent = 'Review & Submit ✓';
+      nextBtn.onclick = openSubmitModal;
+    } else {
+      nextBtn.textContent = 'Next →';
+      nextBtn.onclick = () => navigateQuestion(1);
+    }
+
+    // Update progress bar
+    const answeredCount = Object.keys(userAnswers).filter(k => userAnswers[k]).length;
+    document.getElementById('header-answered-text').textContent = `${answeredCount} / ${TOTAL_QUESTIONS} Answered`;
+    const percent = Math.round((answeredCount / TOTAL_QUESTIONS) * 100);
+    document.getElementById('cbt-progress-bar').style.width = `${percent}%`;
+  }
+
+  function renderNavMatrix() {
+    const matrix = document.getElementById('nav-matrix');
+    matrix.innerHTML = '';
+
+    QUESTIONS.forEach((q, idx) => {
+      const qId = q.id;
+      const isAnswered = !!userAnswers[qId];
+      const isCurrent = idx === currentIndex;
+      const isFlagged = flaggedQuestions.has(qId);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = idx + 1;
+
+      let cls = 'relative h-10 rounded-xl font-bold text-xs flex items-center justify-center transition-all ';
+
+      if (isCurrent) {
+        cls += 'ring-2 ring-brand-600 ring-offset-2 dark:ring-offset-slate-900 ';
+      }
+
+      if (isAnswered) {
+        cls += 'bg-brand-600 text-white shadow-sm ';
+      } else {
+        cls += 'border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-brand-400 ';
+      }
+
+      btn.className = cls;
+
+      if (isFlagged) {
+        const flagSpan = document.createElement('span');
+        flagSpan.className = 'absolute -top-1 -right-1 text-[10px]';
+        flagSpan.textContent = '🚩';
+        btn.appendChild(flagSpan);
+      }
+
+      btn.addEventListener('click', () => {
+        currentIndex = idx;
+        renderCurrentQuestion();
+        renderNavMatrix();
+      });
+
+      matrix.appendChild(btn);
+    });
+  }
+
+  function navigateQuestion(delta) {
+    const target = currentIndex + delta;
+    if (target >= 0 && target < TOTAL_QUESTIONS) {
+      currentIndex = target;
+      renderCurrentQuestion();
+      renderNavMatrix();
+    }
+  }
+
+  function clearCurrentChoice() {
+    const qId = QUESTIONS[currentIndex].id;
+    delete userAnswers[qId];
+    renderCurrentQuestion();
+    renderNavMatrix();
+  }
+
+  function toggleFlagCurrentQuestion() {
+    const qId = QUESTIONS[currentIndex].id;
+    if (flaggedQuestions.has(qId)) {
+      flaggedQuestions.delete(qId);
+    } else {
+      flaggedQuestions.add(qId);
+    }
+    renderCurrentQuestion();
+    renderNavMatrix();
+  }
+
+  // Submit Modal
+  function openSubmitModal() {
+    const answeredCount = Object.keys(userAnswers).filter(k => userAnswers[k]).length;
+    const unansweredCount = TOTAL_QUESTIONS - answeredCount;
+    const flaggedCount = flaggedQuestions.size;
+
+    document.getElementById('modal-answered-count').textContent = answeredCount;
+    document.getElementById('modal-unanswered-count').textContent = unansweredCount;
+    document.getElementById('modal-flagged-count').textContent = flaggedCount;
+
+    const warnText = document.getElementById('modal-warning-text');
+    if (unansweredCount > 0) {
+      warnText.textContent = `Warning: You have left ${unansweredCount} question${unansweredCount === 1 ? '' : 's'} unanswered. They will be marked as incorrect.`;
+      warnText.className = 'text-xs text-rose-500 font-medium leading-relaxed';
+    } else {
+      warnText.textContent = 'Great job! You have attempted all questions in this test.';
+      warnText.className = 'text-xs text-emerald-600 dark:text-emerald-400 font-medium leading-relaxed';
+    }
+
+    document.getElementById('submit-modal').classList.remove('hidden');
+  }
+
+  function closeSubmitModal() {
+    document.getElementById('submit-modal').classList.add('hidden');
+  }
+
+  function submitExam(isAutoTimeout = false) {
+    if (isSubmitting) return;
+    isSubmitting = true;
+    clearInterval(timerInterval);
+
+    const btn = document.getElementById('btn-final-submit');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Submitting & Grading...';
+    }
+
+    const timeTaken = Math.min(TIME_LIMIT_SECONDS, TIME_LIMIT_SECONDS - secondsRemaining);
+
+    fetch(SUBMIT_URL, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify({
+        answers: userAnswers,
+        time_taken_seconds: timeTaken,
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.redirect_url) {
+        window.location.href = data.redirect_url;
+      } else {
+        alert('An error occurred submitting the examination.');
+        isSubmitting = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Yes, Submit Now';
+        }
+      }
+    })
+    .catch(err => {
+      alert('Network error submitting examination: ' + err.message);
+      isSubmitting = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Yes, Submit Now';
+      }
+    });
+  }
+</script>
+{% endblock %}

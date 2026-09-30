@@ -1,8 +1,18 @@
 from django.urls import path
 
-from . import views
+from . import views, cbt_views
 
 urlpatterns = [
+    # CBT Practice Mode
+    path('cbt/', cbt_views.cbt_home, name='cbt_home'),
+    path('cbt/bank/<int:bank_id>/', cbt_views.cbt_detail, name='cbt_detail'),
+    path('cbt/bank/<int:bank_id>/take/', cbt_views.cbt_take, name='cbt_take'),
+    path('cbt/bank/<int:bank_id>/submit/', cbt_views.cbt_submit, name='cbt_submit'),
+    path('cbt/attempt/<int:attempt_id>/results/', cbt_views.cbt_result, name='cbt_result'),
+    path('cbt/explain-answer/', cbt_views.cbt_explain_answer, name='cbt_explain_answer'),
+    path('resources/<int:pk>/ai/generate-cbt/', cbt_views.resource_ai_generate_cbt, name='resource_ai_generate_cbt'),
+
+    # Resources
     path('resources/past-questions/', views.resource_list, {'rtype': 'past_question'}, name='past_questions'),
     path('resources/notes/', views.resource_list, {'rtype': 'notes'}, name='notes_list'),
     path('resources/theses-papers/', views.resource_list, {'rtype': 'thesis_paper'}, name='theses_papers'),

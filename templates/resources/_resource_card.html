@@ -38,6 +38,10 @@
          class="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900 transition">
         ❓ Quiz
       </a>
+      <a href="{% url 'resource_detail' r.pk %}?action=cbt"
+         class="px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-medium hover:bg-purple-100 dark:hover:bg-purple-900 transition">
+        🎯 CBT
+      </a>
     </div>
   {% endif %}
 

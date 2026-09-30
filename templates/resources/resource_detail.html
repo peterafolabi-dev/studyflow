@@ -75,26 +75,33 @@
     </div>
 
     {% if resource.file %}
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         <!-- Summarize Button -->
         <button type="button" id="btn-ai-summarize"
-                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm text-brand-800 dark:text-brand-200 bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 hover:border-brand-400 hover:bg-brand-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
-          <span class="text-lg group-hover:scale-110 transition-transform">📑</span>
+                class="flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl font-medium text-xs sm:text-sm text-brand-800 dark:text-brand-200 bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 hover:border-brand-400 hover:bg-brand-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
+          <span class="text-base group-hover:scale-110 transition-transform">📑</span>
           <span>Summarize</span>
         </button>
 
         <!-- Make Flashcards Button -->
         <button type="button" id="btn-ai-flashcards"
-                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm text-amber-900 dark:text-amber-200 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-900/50 hover:border-amber-400 hover:bg-amber-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
-          <span class="text-lg group-hover:scale-110 transition-transform">🃏</span>
-          <span>Make Flashcards</span>
+                class="flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl font-medium text-xs sm:text-sm text-amber-900 dark:text-amber-200 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-900/50 hover:border-amber-400 hover:bg-amber-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
+          <span class="text-base group-hover:scale-110 transition-transform">🃏</span>
+          <span>Flashcards</span>
         </button>
 
         <!-- Quiz Me Button -->
         <button type="button" id="btn-ai-quiz"
-                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm text-emerald-900 dark:text-emerald-200 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-900/50 hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
-          <span class="text-lg group-hover:scale-110 transition-transform">❓</span>
+                class="flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl font-medium text-xs sm:text-sm text-emerald-900 dark:text-emerald-200 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-900/50 hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
+          <span class="text-base group-hover:scale-110 transition-transform">❓</span>
           <span>Quiz Me</span>
+        </button>
+
+        <!-- CBT Practice Test Button -->
+        <button type="button" id="btn-ai-cbt" onclick="triggerCbtGeneration()"
+                class="flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl font-medium text-xs sm:text-sm text-purple-900 dark:text-purple-200 bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-900/50 hover:border-purple-400 hover:bg-purple-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
+          <span class="text-base group-hover:scale-110 transition-transform">🎯</span>
+          <span>CBT Test</span>
         </button>
       </div>
     {% else %}
@@ -680,6 +687,36 @@
     renderQuizQuestion();
   }
 
+  function triggerCbtGeneration() {
+    const btn = document.getElementById('btn-ai-cbt');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin mr-1">⌛</span> Building Test...`;
+
+    fetch(`/resources/${RESOURCE_ID}/ai/generate-cbt/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.redirect_url) {
+        window.location.href = data.redirect_url;
+      } else {
+        alert(data.error || 'Failed to generate CBT practice test.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    })
+    .catch(err => {
+      alert('Error: ' + err.message);
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    });
+  }
+
   // URL query parameter auto-trigger (e.g. ?action=summarize)
   window.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
@@ -687,6 +724,7 @@
     if (action === 'summarize') document.getElementById('btn-ai-summarize')?.click();
     else if (action === 'flashcards') document.getElementById('btn-ai-flashcards')?.click();
     else if (action === 'quiz') document.getElementById('btn-ai-quiz')?.click();
+    else if (action === 'cbt') triggerCbtGeneration();
   });
 </script>
 {% endblock %}
