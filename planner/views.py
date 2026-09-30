@@ -14,7 +14,7 @@ from community.models import Thread
 from library.models import Book
 
 from .forms import CourseForm, TaskForm, TimetableEntryForm
-from .models import Course, Task, TimetableEntry
+from .models import Course, Task, TimetableEntry, FlashcardDeck, Flashcard
 
 # SECURITY RULE: every query below is filtered by the logged-in user.
 # Without that, a user could open someone else's data by editing the ID in the URL.
@@ -303,8 +303,46 @@ def log_study(request):
 
 @login_required
 def flashcard_hubs(request):
-    decks = FlashcardDeck.objects.filter(course__user=request.user)
-    return render(request, 'planner/flashcards.html', {'decks': decks})
+    courses = Course.objects.filter(user=request.user)
+    decks = FlashcardDeck.objects.filter(course__user=request.user).prefetch_related('cards')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        # --- Create a new deck ---
+        if action == 'create_deck':
+            title = request.POST.get('title', '').strip()
+            course_id = request.POST.get('course_id')
+            course = get_object_or_404(Course, pk=course_id, user=request.user)
+            if title:
+                FlashcardDeck.objects.create(title=title, course=course)
+            return redirect('flashcards')
+
+        # --- Add a card to a deck ---
+        elif action == 'add_card':
+            deck_id = request.POST.get('deck_id')
+            front = request.POST.get('front', '').strip()
+            back = request.POST.get('back', '').strip()
+            deck = get_object_or_404(FlashcardDeck, pk=deck_id, course__user=request.user)
+            if front and back:
+                Flashcard.objects.create(deck=deck, front=front, back=back)
+            return redirect('flashcards')
+
+        # --- Delete a card ---
+        elif action == 'delete_card':
+            card_id = request.POST.get('card_id')
+            card = get_object_or_404(Flashcard, pk=card_id, deck__course__user=request.user)
+            card.delete()
+            return redirect('flashcards')
+
+        # --- Delete a deck ---
+        elif action == 'delete_deck':
+            deck_id = request.POST.get('deck_id')
+            deck = get_object_or_404(FlashcardDeck, pk=deck_id, course__user=request.user)
+            deck.delete()
+            return redirect('flashcards')
+
+    return render(request, 'planner/flashcards.html', {'decks': decks, 'courses': courses})
 
 
 from django.http import JsonResponse

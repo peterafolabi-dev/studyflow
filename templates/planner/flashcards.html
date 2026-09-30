@@ -2,16 +2,260 @@
 {% block title %}Flashcards{% endblock %}
 {% block content %}
 <div class="page">
-    <h2>My Flashcard Decks</h2>
-    <ul class="courses">
-    {% for d in decks %}
-        <li class="course"><a href="#">
-            <span class="course-name">{{ d.title }}</span>
-            <span class="course-code">{{ d.course.code }}</span>
-        </a></li>
-    {% empty %}
-        <li class="empty">No decks yet.</li>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+    <h2 style="margin:0;">🃏 My Flashcard Decks</h2>
+    <button class="btn" onclick="document.getElementById('new-deck-modal').style.display='flex'">+ New Deck</button>
+  </div>
+
+  {% if not decks %}
+    <p style="color:var(--text-muted, #888); margin-top:2rem;">No decks yet. Hit <strong>+ New Deck</strong> to create your first one.</p>
+  {% endif %}
+
+  {% for deck in decks %}
+  <div class="card" style="margin-bottom:2rem; padding:1.25rem;">
+
+    <!-- Deck header -->
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem; margin-bottom:1rem;">
+      <div>
+        <strong style="font-size:1.1rem;">{{ deck.title }}</strong>
+        <span style="font-size:.85rem; color:var(--text-muted,#888); margin-left:.5rem;">
+          {{ deck.course.code }} &middot; {{ deck.cards.count }} card{{ deck.cards.count|pluralize }}
+        </span>
+      </div>
+      <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+        {% if deck.cards.count > 0 %}
+        <button class="btn btn-sm" onclick="startQuiz('{{ deck.pk }}')">&#9654; Quiz me</button>
+        {% endif %}
+        <button class="btn btn-sm btn-outline" onclick="toggleAddCard('{{ deck.pk }}')">+ Add Card</button>
+        <form method="post" style="display:inline;" onsubmit="return confirm('Delete this deck and all its cards?')">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="delete_deck">
+          <input type="hidden" name="deck_id" value="{{ deck.pk }}">
+          <button type="submit" class="btn btn-sm btn-danger">Delete Deck</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add card form (hidden by default) -->
+    <div id="add-card-{{ deck.pk }}" style="display:none; background:var(--bg-soft,#f5f5f5); border-radius:.5rem; padding:1rem; margin-bottom:1rem;">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_card">
+        <input type="hidden" name="deck_id" value="{{ deck.pk }}">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:.75rem;">
+          <div>
+            <label style="font-size:.85rem; font-weight:600; display:block; margin-bottom:.25rem;">Front</label>
+            <textarea name="front" rows="3" required placeholder="Question or term..."
+              style="width:100%; border-radius:.4rem; border:1px solid var(--border,#ddd); padding:.5rem; font-size:.9rem; resize:vertical; background:var(--bg,#fff); color:var(--text,#111);"></textarea>
+          </div>
+          <div>
+            <label style="font-size:.85rem; font-weight:600; display:block; margin-bottom:.25rem;">Back</label>
+            <textarea name="back" rows="3" required placeholder="Answer or definition..."
+              style="width:100%; border-radius:.4rem; border:1px solid var(--border,#ddd); padding:.5rem; font-size:.9rem; resize:vertical; background:var(--bg,#fff); color:var(--text,#111);"></textarea>
+          </div>
+        </div>
+        <div style="display:flex; gap:.5rem;">
+          <button type="submit" class="btn btn-sm">Save Card</button>
+          <button type="button" class="btn btn-sm btn-outline" onclick="toggleAddCard('{{ deck.pk }}')">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Cards grid -->
+    {% if deck.cards.all %}
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:.75rem;">
+      {% for card in deck.cards.all %}
+      <div class="sf-flashcard" onclick="flipCard('{{ card.pk }}')">
+        <div class="sf-flashcard-inner" id="inner-{{ card.pk }}">
+          <div class="sf-flashcard-front">
+            <p>{{ card.front }}</p>
+            <span class="flip-hint">Tap to flip</span>
+          </div>
+          <div class="sf-flashcard-back">
+            <p>{{ card.back }}</p>
+          </div>
+        </div>
+        <form method="post" style="position:absolute; top:.4rem; right:.4rem; z-index:2;"
+              onsubmit="return confirm('Delete this card?')" onclick="event.stopPropagation()">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="delete_card">
+          <input type="hidden" name="card_id" value="{{ card.pk }}">
+          <button type="submit" class="btn-x" title="Delete card">&#10005;</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+      <p style="color:var(--text-muted,#888); font-size:.9rem;">No cards yet — add your first one above.</p>
+    {% endif %}
+
+  </div>
+
+  <!-- hidden JSON data for quiz mode: one element per card -->
+  <div id="deck-data-{{ deck.pk }}" style="display:none;"
+       data-count="{{ deck.cards.count }}">
+    {% for c in deck.cards.all %}
+    <span data-front="{{ c.front|escapejs }}" data-back="{{ c.back|escapejs }}"></span>
     {% endfor %}
-    </ul>
+  </div>
+
+  {% endfor %}
 </div>
+
+<!-- ─── New Deck Modal ─── -->
+<div id="new-deck-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:var(--bg,#fff); border-radius:.75rem; padding:1.5rem; width:min(420px,90vw); box-shadow:0 8px 30px rgba(0,0,0,.2);">
+    <h3 style="margin-top:0;">New Flashcard Deck</h3>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create_deck">
+      <div style="margin-bottom:.75rem;">
+        <label style="font-size:.85rem; font-weight:600; display:block; margin-bottom:.25rem;">Deck Title</label>
+        <input type="text" name="title" required placeholder="e.g. Chapter 3 — Thermodynamics"
+          style="width:100%; border-radius:.4rem; border:1px solid var(--border,#ddd); padding:.5rem .75rem; font-size:.95rem; background:var(--bg,#fff); color:var(--text,#111);">
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="font-size:.85rem; font-weight:600; display:block; margin-bottom:.25rem;">Course</label>
+        <select name="course_id" required style="width:100%; border-radius:.4rem; border:1px solid var(--border,#ddd); padding:.5rem .75rem; font-size:.95rem; background:var(--bg,#fff); color:var(--text,#111);">
+          {% for c in courses %}
+          <option value="{{ c.pk }}">{{ c.code }} — {{ c.name }}</option>
+          {% empty %}
+          <option disabled>No courses yet — add a course first</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex; gap:.5rem; justify-content:flex-end;">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('new-deck-modal').style.display='none'">Cancel</button>
+        <button type="submit" class="btn" {% if not courses %}disabled title="Add a course first"{% endif %}>Create Deck</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Quiz Modal ─── -->
+<div id="quiz-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1001; align-items:center; justify-content:center;">
+  <div style="background:var(--bg,#fff); border-radius:.75rem; padding:2rem; width:min(480px,92vw); text-align:center; box-shadow:0 8px 40px rgba(0,0,0,.3); position:relative;">
+    <button onclick="closeQuiz()" style="position:absolute; top:.75rem; right:.75rem; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text,#111);">&#10005;</button>
+    <p id="quiz-progress" style="font-size:.85rem; color:var(--text-muted,#888); margin-bottom:1rem;"></p>
+    <div id="quiz-card" onclick="quizFlip()"
+      style="cursor:pointer; min-height:160px; display:flex; align-items:center; justify-content:center;
+             border-radius:.75rem; background:var(--bg-soft,#f5f5f5); padding:1.5rem; margin-bottom:1.5rem;
+             transition:background .3s, color .3s;">
+      <p id="quiz-text" style="font-size:1.15rem; margin:0;"></p>
+    </div>
+    <p id="quiz-hint" style="font-size:.8rem; color:var(--text-muted,#888); margin-bottom:1.25rem;">Tap the card to reveal the answer</p>
+    <div style="display:flex; gap:.75rem; justify-content:center;">
+      <button class="btn btn-outline" onclick="quizNav(-1)">&#8592; Prev</button>
+      <button class="btn" onclick="quizNav(1)">Next &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.sf-flashcard {
+  position: relative;
+  height: 160px;
+  cursor: pointer;
+  perspective: 800px;
+}
+.sf-flashcard-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .45s ease;
+  border-radius: .6rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+.sf-flashcard-inner.flipped { transform: rotateY(180deg); }
+.sf-flashcard-front,
+.sf-flashcard-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: .6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  text-align: center;
+  overflow: hidden;
+}
+.sf-flashcard-front {
+  background: var(--bg-soft, #f5f7ff);
+  border: 1px solid var(--border, #e0e0e0);
+}
+.sf-flashcard-back {
+  background: var(--accent, #5b5ef4);
+  color: #fff;
+  transform: rotateY(180deg);
+}
+.sf-flashcard-front p, .sf-flashcard-back p { margin:0; font-size:.9rem; }
+.flip-hint { font-size:.7rem; opacity:.45; margin-top:.4rem; }
+.btn-x {
+  background: rgba(0,0,0,.1);
+  border: none;
+  border-radius: 50%;
+  width: 22px; height: 22px;
+  font-size:.7rem;
+  cursor: pointer;
+  color: var(--text, #111);
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+}
+.btn-x:hover { background:#e53e3e; color:#fff; }
+.btn-sm { padding:.3rem .7rem; font-size:.82rem; }
+.btn-danger { background:#e53e3e; color:#fff; border:none; }
+.btn-danger:hover { background:#c53030; }
+</style>
+
+<script>
+function toggleAddCard(deckId) {
+  const el = document.getElementById('add-card-' + deckId);
+  el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+}
+
+function flipCard(cardId) {
+  document.getElementById('inner-' + cardId).classList.toggle('flipped');
+}
+
+// ── Quiz mode ──
+let quizCards = [], quizIdx = 0, quizShowingBack = false;
+
+function startQuiz(deckId) {
+  const scriptEl = document.getElementById('deck-data-' + deckId);
+  if (!scriptEl) return;
+  quizCards = JSON.parse(scriptEl.textContent);
+  if (!quizCards.length) return;
+  quizIdx = 0; quizShowingBack = false;
+  document.getElementById('quiz-modal').style.display = 'flex';
+  renderQuizCard();
+}
+
+function renderQuizCard() {
+  const card = quizCards[quizIdx];
+  document.getElementById('quiz-progress').textContent = 'Card ' + (quizIdx + 1) + ' of ' + quizCards.length;
+  document.getElementById('quiz-text').textContent = quizShowingBack ? card.back : card.front;
+  document.getElementById('quiz-hint').textContent = quizShowingBack ? 'Answer shown — tap to hide' : 'Tap the card to reveal the answer';
+  const qc = document.getElementById('quiz-card');
+  qc.style.background = quizShowingBack ? 'var(--accent,#5b5ef4)' : 'var(--bg-soft,#f5f5f5)';
+  qc.style.color = quizShowingBack ? '#fff' : 'var(--text,#111)';
+}
+
+function quizFlip() {
+  quizShowingBack = !quizShowingBack;
+  renderQuizCard();
+}
+
+function quizNav(dir) {
+  quizIdx = (quizIdx + dir + quizCards.length) % quizCards.length;
+  quizShowingBack = false;
+  renderQuizCard();
+}
+
+function closeQuiz() {
+  document.getElementById('quiz-modal').style.display = 'none';
+}
+</script>
 {% endblock %}
