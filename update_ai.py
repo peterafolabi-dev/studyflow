@@ -16,7 +16,7 @@ new_api = '''def ai_chat_api(request):
             
             import google.generativeai as genai
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-flash-latest')
             
             prompt = f"""You are a highly intelligent, friendly AI study assistant inside a university app called StudyFlow. 
 You help students with their homework, explain complex topics, and give study advice. 
