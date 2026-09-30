@@ -2,42 +2,74 @@
 {% block title %}The Break Room · StudyFlow{% endblock %}
 {% block content %}
 <div class="mb-6 fade-in-up">
-  <h1 class="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">The Break Room 🎮</h1>
-  <p class="text-slate-500 dark:text-slate-400 mt-1">You've earned a 5-minute brain break. Play a quick game of 2048!</p>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-1">
+        The Break Room 🎮
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 text-sm">
+        You've earned a 5-minute Pomodoro brain reset. Play 2048 or chat with fellow students!
+      </p>
+    </div>
+    <a href="{% url 'global_chat' %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 text-xs shadow-md shadow-brand-500/20 transition-all hover:scale-105 flex items-center gap-1.5">
+      <span>💬</span> Join Campus Chat
+    </a>
+  </div>
 </div>
 
 <div class="flex flex-col md:flex-row gap-8 fade-in-up">
     
     <!-- Game Container -->
-    <div class="bg-[#bbada0] p-4 rounded-3xl shadow-2xl w-full max-w-[400px] mx-auto md:mx-0">
+    <div class="bg-[#bbada0] dark:bg-slate-800 p-4 sm:p-5 rounded-3xl shadow-2xl w-full max-w-[400px] mx-auto md:mx-0 border border-black/10 dark:border-slate-700">
         <div class="flex justify-between items-center mb-4">
-            <div class="bg-[#8f7a66] text-white px-4 py-2 rounded-xl font-bold">
-                SCORE <br><span id="score" class="text-2xl">0</span>
+            <div class="flex gap-2">
+                <div class="bg-[#8f7a66] dark:bg-slate-700 text-white px-3.5 py-1.5 rounded-xl font-bold text-center min-w-[70px]">
+                    <span class="text-[10px] tracking-wider uppercase block text-amber-200">SCORE</span>
+                    <span id="score" class="text-xl leading-none">0</span>
+                </div>
+                <div class="bg-[#8f7a66] dark:bg-slate-700 text-white px-3.5 py-1.5 rounded-xl font-bold text-center min-w-[70px]">
+                    <span class="text-[10px] tracking-wider uppercase block text-amber-200">BEST</span>
+                    <span id="best-score" class="text-xl leading-none">0</span>
+                </div>
             </div>
-            <button id="restart-btn" class="bg-[#8f7a66] hover:bg-[#9f8b77] text-white font-bold py-3 px-6 rounded-xl transition">
+            <button id="restart-btn" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-4 rounded-xl transition text-xs shadow-md shadow-brand-500/20 hover:scale-105">
                 New Game
             </button>
         </div>
         
         <!-- Grid -->
-        <div class="relative bg-[#a39485] p-3 rounded-xl w-full aspect-square grid grid-cols-4 grid-rows-4 gap-3" id="grid-container">
+        <div class="relative bg-[#a39485] dark:bg-slate-900 p-3 rounded-2xl w-full aspect-square grid grid-cols-4 grid-rows-4 gap-2.5 sm:gap-3" id="grid-container">
             <!-- JS will populate tiles -->
         </div>
+        <p class="text-center text-[11px] text-white/80 dark:text-slate-400 mt-3 select-none">
+          Swipe on mobile or use Arrow Keys to move
+        </p>
     </div>
 
-    <!-- Leaderboard / Instructions -->
-    <div class="flex-1 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-3xl p-8">
-        <h2 class="font-display text-2xl font-bold mb-4">How to play</h2>
-        <p class="text-slate-600 dark:text-slate-300 mb-6">Use your <strong>Arrow Keys</strong> (or swipe on mobile) to move the tiles. Tiles with the same number merge into one when they touch. Add them up to reach <strong>2048!</strong></p>
+    <!-- Leaderboard / Instructions / Actions -->
+    <div class="flex-1 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-brand-100 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
+        <div>
+          <h2 class="font-display text-2xl font-bold mb-3 text-slate-800 dark:text-white">How to play</h2>
+          <p class="text-slate-600 dark:text-slate-300 text-sm mb-6 leading-relaxed">
+            Use your <strong>Arrow Keys</strong> (or swipe on touchscreens) to slide the tiles. When two tiles with the same number touch, they merge into one. Add them up to reach <strong>2048!</strong>
+          </p>
+          
+          <h3 class="font-display text-lg font-bold mb-2 text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
+            <span>⏱️</span> Study Science Tip
+          </h3>
+          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6">
+            Puzzles like 2048 activate pattern recognition without inducing social media burnout. Play one 5-minute round to give your memory consolidation time to work, then hop back into your Pomodoro study session!
+          </p>
+        </div>
         
-        <h3 class="font-display text-xl font-bold mb-3 text-brand-600 dark:text-brand-400">Study Advice</h3>
-        <p class="text-slate-600 dark:text-slate-300">Games like this are perfect for the 5-minute break in your Pomodoro cycle. They give your brain a quick hit of dopamine without sucking you into a doom-scroll on social media. Play a round, then get back to work!</p>
-        
-        <div class="mt-8 flex gap-3">
-            <a href="{% url 'study_room' %}" class="inline-block bg-brand-600 hover:bg-brand-700 text-white font-medium px-6 py-3 rounded-xl shadow-lg transition">
-                Back to Study Room
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-3">
+            <a href="{% url 'study_room' %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2.5 text-xs shadow-md shadow-brand-500/20 transition-all hover:scale-105 flex items-center gap-1.5">
+                <span>⏱️</span> Return to Study Room
             </a>
-            <a href="{% url 'dashboard' %}" class="inline-block bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-medium px-6 py-3 rounded-xl shadow-sm transition">
+            <a href="{% url 'global_chat' %}" class="rounded-xl border border-brand-200 dark:border-slate-700 bg-brand-50/50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 hover:bg-brand-100 font-semibold px-4 py-2.5 text-xs transition flex items-center gap-1.5">
+                <span>💬</span> Campus Chat
+            </a>
+            <a href="{% url 'dashboard' %}" class="rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-4 py-2.5 text-xs transition">
                 Dashboard
             </a>
         </div>
@@ -49,31 +81,35 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 2rem;
-        font-weight: bold;
-        border-radius: 8px;
+        font-size: 1.6rem;
+        font-weight: 800;
+        border-radius: 12px;
         background-color: #cdc1b4;
         color: #776e65;
-        transition: transform 0.15s ease-in-out;
+        transition: transform 0.12s ease-in-out;
+        user-select: none;
     }
-    .tile-2 { background: #eee4da; }
-    .tile-4 { background: #ede0c8; }
+    .tile-2 { background: #eee4da; color: #475569; }
+    .tile-4 { background: #ede0c8; color: #475569; }
     .tile-8 { background: #f2b179; color: white; }
     .tile-16 { background: #f59563; color: white; }
     .tile-32 { background: #f67c5f; color: white; }
     .tile-64 { background: #f65e3b; color: white; }
-    .tile-128 { background: #edcf72; color: white; font-size: 1.5rem; box-shadow: 0 0 10px rgba(243, 215, 116, 0.5); }
-    .tile-256 { background: #edcc61; color: white; font-size: 1.5rem; box-shadow: 0 0 15px rgba(243, 215, 116, 0.6); }
-    .tile-512 { background: #edc850; color: white; font-size: 1.5rem; box-shadow: 0 0 20px rgba(243, 215, 116, 0.7); }
-    .tile-1024 { background: #edc53f; color: white; font-size: 1.2rem; box-shadow: 0 0 25px rgba(243, 215, 116, 0.8); }
-    .tile-2048 { background: #edc22e; color: white; font-size: 1.2rem; box-shadow: 0 0 30px rgba(243, 215, 116, 0.9); }
+    .tile-128 { background: #edcf72; color: white; font-size: 1.3rem; box-shadow: 0 0 10px rgba(243, 215, 116, 0.5); }
+    .tile-256 { background: #edcc61; color: white; font-size: 1.3rem; box-shadow: 0 0 15px rgba(243, 215, 116, 0.6); }
+    .tile-512 { background: #edc850; color: white; font-size: 1.3rem; box-shadow: 0 0 20px rgba(243, 215, 116, 0.7); }
+    .tile-1024 { background: #edc53f; color: white; font-size: 1.1rem; box-shadow: 0 0 25px rgba(243, 215, 116, 0.8); }
+    .tile-2048 { background: #7c3aed; color: white; font-size: 1.1rem; box-shadow: 0 0 30px rgba(124, 58, 237, 0.9); }
 </style>
 
 <script>
     const gridContainer = document.getElementById('grid-container');
     const scoreDisplay = document.getElementById('score');
+    const bestDisplay = document.getElementById('best-score');
     let board = [];
     let score = 0;
+    let bestScore = parseInt(localStorage.getItem('studyflow_2048_best') || '0', 10);
+    bestDisplay.textContent = bestScore;
 
     function initGame() {
         board = [...Array(4)].map(e => Array(4).fill(0));
@@ -82,6 +118,16 @@
         addRandomTile();
         addRandomTile();
         drawBoard();
+    }
+
+    function updateScore(added) {
+        score += added;
+        scoreDisplay.textContent = score;
+        if (score > bestScore) {
+            bestScore = score;
+            bestDisplay.textContent = bestScore;
+            localStorage.setItem('studyflow_2048_best', bestScore);
+        }
     }
 
     function addRandomTile() {
@@ -103,7 +149,7 @@
             for(let c=0; c<4; c++) {
                 let val = board[r][c];
                 let tile = document.createElement('div');
-                tile.className = `tile ${val > 0 ? 'tile-'+val : ''}`;
+                tile.className = `tile ${val > 0 ? 'tile-'+val : 'opacity-20 bg-slate-300 dark:bg-slate-800'}`;
                 tile.textContent = val > 0 ? val : '';
                 gridContainer.appendChild(tile);
             }
@@ -121,8 +167,7 @@
         for(let i=0; i<3; i++) {
             if(row[i] !== 0 && row[i] === row[i+1]) {
                 row[i] *= 2;
-                score += row[i];
-                scoreDisplay.textContent = score;
+                updateScore(row[i]);
                 row[i+1] = 0;
             }
         }
@@ -183,21 +228,45 @@
         return changed;
     }
 
-    document.addEventListener('keydown', e => {
-        if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
-            e.preventDefault(); // stop scrolling
-        }
-        let changed = false;
-        if(e.key === 'ArrowLeft') changed = moveLeft();
-        else if(e.key === 'ArrowRight') changed = moveRight();
-        else if(e.key === 'ArrowUp') changed = moveUp();
-        else if(e.key === 'ArrowDown') changed = moveDown();
-        
+    function handleMove(changed) {
         if(changed) {
             addRandomTile();
             drawBoard();
         }
+    }
+
+    document.addEventListener('keydown', e => {
+        if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+            e.preventDefault();
+        }
+        if(e.key === 'ArrowLeft') handleMove(moveLeft());
+        else if(e.key === 'ArrowRight') handleMove(moveRight());
+        else if(e.key === 'ArrowUp') handleMove(moveUp());
+        else if(e.key === 'ArrowDown') handleMove(moveDown());
     });
+
+    // Touch Swipe Support for Mobile
+    let touchStartX = 0, touchStartY = 0;
+    gridContainer.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    gridContainer.addEventListener('touchend', e => {
+        let diffX = e.changedTouches[0].screenX - touchStartX;
+        let diffY = e.changedTouches[0].screenY - touchStartY;
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            if (Math.abs(diffX) > 30) {
+                if (diffX > 0) handleMove(moveRight());
+                else handleMove(moveLeft());
+            }
+        } else {
+            if (Math.abs(diffY) > 30) {
+                if (diffY > 0) handleMove(moveDown());
+                else handleMove(moveUp());
+            }
+        }
+    }, { passive: true });
 
     document.getElementById('restart-btn').addEventListener('click', initGame);
     initGame();
