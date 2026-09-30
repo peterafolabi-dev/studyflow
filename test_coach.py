@@ -49,7 +49,7 @@ with patch.dict(os.environ, {'GROQ_API_KEY': 'dummy_key'}):
             print('Model used:', call_kwargs['model'])
             print('Number of messages sent to Groq:', len(call_kwargs['messages']))
             print('Roles sequence:', [m['role'] for m in call_kwargs['messages']])
-            print('Reply:', data['reply'])
+            print('Reply:', data['reply'].encode('ascii', errors='replace').decode('ascii'))
             print()
             
             history.append({'role': 'user', 'content': msg})
