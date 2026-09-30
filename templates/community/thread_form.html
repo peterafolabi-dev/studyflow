@@ -20,10 +20,16 @@
         <textarea name="body" rows="4" placeholder="Kick off the conversation&hellip;"
                   class="w-full rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"></textarea>
       </div>
-      <label class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-        <input type="checkbox" name="is_anonymous" class="rounded border-brand-300">
-        Start this discussion anonymously
-      </label>
+      <div class="space-y-2 pt-1">
+        <label class="flex items-center gap-2 text-xs font-semibold text-brand-700 dark:text-brand-300 cursor-pointer select-none">
+          <input type="checkbox" name="ask_ai" value="1" checked class="rounded text-brand-600 focus:ring-brand-500">
+          <span>🤖 Get instant AI Coach answer right away (if classmates aren't online)</span>
+        </label>
+        <label class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+          <input type="checkbox" name="is_anonymous" class="rounded border-brand-300">
+          <span>Start this discussion anonymously</span>
+        </label>
+      </div>
       <div class="flex gap-2">
         <button type="submit" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Start discussion</button>
         <a href="{% url 'thread_list' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">Cancel</a>
