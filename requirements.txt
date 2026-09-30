@@ -6,7 +6,7 @@ dj-database-url
 psycopg[binary]
 whitenoise
 gunicorn
-google-generativeai
+groq
 django-allauth[socialaccount]
 python-dotenv
 
