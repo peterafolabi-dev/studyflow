@@ -353,7 +353,7 @@ import os
 import logging
 logger = logging.getLogger('django.request')
 
-@login_required
+@csrf_exempt
 @require_POST
 def ai_chat_api(request):
     try:
