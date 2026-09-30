@@ -21,6 +21,7 @@ urlpatterns = [
     path('study/', views.study_room, name='study_room'),
     path('study/log/', views.log_study, name='log_study'),
     path('flashcards/', views.flashcard_hubs, name='flashcards'),
+    path('flashcards/<int:pk>/review/', views.flashcard_rate_review, name='flashcard_rate_review'),
     path('timetable/new/', views.timetable_create, name='timetable_create'),
     path('timetable/<int:pk>/delete/', views.timetable_delete, name='timetable_delete'),
     path('calendar.ics', views.export_calendar, name='export_calendar'),

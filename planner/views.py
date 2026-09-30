@@ -37,12 +37,17 @@ def dashboard(request):
         course__user=request.user, is_done=False
     ).select_related('course')
 
+    due_flashcards_count = Flashcard.objects.filter(
+        deck__course__user=request.user, next_review_date__lte=today
+    ).count()
+
     context = {
         'overdue': open_tasks.filter(due_date__lt=today),
         'due_soon': open_tasks.filter(due_date__gte=today, due_date__lte=week_end),
         'course_count': Course.objects.filter(user=request.user).count(),
         'open_count': open_tasks.count(),
         'done_count': Task.objects.filter(course__user=request.user, is_done=True).count(),
+        'due_flashcards_count': due_flashcards_count,
         'trending_resources': Resource.objects.filter(
             last_downloaded_at__gte=timezone.now() - timedelta(days=7)
         ).order_by('-download_count')[:5],
@@ -343,7 +348,59 @@ def flashcard_hubs(request):
             deck.delete()
             return redirect('flashcards')
 
-    return render(request, 'planner/flashcards.html', {'decks': decks, 'courses': courses})
+    today = timezone.localdate()
+    due_cards_qs = Flashcard.objects.filter(
+        deck__course__user=request.user, next_review_date__lte=today
+    ).select_related('deck', 'deck__course')
+    due_count = due_cards_qs.count()
+
+    due_cards_data = [
+        {
+            'id': c.id,
+            'front': c.front,
+            'back': c.back,
+            'deck_title': c.deck.title,
+            'course_code': c.deck.course.code,
+            'interval_days': c.interval_days,
+            'repetitions': c.repetitions,
+        }
+        for c in due_cards_qs
+    ]
+
+    context = {
+        'decks': decks,
+        'courses': courses,
+        'due_count': due_count,
+        'due_cards_json': json.dumps(due_cards_data),
+    }
+    return render(request, 'planner/flashcards.html', context)
+
+
+@login_required
+@require_POST
+def flashcard_rate_review(request, pk):
+    """
+    Applies SM-2 spaced repetition rating: 'easy', 'medium', or 'hard'.
+    """
+    card = get_object_or_404(Flashcard, pk=pk, deck__course__user=request.user)
+    try:
+        data = json.loads(request.body)
+        rating = data.get('rating', 'medium')
+    except Exception:
+        rating = request.POST.get('rating', 'medium')
+
+    if rating not in ['hard', 'medium', 'easy']:
+        return JsonResponse({'error': 'Rating must be hard, medium, or easy.'}, status=400)
+
+    next_date = card.process_review(rating)
+    return JsonResponse({
+        'success': True,
+        'card_id': card.id,
+        'rating': rating,
+        'next_review_date': next_date.strftime('%Y-%m-%d'),
+        'interval_days': card.interval_days,
+        'repetitions': card.repetitions,
+    })
 
 
 from django.http import JsonResponse
