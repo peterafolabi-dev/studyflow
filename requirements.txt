@@ -9,3 +9,6 @@ gunicorn
 google-generativeai
 django-allauth[socialaccount]
 python-dotenv
+
+PyJWT
+requests-oauthlib
