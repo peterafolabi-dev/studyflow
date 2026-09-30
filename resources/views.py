@@ -79,9 +79,27 @@ def resource_detail(request, pk):
     )
 
 
+from studyflow.upload_config import (
+    get_accept_attribute,
+    get_allowed_types_display,
+    get_allowed_extensions,
+    get_allowed_mime_types,
+    MAX_UPLOAD_SIZE_MB,
+    MAX_UPLOAD_SIZE_BYTES,
+)
+
 @login_required
 def resource_upload(request):
     default_type = request.GET.get('type', 'notes')
+    upload_ctx = {
+        'accept_attribute': get_accept_attribute(),
+        'allowed_types_display': get_allowed_types_display(),
+        'allowed_extensions': get_allowed_extensions(),
+        'allowed_mimes': get_allowed_mime_types(),
+        'max_size_mb': MAX_UPLOAD_SIZE_MB,
+        'max_size_bytes': MAX_UPLOAD_SIZE_BYTES,
+    }
+
     if request.method == 'POST':
         form = ResourceUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -92,10 +110,12 @@ def resource_upload(request):
             reverse_type = 'thesis_paper' if resource.resource_type in ('thesis', 'paper') else resource.resource_type
             _, _, url_name = TYPE_GROUPS.get(reverse_type, (None, None, 'notes_list'))
             return redirect(url_name)
+        else:
+            return render(request, 'resources/upload.html', {'form': form, 'upload_config': upload_ctx}, status=400)
     else:
         form = ResourceUploadForm(initial={'resource_type': default_type})
 
-    return render(request, 'resources/upload.html', {'form': form})
+    return render(request, 'resources/upload.html', {'form': form, 'upload_config': upload_ctx})
 
 
 @login_required

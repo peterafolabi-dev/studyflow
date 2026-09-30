@@ -1,9 +1,15 @@
+import uuid
 from django import forms
-
 from .models import Resource
-
-ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.txt']
-MAX_UPLOAD_SIZE_MB = 20
+from studyflow.upload_config import (
+    get_allowed_extensions,
+    get_allowed_mime_types,
+    get_accept_attribute,
+    get_allowed_types_display,
+    validate_magic_bytes,
+    MAX_UPLOAD_SIZE_MB,
+    MAX_UPLOAD_SIZE_BYTES,
+)
 
 
 class ResourceUploadForm(forms.ModelForm):
@@ -12,9 +18,10 @@ class ResourceUploadForm(forms.ModelForm):
         fields = ['title', 'course_code', 'resource_type', 'description', 'file']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
+            'file': forms.FileInput(attrs={'accept': get_accept_attribute()}),
         }
         help_texts = {
-            'file': 'PDF, Word, PowerPoint or plain text — up to 20MB.',
+            'file': f'Allowed: {get_allowed_types_display()} — up to {MAX_UPLOAD_SIZE_MB}MB.',
         }
 
     def clean_file(self):
@@ -22,14 +29,28 @@ class ResourceUploadForm(forms.ModelForm):
         if not file:
             return file
 
-        ext = ('.' + file.name.rsplit('.', 1)[-1].lower()) if '.' in file.name else ''
-        if ext not in ALLOWED_EXTENSIONS:
-            raise forms.ValidationError(
-                f'"{ext or "that file type"}" isn\'t allowed. Stick to: {", ".join(ALLOWED_EXTENSIONS)}.'
-            )
-
-        if file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024:
+        # Check file size limit
+        if file.size > MAX_UPLOAD_SIZE_BYTES:
             raise forms.ValidationError(f'File is too large — keep it under {MAX_UPLOAD_SIZE_MB}MB.')
+
+        # Check extension
+        ext = ('.' + file.name.rsplit('.', 1)[-1].lower()) if '.' in file.name else ''
+        allowed_extensions = get_allowed_extensions()
+        if ext not in allowed_extensions:
+            raise forms.ValidationError(f'Only {get_allowed_types_display()} files are allowed.')
+
+        # Check MIME type
+        content_type = getattr(file, 'content_type', '')
+        allowed_mimes = get_allowed_mime_types()
+        if content_type and content_type.lower() not in allowed_mimes:
+            raise forms.ValidationError(f'Only {get_allowed_types_display()} files are allowed.')
+
+        # Check magic bytes for genuine file content
+        if not validate_magic_bytes(file, ext):
+            raise forms.ValidationError(f'Invalid file content: The file does not match a valid {get_allowed_types_display()} signature.')
+
+        # Generate a safe random filename so original filename is never the storage path
+        file.name = f"{uuid.uuid4().hex}{ext}"
 
         return file
 
