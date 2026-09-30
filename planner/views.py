@@ -312,26 +312,52 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 import os
 
-@csrf_exempt
+import logging
+logger = logging.getLogger('django.request')
+
+@login_required
+@require_POST
 def ai_chat_api(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            user_message = data.get('message', '')
+    try:
+        data = json.loads(request.body)
+        user_message = data.get('message', '').strip()
+        if not user_message:
+            return JsonResponse({'reply': 'Ask me something!'})
             
-            api_key = os.environ.get('GEMINI_API_KEY')
-            if not api_key:
-                return JsonResponse({'reply': 'I am ready to go! To activate me, add GEMINI_API_KEY to the .env file.'})
+        api_key = os.environ.get('GROQ_API_KEY')
+        if not api_key:
+            return JsonResponse({'reply': 'I am ready to go! To activate me, add GROQ_API_KEY to your Render environment variables (or .env file).'})
             
-            import google.generativeai as genai
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-flash-latest')
-            response = model.generate_content(user_message)
-            
-            return JsonResponse({'reply': response.text})
-        except Exception as e:
-            return JsonResponse({'reply': 'Oops, I encountered an error connecting to Gemini! Check your API key. Error: ' + str(e)}, status=500)
-    return JsonResponse({'error': 'Invalid method'}, status=405)
+        from groq import Groq
+        client = Groq(api_key=api_key)
+        
+        system_prompt = """You are the legendary AI study assistant inside StudyFlow, a comprehensive student app built for FUT Minna students.
+You know everything about StudyFlow:
+- Users can manage Courses and Tasks on the Dashboard.
+- Users can view and add to the Catalogue (a global library).
+- IBB Library allows users to reserve and return physical books.
+- Study Groups are for specific courses.
+- Break Room has mini-games.
+- Study Room has a Pomodoro Timer (with Deep Focus and Lo-Fi Spotify playlists) and logs study sessions.
+- Flashcards let users quiz themselves.
+- GPA Calculator helps them track their grades.
+- Resources section holds Past Questions, Notes, Theses, and Lecture Slides.
+
+Your personality: Friendly, highly intelligent, encouraging, and legendary.
+Respond in PLAIN TEXT ONLY. Do not use Markdown, HTML tags, or code blocks. Keep it concise."""
+
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ],
+            model="llama3-8b-8192",
+        )
+        reply = chat_completion.choices[0].message.content
+        return JsonResponse({'reply': reply})
+    except Exception as e:
+        logger.error('AI chat error: %s', e, exc_info=True)
+        return JsonResponse({'reply': 'Oops, I encountered an error. Check if your API key is correct!'}, status=500)
 
 
 @login_required
