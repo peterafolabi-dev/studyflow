@@ -346,17 +346,31 @@ You know everything about StudyFlow:
 Your personality: Friendly, highly intelligent, encouraging, and legendary.
 Respond in PLAIN TEXT ONLY. Do not use Markdown, HTML tags, or code blocks. Keep it concise."""
 
+        model_name = os.environ.get('MODEL_NAME') or os.environ.get('GROQ_MODEL_NAME') or 'openai/gpt-oss-20b'
+
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message}
             ],
-            model="llama-3.1-8b-instant",
+            model=model_name,
         )
         reply = chat_completion.choices[0].message.content
         return JsonResponse({'reply': reply})
     except Exception as e:
         logger.error('AI chat error: %s', e, exc_info=True)
+        error_msg = str(e)
+        # Check if error is model_not_found (404)
+        if (hasattr(e, 'status_code') and e.status_code == 404) or 'model_not_found' in error_msg or 'does not exist' in error_msg:
+            available_list = []
+            try:
+                available_list = [m.id for m in client.models.list().data if 'whisper' not in m.id]
+            except Exception:
+                pass
+            extra = f" Available models: {', '.join(available_list[:6])}." if available_list else ""
+            return JsonResponse({
+                'reply': f"Model '{model_name}' not found on Groq.{extra} Set MODEL_NAME in your environment to choose an available model."
+            }, status=500)
         return JsonResponse({'reply': f'Oops, error: {type(e).__name__} - {e}'}, status=500)
 
 
