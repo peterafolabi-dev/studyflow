@@ -73,6 +73,34 @@ h1, h2, h3, .font-display {
 }
 html { scroll-behavior: smooth; }
 
+/* Official Google Login Button — Clean neutral styling, never turns purple on hover */
+.google-btn {
+  background-color: #ffffff !important;
+  color: #374151 !important;
+  border: 1px solid #cbd5e1 !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.google-btn:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08) !important;
+}
+.dark .google-btn {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25) !important;
+}
+.dark .google-btn:hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+  border-color: #64748b !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.35) !important;
+}
+
 /* StudyFlow — student deadline planner
    Palette: purple. page #F5F3FF, ink #1E1B2E, muted #6B6280, line #E4DEFB, primary #7C3AED,
    late #C0223B, soon #A85F00. Each course gets one of six accent colours. */
