@@ -9,7 +9,7 @@ class DebugSocialAccountAdapter(DefaultSocialAccountAdapter):
     is found and fixed — always raising like this is wrong for real users.
     """
 
-    def authentication_error(self, request, provider_id, error=None, exception=None, extra_context=None):
+    def on_authentication_error(self, request, provider, error=None, exception=None, extra_context=None):
         if exception:
             raise exception
-        return super().authentication_error(request, provider_id, error, exception, extra_context)
+        return super().on_authentication_error(request, provider, error, exception, extra_context)
