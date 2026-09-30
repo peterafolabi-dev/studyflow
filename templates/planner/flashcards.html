@@ -224,9 +224,12 @@ function flipCard(cardId) {
 let quizCards = [], quizIdx = 0, quizShowingBack = false;
 
 function startQuiz(deckId) {
-  const scriptEl = document.getElementById('deck-data-' + deckId);
-  if (!scriptEl) return;
-  quizCards = JSON.parse(scriptEl.textContent);
+  const container = document.getElementById('deck-data-' + deckId);
+  if (!container) return;
+  quizCards = Array.from(container.querySelectorAll('span')).map(s => ({
+    front: s.dataset.front,
+    back: s.dataset.back
+  }));
   if (!quizCards.length) return;
   quizIdx = 0; quizShowingBack = false;
   document.getElementById('quiz-modal').style.display = 'flex';
