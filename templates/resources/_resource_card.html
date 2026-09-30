@@ -23,6 +23,24 @@
     Uploaded by {{ r.uploaded_by.username|default:"a student" }} &middot; {{ r.download_count }} download{{ r.download_count|pluralize }}
   </p>
 
+  {% if r.file %}
+    <div class="flex flex-wrap items-center gap-1.5 pt-3 pb-2.5 mb-2 border-t border-brand-100 dark:border-slate-800 text-xs">
+      <span class="text-brand-600 dark:text-brand-400 font-bold shrink-0">✨ AI:</span>
+      <a href="{% url 'resource_detail' r.pk %}?action=summarize"
+         class="px-2 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-medium hover:bg-brand-100 dark:hover:bg-brand-900 transition">
+        📑 Summarize
+      </a>
+      <a href="{% url 'resource_detail' r.pk %}?action=flashcards"
+         class="px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-100 dark:hover:bg-amber-900 transition">
+        🃏 Flashcards
+      </a>
+      <a href="{% url 'resource_detail' r.pk %}?action=quiz"
+         class="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900 transition">
+        ❓ Quiz
+      </a>
+    </div>
+  {% endif %}
+
   <div class="mt-auto flex gap-2">
     <a href="{% url 'resource_detail' r.pk %}"
        class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium py-2 px-3 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">

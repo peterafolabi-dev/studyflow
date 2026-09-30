@@ -12,3 +12,4 @@ python-dotenv
 
 PyJWT
 requests-oauthlib
+pypdf

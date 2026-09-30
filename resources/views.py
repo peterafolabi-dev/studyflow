@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import F, Q
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -237,3 +237,162 @@ def rate_resource(request, pk):
         messages.success(request, 'Thanks for the rating!')
     next_url = request.POST.get('next') or 'notes_list'
     return redirect(next_url)
+
+
+import json
+from planner.models import Course, FlashcardDeck, Flashcard
+from .pdf_service import extract_and_chunk_pdf, ScannedOrEmptyPDFError, PDFExtractionError
+from .ai_service import (
+    check_and_increment_rate_limit,
+    RateLimitExceeded,
+    AIProcessingError,
+    summarize_material,
+    generate_flashcards_from_material,
+    generate_quiz_from_material,
+)
+
+
+def _extract_pdf_with_rate_limit(request, pk):
+    """Common helper to validate resource, check PDF validity, enforce rate limit, and extract text."""
+    resource = get_object_or_404(Resource, pk=pk)
+    if not resource.file:
+        return None, None, JsonResponse({'error': 'No file is attached to this resource.'}, status=400)
+
+    filename = resource.file.name.lower()
+    if not filename.endswith('.pdf'):
+        return None, None, JsonResponse({'error': 'AI features are currently supported for PDF files only.'}, status=400)
+
+    try:
+        check_and_increment_rate_limit(request.user.id)
+    except RateLimitExceeded as e:
+        return None, None, JsonResponse({'error': str(e)}, status=429)
+
+    try:
+        text = extract_and_chunk_pdf(resource.file.path)
+    except ScannedOrEmptyPDFError as e:
+        return None, None, JsonResponse({'error': str(e)}, status=422)
+    except PDFExtractionError as e:
+        return None, None, JsonResponse({'error': f'PDF extraction failed: {str(e)}'}, status=400)
+    except Exception as e:
+        return None, None, JsonResponse({'error': f'Unable to read PDF file: {str(e)}'}, status=500)
+
+    return resource, text, None
+
+
+@login_required
+@require_POST
+def resource_ai_summarize(request, pk):
+    resource, text, err_resp = _extract_pdf_with_rate_limit(request, pk)
+    if err_resp:
+        return err_resp
+    try:
+        data = summarize_material(text, title=resource.title)
+        return JsonResponse({'success': True, 'data': data})
+    except AIProcessingError as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def resource_ai_flashcards(request, pk):
+    resource, text, err_resp = _extract_pdf_with_rate_limit(request, pk)
+    if err_resp:
+        return err_resp
+    try:
+        cards = generate_flashcards_from_material(text, title=resource.title, card_count=8)
+        user_courses = list(Course.objects.filter(user=request.user).values('id', 'name', 'code'))
+        user_decks = list(
+            FlashcardDeck.objects.filter(course__user=request.user)
+            .values('id', 'title', 'course__name', 'course__code')
+        )
+        return JsonResponse({
+            'success': True,
+            'flashcards': cards,
+            'user_courses': user_courses,
+            'user_decks': user_decks,
+            'default_deck_title': f"{resource.title} Cards"[:180]
+        })
+    except AIProcessingError as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def resource_ai_save_flashcards(request, pk):
+    resource = get_object_or_404(Resource, pk=pk)
+    try:
+        data = json.loads(request.body)
+    except Exception:
+        data = request.POST
+
+    cards_data = data.get('cards', [])
+    if isinstance(cards_data, str):
+        try:
+            cards_data = json.loads(cards_data)
+        except Exception:
+            cards_data = []
+
+    if not cards_data:
+        return JsonResponse({'error': 'No flashcards provided to save.'}, status=400)
+
+    deck_id = data.get('deck_id')
+    deck = None
+    if deck_id:
+        deck = FlashcardDeck.objects.filter(pk=deck_id, course__user=request.user).first()
+        if not deck:
+            return JsonResponse({'error': 'Selected flashcard deck not found.'}, status=404)
+    else:
+        # Create a new deck
+        deck_title = (data.get('new_deck_title') or f"{resource.title} Cards").strip()
+        course_id = data.get('course_id')
+        course = None
+        if course_id:
+            course = Course.objects.filter(pk=course_id, user=request.user).first()
+
+        if not course:
+            course_code = resource.course_code.strip() or 'GEN'
+            course = Course.objects.filter(user=request.user, code__iexact=course_code).first()
+            if not course:
+                course = Course.objects.create(
+                    user=request.user,
+                    name=resource.course_code or 'Study Materials',
+                    code=course_code
+                )
+
+        deck = FlashcardDeck.objects.create(course=course, title=deck_title)
+
+    cards_to_create = []
+    for c in cards_data:
+        front = (c.get('front') or '').strip()
+        back = (c.get('back') or '').strip()
+        if front and back:
+            cards_to_create.append(Flashcard(deck=deck, front=front, back=back))
+
+    if cards_to_create:
+        Flashcard.objects.bulk_create(cards_to_create)
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Saved {len(cards_to_create)} flashcards into '{deck.title}'.",
+        'deck_id': deck.id,
+        'deck_title': deck.title,
+        'course_name': deck.course.name,
+        'cards_count': len(cards_to_create)
+    })
+
+
+@login_required
+@require_POST
+def resource_ai_quiz(request, pk):
+    resource, text, err_resp = _extract_pdf_with_rate_limit(request, pk)
+    if err_resp:
+        return err_resp
+    try:
+        questions = generate_quiz_from_material(text, title=resource.title, question_count=5)
+        return JsonResponse({
+            'success': True,
+            'resource_title': resource.title,
+            'questions': questions
+        })
+    except AIProcessingError as e:
+        return JsonResponse({'error': str(e)}, status=500)

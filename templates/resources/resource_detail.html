@@ -1,60 +1,692 @@
 {% extends 'base.html' %}
-{% block title %}{{ resource.title }} · StudyFlow{% endblock %}
-{% block content %}
-  <div class="max-w-2xl">
-    <a href="{% url back_url_name %}" class="text-sm text-brand-600 dark:text-brand-300 hover:underline">&larr; Back</a>
+{% block title %}{{ resource.title }} · StudyFlow AI{% endblock %}
 
-    <div class="mt-3 mb-6">
-      <span class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">
-        {{ resource.get_resource_type_display }}{% if resource.course_code %} &middot; {{ resource.course_code }}{% endif %}
+{% block content %}
+<div class="max-w-3xl mx-auto">
+  <!-- Back button -->
+  <a href="{% url back_url_name %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 dark:text-brand-300 hover:text-brand-700 dark:hover:text-brand-200 transition">
+    <span>&larr;</span> Back to {{ resource.get_resource_type_display }}
+  </a>
+
+  <!-- Header Card -->
+  <div class="mt-4 mb-6 rounded-2xl border border-brand-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-brand-50 dark:bg-brand-950/70 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
+        {{ resource.get_resource_type_display }}
+        {% if resource.course_code %} &middot; {{ resource.course_code }}{% endif %}
       </span>
-      <h1 class="font-display text-2xl font-bold mt-1 mb-2 text-brand-800 dark:text-brand-200">{{ resource.title }}</h1>
-      {% if resource.description %}<p class="text-slate-700 dark:text-slate-300">{{ resource.description }}</p>{% endif %}
-      <p class="text-xs text-slate-400 mt-2">
-        Uploaded by {{ resource.uploaded_by.username|default:"a student" }} &middot; {{ resource.download_count }} download{{ resource.download_count|pluralize }}
-      </p>
+      <span class="text-xs text-slate-400">
+        {{ resource.download_count }} download{{ resource.download_count|pluralize }} &middot; {{ resource.created_at|date:"d M Y" }}
+      </span>
     </div>
 
-    <div class="flex items-center gap-3 mb-6">
-      {% if resource.average_rating %}
-        <span class="text-amber-500 text-sm">{% for i in "12345" %}{% if forloop.counter <= resource.average_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-        <span class="text-sm text-slate-500 dark:text-slate-400">{{ resource.average_rating }} ({{ resource.rating_count }})</span>
+    <h1 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">
+      {{ resource.title }}
+    </h1>
+
+    {% if resource.description %}
+      <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-4">
+        {{ resource.description }}
+      </p>
+    {% endif %}
+
+    <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-brand-50 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+      <div>Uploaded by <strong class="text-slate-700 dark:text-slate-200">{{ resource.uploaded_by.username|default:"A Student" }}</strong></div>
+      
+      <!-- Rating widget -->
+      <form method="post" action="{% url 'rate_resource' resource.pk %}" class="flex items-center gap-1">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'resource_detail' resource.pk %}">
+        <span class="mr-1">Rating:</span>
+        {% for i in "12345" %}
+          <button name="stars" value="{{ forloop.counter }}" type="submit" title="Rate {{ forloop.counter }} stars"
+                  class="text-base transition hover:scale-125 {% if my_rating and forloop.counter <= my_rating.stars %}text-amber-400{% else %}text-slate-300 dark:text-slate-600{% endif %} hover:text-amber-400">
+            ★
+          </button>
+        {% endfor %}
+        {% if resource.average_rating %}
+          <span class="font-medium ml-1 text-slate-600 dark:text-slate-300">({{ resource.average_rating }})</span>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- AI Study Kit & Download Toolbar -->
+  <div class="mb-8 rounded-2xl border border-brand-200 dark:border-brand-900/60 bg-gradient-to-br from-brand-50/60 via-white to-indigo-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-brand-950/40 p-5 shadow-sm">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white">AI Study Kit</h2>
+          <span class="text-xs font-semibold px-2 py-0.5 rounded bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300">Groq Powered</span>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Generate high-yield summaries, flashcard decks, and practice quizzes directly from this PDF.
+        </p>
+      </div>
+
+      {% if resource.file %}
+        <a href="{% url 'resource_download' resource.pk %}"
+           class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium px-4 py-2 text-xs sm:text-sm shadow-sm transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download PDF
+        </a>
       {% endif %}
     </div>
 
-    <form method="post" action="{% url 'rate_resource' resource.pk %}" class="flex items-center gap-1 mb-6">
-      {% csrf_token %}
-      <input type="hidden" name="next" value="{% url 'resource_detail' resource.pk %}">
-      <span class="text-sm text-slate-500 dark:text-slate-400 mr-2">Rate this:</span>
-      {% for i in "12345" %}
-        <button name="stars" value="{{ forloop.counter }}" type="submit"
-                class="text-xl {% if my_rating and forloop.counter <= my_rating.stars %}text-amber-500{% else %}text-slate-300 dark:text-slate-600{% endif %} hover:text-amber-500">★</button>
-      {% endfor %}
-    </form>
-
     {% if resource.file %}
-      <a href="{% url 'resource_download' resource.pk %}" class="inline-block rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm mb-8">
-        ⬇ Download
-      </a>
-    {% endif %}
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <!-- Summarize Button -->
+        <button type="button" id="btn-ai-summarize"
+                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm text-brand-800 dark:text-brand-200 bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 hover:border-brand-400 hover:bg-brand-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
+          <span class="text-lg group-hover:scale-110 transition-transform">📑</span>
+          <span>Summarize</span>
+        </button>
 
-    <h2 class="font-display font-bold text-lg mb-3">💬 Questions &amp; comments</h2>
+        <!-- Make Flashcards Button -->
+        <button type="button" id="btn-ai-flashcards"
+                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm text-amber-900 dark:text-amber-200 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-900/50 hover:border-amber-400 hover:bg-amber-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
+          <span class="text-lg group-hover:scale-110 transition-transform">🃏</span>
+          <span>Make Flashcards</span>
+        </button>
+
+        <!-- Quiz Me Button -->
+        <button type="button" id="btn-ai-quiz"
+                class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium text-sm text-emerald-900 dark:text-emerald-200 bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-900/50 hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:bg-slate-700/60 shadow-sm transition group">
+          <span class="text-lg group-hover:scale-110 transition-transform">❓</span>
+          <span>Quiz Me</span>
+        </button>
+      </div>
+    {% else %}
+      <div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-4 text-center text-sm text-slate-500">
+        No document attached to this resource yet.
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Comments / Discussion -->
+  <div class="rounded-2xl border border-brand-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm mb-12">
+    <h2 class="font-display font-bold text-lg mb-4 text-slate-900 dark:text-white flex items-center gap-2">
+      <span>💬</span> Discussion &amp; Questions ({{ comments.count }})
+    </h2>
+
     <div class="space-y-3 mb-6">
       {% for c in comments %}
-        <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-          <p class="text-sm text-slate-700 dark:text-slate-300">{{ c.body }}</p>
-          <p class="text-xs text-slate-400 mt-2">{{ c.user.username|default:"a student" }} &middot; {{ c.created_at|date:"d M, g:i a" }}</p>
+        <div class="rounded-xl border border-brand-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 p-3.5">
+          <p class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line">{{ c.body }}</p>
+          <p class="text-xs text-slate-400 mt-2 flex items-center gap-2">
+            <strong class="font-medium text-slate-600 dark:text-slate-400">{{ c.user.username|default:"a student" }}</strong>
+            &middot;
+            <span>{{ c.created_at|date:"d M, g:i a" }}</span>
+          </p>
         </div>
       {% empty %}
-        <p class="text-sm text-slate-500 dark:text-slate-400">No comments yet — ask something.</p>
+        <p class="text-sm text-slate-400 italic py-2">No comments yet — be the first to ask something.</p>
       {% endfor %}
     </div>
 
     <form method="post" class="flex gap-2">
       {% csrf_token %}
-      <input type="text" name="body" required placeholder="Ask a question about this resource&hellip;"
-             class="flex-1 rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm">
-      <button class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2">Post</button>
+      <input type="text" name="body" required placeholder="Ask a question or leave a tip for classmates&hellip;"
+             class="flex-1 rounded-xl border border-brand-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <button class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-5 py-2.5 transition">
+        Post
+      </button>
     </form>
   </div>
+</div>
+
+<!-- ================= AI MODAL OVERLAY ================= -->
+<div id="ai-modal-overlay" class="fixed inset-0 z-50 hidden bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+  <div class="relative w-full max-w-2xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-brand-200 dark:border-slate-700 overflow-hidden">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-brand-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60">
+      <div class="flex items-center gap-2.5">
+        <span id="modal-icon" class="text-2xl">✨</span>
+        <div>
+          <h3 id="modal-title" class="font-display font-bold text-lg text-slate-900 dark:text-white">AI Study Assistant</h3>
+          <p id="modal-subtitle" class="text-xs text-slate-500 dark:text-slate-400">Analyzing {{ resource.title|truncatechars:45 }}</p>
+        </div>
+      </div>
+      <button type="button" id="btn-modal-close" class="rounded-full p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div id="modal-body" class="p-6 overflow-y-auto custom-scrollbar flex-1">
+      
+      <!-- 1. LOADING STATE -->
+      <div id="modal-state-loading" class="py-12 flex flex-col items-center justify-center text-center">
+        <div class="w-12 h-12 border-4 border-brand-200 dark:border-brand-900 border-t-brand-600 rounded-full animate-spin mb-4"></div>
+        <h4 id="loading-title" class="font-display font-bold text-base text-slate-900 dark:text-white">Reading PDF &amp; Thinking...</h4>
+        <p id="loading-desc" class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1">
+          Extracting text and extracting high-yield knowledge with Groq AI. This usually takes 2-4 seconds.
+        </p>
+      </div>
+
+      <!-- 2. ERROR STATE -->
+      <div id="modal-state-error" class="hidden py-8 flex flex-col items-center justify-center text-center">
+        <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mb-3">
+          ⚠️
+        </div>
+        <h4 class="font-display font-bold text-base text-slate-900 dark:text-white mb-1">Could Not Process Document</h4>
+        <p id="error-message-text" class="text-xs text-rose-600 dark:text-rose-400 max-w-md mx-auto mb-5 leading-relaxed"></p>
+        <button type="button" onclick="closeAiModal()" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+          Dismiss
+        </button>
+      </div>
+
+      <!-- 3. SUMMARY VIEW -->
+      <div id="modal-view-summary" class="hidden space-y-5">
+        <div class="rounded-2xl bg-brand-50/60 dark:bg-brand-950/30 border border-brand-100 dark:border-brand-900/40 p-4">
+          <span class="text-xs font-bold uppercase tracking-wider text-brand-700 dark:text-brand-300">Executive Summary</span>
+          <p id="summary-text" class="text-sm text-slate-800 dark:text-slate-200 mt-2 leading-relaxed whitespace-pre-line"></p>
+        </div>
+
+        <div>
+          <h4 class="font-display font-bold text-sm text-slate-900 dark:text-white mb-2 flex items-center gap-1.5">
+            <span>🎯</span> Key High-Yield Takeaways
+          </h4>
+          <ul id="summary-keypoints" class="space-y-2"></ul>
+        </div>
+      </div>
+
+      <!-- 4. FLASHCARDS VIEW -->
+      <div id="modal-view-flashcards" class="hidden space-y-5">
+        <div class="flex items-center justify-between">
+          <span id="flashcards-count-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200">
+            8 Cards Generated
+          </span>
+          <span class="text-xs text-slate-400">Click any card to flip</span>
+        </div>
+
+        <!-- Cards Container -->
+        <div id="flashcards-list" class="space-y-3 max-h-72 overflow-y-auto pr-1"></div>
+
+        <!-- Save Deck Section -->
+        <div class="pt-4 border-t border-brand-100 dark:border-slate-800">
+          <h4 class="font-display font-bold text-sm text-slate-900 dark:text-white mb-2">Save Cards to Your Decks</h4>
+          
+          <div class="space-y-3">
+            <div class="flex items-center gap-4 text-xs font-medium text-slate-700 dark:text-slate-300">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="deck_mode" value="new" checked onchange="toggleDeckMode()" class="text-brand-600">
+                <span>Create New Deck</span>
+              </label>
+              <label id="lbl-existing-deck" class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="deck_mode" value="existing" onchange="toggleDeckMode()" class="text-brand-600">
+                <span>Add to Existing Deck</span>
+              </label>
+            </div>
+
+            <!-- New Deck Inputs -->
+            <div id="deck-input-new" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input type="text" id="new-deck-title" placeholder="Deck title..."
+                     class="rounded-xl border border-brand-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+              <select id="new-deck-course" class="rounded-xl border border-brand-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white">
+                <!-- Courses injected via JS -->
+              </select>
+            </div>
+
+            <!-- Existing Deck Selector -->
+            <div id="deck-input-existing" class="hidden">
+              <select id="existing-deck-select" class="w-full rounded-xl border border-brand-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs text-slate-900 dark:text-white">
+                <!-- Decks injected via JS -->
+              </select>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <button type="button" id="btn-save-cards" onclick="saveGeneratedFlashcards()"
+                      class="flex-1 py-2 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-sm transition">
+                💾 Save Flashcards to My Collection
+              </button>
+            </div>
+
+            <div id="save-cards-status" class="hidden text-xs py-2 px-3 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. QUIZ RUNNER VIEW -->
+      <div id="modal-view-quiz" class="hidden space-y-5">
+        
+        <!-- Quiz Ongoing Runner -->
+        <div id="quiz-runner-active">
+          <!-- Quiz Progress Header -->
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
+            <span id="quiz-step-indicator">Question 1 of 5</span>
+            <span id="quiz-score-indicator">CBT Practice Mode</span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-5">
+            <div id="quiz-progress-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 20%"></div>
+          </div>
+
+          <!-- Question Stem -->
+          <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-brand-100 dark:border-slate-800 mb-4">
+            <h4 id="quiz-question-stem" class="font-display font-semibold text-base text-slate-900 dark:text-white leading-snug"></h4>
+          </div>
+
+          <!-- Options -->
+          <div id="quiz-options-container" class="space-y-2.5 mb-6"></div>
+
+          <!-- Quiz Nav Buttons -->
+          <div class="flex items-center justify-between pt-2">
+            <button type="button" id="btn-quiz-prev" onclick="navQuiz(-1)"
+                    class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40">
+              &larr; Previous
+            </button>
+            <button type="button" id="btn-quiz-next" onclick="navQuiz(1)"
+                    class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+              Next Question &rarr;
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz Completed Results -->
+        <div id="quiz-runner-results" class="hidden space-y-6">
+          <div class="text-center py-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 p-6">
+            <div class="text-3xl mb-2">🎯</div>
+            <h4 class="font-display font-bold text-xl text-slate-900 dark:text-white">Practice Quiz Completed!</h4>
+            <div class="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400" id="quiz-final-score">
+              0 / 0 (0%)
+            </div>
+            <p id="quiz-final-feedback" class="text-xs text-slate-600 dark:text-slate-300 mt-1"></p>
+          </div>
+
+          <!-- Detailed Answer Breakdown -->
+          <div>
+            <h5 class="font-display font-bold text-sm text-slate-900 dark:text-white mb-3">Answers &amp; Explanations</h5>
+            <div id="quiz-review-list" class="space-y-4"></div>
+          </div>
+
+          <div class="flex items-center justify-center gap-3 pt-2">
+            <button type="button" onclick="restartQuiz()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">
+              🔄 Retake Quiz
+            </button>
+            <button type="button" onclick="closeAiModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Close
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div id="modal-footer" class="px-6 py-3.5 border-t border-brand-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 flex items-center justify-between text-xs">
+      <div id="footer-extra-info" class="text-slate-400">
+        StudyFlow AI &middot; Verified Academic Helper
+      </div>
+      <button type="button" onclick="closeAiModal()" class="px-4 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium">
+        Done
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const RESOURCE_ID = "{{ resource.pk }}";
+  let activeTool = null;
+  let currentFlashcards = [];
+  let currentQuiz = [];
+  let userQuizAnswers = {};
+  let currentQuizIndex = 0;
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken') || (document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '');
+
+  function openAiModal(toolTitle, toolIcon) {
+    document.getElementById('ai-modal-overlay').classList.remove('hidden');
+    document.getElementById('modal-title').textContent = toolTitle;
+    document.getElementById('modal-icon').textContent = toolIcon;
+    
+    // Show loading
+    document.getElementById('modal-state-loading').classList.remove('hidden');
+    document.getElementById('modal-state-error').classList.add('hidden');
+    document.getElementById('modal-view-summary').classList.add('hidden');
+    document.getElementById('modal-view-flashcards').classList.add('hidden');
+    document.getElementById('modal-view-quiz').classList.add('hidden');
+  }
+
+  function closeAiModal() {
+    document.getElementById('ai-modal-overlay').classList.add('hidden');
+  }
+
+  document.getElementById('btn-modal-close').addEventListener('click', closeAiModal);
+  document.getElementById('ai-modal-overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'ai-modal-overlay') closeAiModal();
+  });
+
+  function showAiError(msg) {
+    document.getElementById('modal-state-loading').classList.add('hidden');
+    document.getElementById('modal-state-error').classList.remove('hidden');
+    document.getElementById('error-message-text').textContent = msg || "An error occurred while analyzing the document.";
+  }
+
+  // ================= 1. SUMMARIZE =================
+  document.getElementById('btn-ai-summarize')?.addEventListener('click', () => {
+    openAiModal('Material Summary & Key Points', '📑');
+    fetch(`/resources/${RESOURCE_ID}/ai/summarize/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json().then(data => ({ status: res.status, data })))
+    .then(({ status, data }) => {
+      if (status !== 200 || !data.success) {
+        showAiError(data.error || 'Failed to generate summary.');
+        return;
+      }
+      document.getElementById('modal-state-loading').classList.add('hidden');
+      document.getElementById('modal-view-summary').classList.remove('hidden');
+      document.getElementById('summary-text').textContent = data.data.summary;
+      
+      const ul = document.getElementById('summary-keypoints');
+      ul.innerHTML = '';
+      (data.data.key_points || []).forEach(pt => {
+        const li = document.createElement('li');
+        li.className = 'flex items-start gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300';
+        li.innerHTML = `<span class="text-emerald-500 font-bold shrink-0 mt-0.5">✓</span><span>${pt}</span>`;
+        ul.appendChild(li);
+      });
+    })
+    .catch(err => showAiError(err.message));
+  });
+
+  // ================= 2. FLASHCARDS =================
+  document.getElementById('btn-ai-flashcards')?.addEventListener('click', () => {
+    openAiModal('Generated Flashcards', '🃏');
+    fetch(`/resources/${RESOURCE_ID}/ai/flashcards/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json().then(data => ({ status: res.status, data })))
+    .then(({ status, data }) => {
+      if (status !== 200 || !data.success) {
+        showAiError(data.error || 'Failed to generate flashcards.');
+        return;
+      }
+      currentFlashcards = data.flashcards;
+      document.getElementById('modal-state-loading').classList.add('hidden');
+      document.getElementById('modal-view-flashcards').classList.remove('hidden');
+      document.getElementById('flashcards-count-badge').textContent = `${data.flashcards.length} Cards Generated`;
+      document.getElementById('new-deck-title').value = data.default_deck_title;
+
+      // Populate Courses
+      const courseSelect = document.getElementById('new-deck-course');
+      courseSelect.innerHTML = '';
+      (data.user_courses || []).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = `${c.code ? c.code + ' - ' : ''}${c.name}`;
+        courseSelect.appendChild(opt);
+      });
+      if (!data.user_courses || data.user_courses.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Auto-create Course for this resource';
+        courseSelect.appendChild(opt);
+      }
+
+      // Populate Existing Decks
+      const deckSelect = document.getElementById('existing-deck-select');
+      deckSelect.innerHTML = '';
+      if (data.user_decks && data.user_decks.length > 0) {
+        data.user_decks.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = `${d.title} (${d.course__name})`;
+          deckSelect.appendChild(opt);
+        });
+        document.getElementById('lbl-existing-deck').classList.remove('hidden');
+      } else {
+        document.getElementById('lbl-existing-deck').classList.add('hidden');
+      }
+
+      // Render cards
+      const list = document.getElementById('flashcards-list');
+      list.innerHTML = '';
+      data.flashcards.forEach((card, idx) => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'rounded-xl border border-brand-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 p-3.5 cursor-pointer hover:border-amber-400 transition';
+        cardEl.innerHTML = `
+          <div class="flex items-center justify-between text-[11px] font-semibold text-slate-400 mb-1">
+            <span>CARD #${idx + 1}</span>
+            <span class="text-amber-500 card-flip-hint">Show Answer ↷</span>
+          </div>
+          <p class="font-medium text-xs sm:text-sm text-slate-900 dark:text-white card-front">${card.front}</p>
+          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 pt-2 border-t border-slate-200 dark:border-slate-700/60 mt-2 hidden card-back">${card.back}</p>
+        `;
+        cardEl.addEventListener('click', () => {
+          const back = cardEl.querySelector('.card-back');
+          const hint = cardEl.querySelector('.card-flip-hint');
+          const isHidden = back.classList.contains('hidden');
+          back.classList.toggle('hidden');
+          hint.textContent = isHidden ? 'Hide Answer ↶' : 'Show Answer ↷';
+        });
+        list.appendChild(cardEl);
+      });
+    })
+    .catch(err => showAiError(err.message));
+  });
+
+  function toggleDeckMode() {
+    const isNew = document.querySelector('input[name="deck_mode"]:checked').value === 'new';
+    document.getElementById('deck-input-new').classList.toggle('hidden', !isNew);
+    document.getElementById('deck-input-existing').classList.toggle('hidden', isNew);
+  }
+
+  function saveGeneratedFlashcards() {
+    if (!currentFlashcards.length) return;
+    const isNew = document.querySelector('input[name="deck_mode"]:checked').value === 'new';
+    const payload = { cards: currentFlashcards };
+
+    if (isNew) {
+      payload.new_deck_title = document.getElementById('new-deck-title').value.trim();
+      payload.course_id = document.getElementById('new-deck-course').value || null;
+    } else {
+      payload.deck_id = document.getElementById('existing-deck-select').value;
+    }
+
+    const btn = document.getElementById('btn-save-cards');
+    const statusBox = document.getElementById('save-cards-status');
+    btn.disabled = true;
+    btn.textContent = 'Saving cards...';
+
+    fetch(`/resources/${RESOURCE_ID}/ai/save-flashcards/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.textContent = '💾 Save Flashcards to My Collection';
+      statusBox.classList.remove('hidden');
+      if (data.success) {
+        statusBox.className = 'text-xs py-2.5 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-2';
+        statusBox.innerHTML = `
+          <span>✓ ${data.message}</span>
+          <a href="/flashcards/" class="font-bold underline hover:opacity-80">Open Flashcards &rarr;</a>
+        `;
+      } else {
+        statusBox.className = 'text-xs py-2 px-3 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400';
+        statusBox.textContent = data.error || 'Failed to save cards.';
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.textContent = '💾 Save Flashcards to My Collection';
+      statusBox.classList.remove('hidden');
+      statusBox.className = 'text-xs py-2 px-3 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400';
+      statusBox.textContent = err.message;
+    });
+  }
+
+  // ================= 3. QUIZ RUNNER =================
+  document.getElementById('btn-ai-quiz')?.addEventListener('click', () => {
+    openAiModal('CBT Practice Quiz', '❓');
+    fetch(`/resources/${RESOURCE_ID}/ai/quiz/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' }
+    })
+    .then(res => res.json().then(data => ({ status: res.status, data })))
+    .then(({ status, data }) => {
+      if (status !== 200 || !data.success) {
+        showAiError(data.error || 'Failed to generate practice quiz.');
+        return;
+      }
+      currentQuiz = data.questions;
+      userQuizAnswers = {};
+      currentQuizIndex = 0;
+
+      document.getElementById('modal-state-loading').classList.add('hidden');
+      document.getElementById('modal-view-quiz').classList.remove('hidden');
+      document.getElementById('quiz-runner-active').classList.remove('hidden');
+      document.getElementById('quiz-runner-results').classList.add('hidden');
+      renderQuizQuestion();
+    })
+    .catch(err => showAiError(err.message));
+  });
+
+  function renderQuizQuestion() {
+    if (!currentQuiz.length) return;
+    const q = currentQuiz[currentQuizIndex];
+    const total = currentQuiz.length;
+
+    document.getElementById('quiz-step-indicator').textContent = `Question ${currentQuizIndex + 1} of ${total}`;
+    document.getElementById('quiz-progress-bar').style.width = `${((currentQuizIndex + 1) / total) * 100}%`;
+    document.getElementById('quiz-question-stem').textContent = q.question;
+
+    const optContainer = document.getElementById('quiz-options-container');
+    optContainer.innerHTML = '';
+
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    q.options.forEach((optText, optIdx) => {
+      const isSelected = userQuizAnswers[currentQuizIndex] === optIdx;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `w-full text-left p-3.5 rounded-xl border text-xs sm:text-sm font-medium transition flex items-start gap-3 ${
+        isSelected
+          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-sm'
+          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-400'
+      }`;
+      btn.innerHTML = `
+        <span class="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+          isSelected ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500'
+        }">${letters[optIdx] || optIdx + 1}</span>
+        <span class="pt-0.5 leading-relaxed">${optText}</span>
+      `;
+      btn.addEventListener('click', () => {
+        userQuizAnswers[currentQuizIndex] = optIdx;
+        renderQuizQuestion();
+      });
+      optContainer.appendChild(btn);
+    });
+
+    document.getElementById('btn-quiz-prev').disabled = (currentQuizIndex === 0);
+    const nextBtn = document.getElementById('btn-quiz-next');
+    if (currentQuizIndex === total - 1) {
+      nextBtn.textContent = 'Submit Quiz & Check Score ✓';
+      nextBtn.className = 'px-5 py-2 rounded-xl text-xs font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-sm transition';
+    } else {
+      nextBtn.textContent = 'Next Question →';
+      nextBtn.className = 'px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition';
+    }
+  }
+
+  function navQuiz(direction) {
+    if (direction === 1 && currentQuizIndex === currentQuiz.length - 1) {
+      finishQuiz();
+      return;
+    }
+    currentQuizIndex += direction;
+    if (currentQuizIndex < 0) currentQuizIndex = 0;
+    if (currentQuizIndex >= currentQuiz.length) currentQuizIndex = currentQuiz.length - 1;
+    renderQuizQuestion();
+  }
+
+  function finishQuiz() {
+    document.getElementById('quiz-runner-active').classList.add('hidden');
+    document.getElementById('quiz-runner-results').classList.remove('hidden');
+
+    let score = 0;
+    const total = currentQuiz.length;
+
+    const reviewList = document.getElementById('quiz-review-list');
+    reviewList.innerHTML = '';
+
+    currentQuiz.forEach((q, idx) => {
+      const userAns = userQuizAnswers[idx];
+      const isCorrect = userAns === q.correct_index;
+      if (isCorrect) score++;
+
+      const item = document.createElement('div');
+      item.className = `rounded-2xl border p-4 text-xs sm:text-sm ${
+        isCorrect
+          ? 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/30 dark:bg-emerald-950/20'
+          : 'border-rose-200 dark:border-rose-800/60 bg-rose-50/30 dark:bg-rose-950/20'
+      }`;
+
+      item.innerHTML = `
+        <div class="flex items-start justify-between gap-2 mb-1.5">
+          <span class="font-bold ${isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+            ${isCorrect ? '✓ Correct' : '✕ Incorrect'} &middot; Q${idx + 1}
+          </span>
+        </div>
+        <p class="font-medium text-slate-900 dark:text-white mb-2">${q.question}</p>
+        <div class="space-y-1 mb-2.5 text-xs">
+          <div class="text-slate-600 dark:text-slate-400">Your choice: <strong class="${isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${userAns !== undefined ? q.options[userAns] : 'Not answered'}</strong></div>
+          ${!isCorrect ? `<div class="text-emerald-700 dark:text-emerald-400">Correct answer: <strong>${q.options[q.correct_index]}</strong></div>` : ''}
+        </div>
+        <div class="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          <strong class="text-brand-600 dark:text-brand-400">💡 Explanation:</strong> ${q.explanation}
+        </div>
+      `;
+      reviewList.appendChild(item);
+    });
+
+    const percent = Math.round((score / total) * 100);
+    document.getElementById('quiz-final-score').textContent = `${score} / ${total} (${percent}%)`;
+    let feedback = "Review the concepts above and retake when you're ready!";
+    if (percent === 100) feedback = "Flawless score! You have completely mastered this material.";
+    else if (percent >= 80) feedback = "Excellent performance! High-yield mastery achieved.";
+    else if (percent >= 60) feedback = "Good grasp of the basics! Strengthen the missed points above.";
+    document.getElementById('quiz-final-feedback').textContent = feedback;
+  }
+
+  function restartQuiz() {
+    userQuizAnswers = {};
+    currentQuizIndex = 0;
+    document.getElementById('quiz-runner-active').classList.remove('hidden');
+    document.getElementById('quiz-runner-results').classList.add('hidden');
+    renderQuizQuestion();
+  }
+
+  // URL query parameter auto-trigger (e.g. ?action=summarize)
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    if (action === 'summarize') document.getElementById('btn-ai-summarize')?.click();
+    else if (action === 'flashcards') document.getElementById('btn-ai-flashcards')?.click();
+    else if (action === 'quiz') document.getElementById('btn-ai-quiz')?.click();
+  });
+</script>
 {% endblock %}
