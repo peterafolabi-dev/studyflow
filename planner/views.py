@@ -357,7 +357,7 @@ Respond in PLAIN TEXT ONLY. Do not use Markdown, HTML tags, or code blocks. Keep
         return JsonResponse({'reply': reply})
     except Exception as e:
         logger.error('AI chat error: %s', e, exc_info=True)
-        return JsonResponse({'reply': 'Oops, I encountered an error. Check if your API key is correct!'}, status=500)
+        return JsonResponse({'reply': 'Oops, I encountered an error: ' + str(e)}, status=500)
 
 
 @login_required
