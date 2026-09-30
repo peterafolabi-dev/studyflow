@@ -71,7 +71,6 @@ class TimetableEntry(models.Model):
     def __str__(self):
         return f'{self.title} ({self.get_day_of_week_display()})'
 
-from django.conf import settings
 
 class StudySession(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='study_sessions')
@@ -80,11 +79,70 @@ class StudySession(models.Model):
     duration_minutes = models.PositiveIntegerField()
     date = models.DateField(auto_now_add=True)
 
+
 class FlashcardDeck(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='flashcard_decks')
     title = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def due_cards_count(self):
+        return self.cards.filter(next_review_date__lte=timezone.localdate()).count()
+
 
 class Flashcard(models.Model):
     deck = models.ForeignKey(FlashcardDeck, on_delete=models.CASCADE, related_name='cards')
     front = models.TextField()
     back = models.TextField()
+    repetitions = models.PositiveIntegerField(default=0)
+    interval_days = models.PositiveIntegerField(default=1)
+    ease_factor = models.FloatField(default=2.5)
+    next_review_date = models.DateField(default=timezone.localdate)
+    last_reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['next_review_date', 'id']
+
+    def __str__(self):
+        return f"{self.front[:30]} ({self.deck.title})"
+
+    @property
+    def is_due(self):
+        return self.next_review_date <= timezone.localdate()
+
+    def process_review(self, rating):
+        """
+        Applies SM-2 spaced repetition algorithm.
+        rating: 'hard', 'medium', or 'easy'
+        """
+        today = timezone.localdate()
+        self.last_reviewed_at = timezone.now()
+
+        rating = str(rating).lower().strip()
+        if rating == 'hard':
+            self.repetitions = 0
+            self.interval_days = 1
+            self.ease_factor = max(1.3, self.ease_factor - 0.2)
+        elif rating == 'medium':
+            self.repetitions += 1
+            if self.repetitions == 1:
+                self.interval_days = 1
+            elif self.repetitions == 2:
+                self.interval_days = 3
+            else:
+                self.interval_days = max(1, round(self.interval_days * self.ease_factor))
+        elif rating == 'easy':
+            self.repetitions += 1
+            self.ease_factor = min(3.0, self.ease_factor + 0.15)
+            if self.repetitions == 1:
+                self.interval_days = 2
+            elif self.repetitions == 2:
+                self.interval_days = 6
+            else:
+                self.interval_days = max(1, round(self.interval_days * self.ease_factor * 1.2))
+
+        self.next_review_date = today + timedelta(days=self.interval_days)
+        self.save(update_fields=['repetitions', 'interval_days', 'ease_factor', 'next_review_date', 'last_reviewed_at'])
+        return self.next_review_date
