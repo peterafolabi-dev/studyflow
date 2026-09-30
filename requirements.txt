@@ -7,5 +7,5 @@ psycopg[binary]
 whitenoise
 gunicorn
 google-generativeai
-django-allauth
+django-allauth[socialaccount]
 python-dotenv
