@@ -155,10 +155,13 @@
 
         <form method="get" action="{% url 'global_search' %}" class="hidden lg:block ml-4 w-56">
           <input type="text" name="q" placeholder="Search StudyFlow&hellip;"
-                 class="w-full rounded-full border border-brand-200 dark:border-slate-700 bg-brand-50 dark:bg-slate-800 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
         </form>
+        <button type="button" class="theme-toggle-btn p-2 rounded-full border border-brand-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition shadow-sm ml-auto" aria-label="Toggle theme" title="Toggle Light/Dark Theme">
+          <span class="dark:hidden text-sm">🌙</span>
+          <span class="hidden dark:inline text-sm">☀️</span>
+        </button>
 
-        <div class="ml-auto relative" id="profile-menu-wrapper">
+        <div class="relative" id="profile-menu-wrapper">
           <button id="profile-menu-btn" type="button"
                   class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-brand-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 hover:bg-brand-50 dark:hover:bg-slate-800 transition shadow-sm"
                   aria-haspopup="true" aria-expanded="false">
