@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Course, Task
+from .models import Course, Task, FlashcardDeck, Flashcard
 
 User = get_user_model()
 
@@ -165,3 +165,82 @@ class DashboardTests(BaseCase):
         self.client.login(username='carol', password='pass12345!')
         response = self.client.get(reverse('dashboard'))
         self.assertContains(response, 'Add your first course')
+
+
+class FlashcardSpacedRepetitionTests(BaseCase):
+    def setUp(self):
+        super().setUp()
+        self.deck = FlashcardDeck.objects.create(
+            course=self.alice_course,
+            title='Calculus Definitions'
+        )
+        self.card = Flashcard.objects.create(
+            deck=self.deck,
+            front='What is a limit?',
+            back='The value a function approaches.',
+            next_review_date=self.today
+        )
+
+    def test_due_property(self):
+        self.assertTrue(self.card.is_due)
+        self.card.next_review_date = self.today + timedelta(days=3)
+        self.card.save()
+        self.assertFalse(self.card.is_due)
+
+    def test_sm2_process_review_easy(self):
+        initial_ef = self.card.ease_factor
+        next_date = self.card.process_review('easy')
+        self.assertEqual(self.card.repetitions, 1)
+        self.assertEqual(self.card.interval_days, 2)
+        self.assertGreater(self.card.ease_factor, initial_ef)
+        self.assertEqual(next_date, self.today + timedelta(days=2))
+
+    def test_sm2_process_review_medium(self):
+        next_date = self.card.process_review('medium')
+        self.assertEqual(self.card.repetitions, 1)
+        self.assertEqual(self.card.interval_days, 1)
+        self.assertEqual(next_date, self.today + timedelta(days=1))
+
+    def test_sm2_process_review_hard(self):
+        self.card.repetitions = 5
+        self.card.interval_days = 10
+        self.card.save()
+
+        next_date = self.card.process_review('hard')
+        self.assertEqual(self.card.repetitions, 0)
+        self.assertEqual(self.card.interval_days, 1)
+        self.assertEqual(next_date, self.today + timedelta(days=1))
+
+    def test_rate_review_endpoint(self):
+        url = reverse('flashcard_rate_review', args=[self.card.pk])
+        response = self.client.post(
+            url,
+            data={'rating': 'easy'},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['success'])
+        self.assertEqual(data['rating'], 'easy')
+        self.assertEqual(data['interval_days'], 2)
+
+    def test_rate_review_rejects_invalid_rating(self):
+        url = reverse('flashcard_rate_review', args=[self.card.pk])
+        response = self.client.post(
+            url,
+            data={'rating': 'super_easy'},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_due_flashcards_count_on_dashboard(self):
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.context['due_flashcards_count'], 1)
+
+    def test_cannot_rate_another_users_flashcard(self):
+        bob_deck = FlashcardDeck.objects.create(course=self.bob_course, title='Bob Deck')
+        bob_card = Flashcard.objects.create(deck=bob_deck, front='Q', back='A')
+        url = reverse('flashcard_rate_review', args=[bob_card.pk])
+        response = self.client.post(url, data={'rating': 'easy'}, content_type='application/json')
+        self.assertEqual(response.status_code, 404)
+
