@@ -22,6 +22,39 @@
     </button>
   </div>
 
+  <!-- Due Today Spaced Repetition Queue Banner -->
+  {% if due_count > 0 %}
+  <div class="mb-8 rounded-3xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent border border-amber-300 dark:border-amber-700/60 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 fade-in-up shadow-sm">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0">
+        🃏
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="font-display font-bold text-lg text-amber-950 dark:text-amber-200">
+            {{ due_count }} Card{{ due_count|pluralize }} Due for Spaced Review!
+          </h2>
+          <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 rounded-full">
+            SM-2 Algorithm
+          </span>
+        </div>
+        <p class="text-xs sm:text-sm text-amber-800/80 dark:text-amber-300/80 mt-1">
+          Review these cards today to optimize long-term memory retention before forgetting occurs.
+        </p>
+      </div>
+    </div>
+    <button onclick="startDueQueueQuiz()"
+            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-lg shadow-amber-500/20 transition-all hover:scale-105 shrink-0">
+      <span>🚀</span> Start Due Review ({{ due_count }}) &rarr;
+    </button>
+  </div>
+  {% elif decks %}
+  <div class="mb-6 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 p-4 flex items-center gap-3 text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 fade-in-up">
+    <span class="text-lg">🎉</span>
+    <span><strong>All caught up!</strong> You have no cards scheduled for review today. Great job keeping your memory fresh!</span>
+  </div>
+  {% endif %}
+
   <!-- Empty state -->
   {% if not decks %}
     <div class="rounded-3xl border border-dashed border-brand-300 dark:border-slate-700 bg-brand-50/40 dark:bg-slate-900/40 p-12 text-center text-slate-500 dark:text-slate-400 fade-in-up flex flex-col items-center justify-center min-h-[320px]">
@@ -47,7 +80,7 @@
         <div>
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 bg-brand-100 dark:bg-brand-900/40 px-2.5 py-0.5 rounded-full">
-              {{ deck.course.code }}
+              {{ deck.course.code|default:deck.course.name }}
             </span>
             <span class="text-xs text-slate-400 font-medium">
               {{ deck.cards.count }} card{{ deck.cards.count|pluralize }}
@@ -63,7 +96,7 @@
           <button onclick="startQuiz('{{ deck.pk }}')"
                   class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium px-3.5 py-2 text-xs shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5 hover:scale-105">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            <span>Quiz me</span>
+            <span>Practice deck</span>
           </button>
           {% endif %}
 
@@ -125,7 +158,14 @@
           <div class="sf-flashcard-inner" id="inner-{{ card.pk }}">
             <!-- Front -->
             <div class="sf-flashcard-front">
-              <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-2">Question</span>
+              <div class="w-full flex items-center justify-between mb-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Question</span>
+                {% if card.is_due %}
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60">Due today</span>
+                {% else %}
+                  <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/70 text-slate-500 dark:text-slate-300">In {{ card.interval_days }}d</span>
+                {% endif %}
+              </div>
               <p class="font-medium text-slate-800 dark:text-slate-100 text-sm leading-relaxed">{{ card.front }}</p>
               <span class="flip-hint text-[11px] text-slate-400 dark:text-slate-500 mt-auto pt-2 flex items-center gap-1">
                 <span>🔄</span> Tap to reveal
@@ -162,9 +202,9 @@
     </div>
 
     <!-- Hidden data store for Quiz Mode -->
-    <div id="deck-data-{{ deck.pk }}" style="display:none;" data-count="{{ deck.cards.count }}">
+    <div id="deck-data-{{ deck.pk }}" style="display:none;" data-count="{{ deck.cards.count }}" data-title="{{ deck.title|escapejs }}" data-course="{{ deck.course.code|default:deck.course.name|escapejs }}">
       {% for c in deck.cards.all %}
-      <span data-front="{{ c.front|escapejs }}" data-back="{{ c.back|escapejs }}"></span>
+      <span data-id="{{ c.pk }}" data-front="{{ c.front|escapejs }}" data-back="{{ c.back|escapejs }}" data-interval="{{ c.interval_days }}" data-repetitions="{{ c.repetitions }}" data-due="{{ c.is_due|yesno:'1,0' }}"></span>
       {% endfor %}
     </div>
 
