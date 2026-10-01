@@ -5,19 +5,12 @@ from . import views
 
 urlpatterns = [
     path('signup/', views.signup, name='signup'),
+    path('login/', views.login_view, name='login'),
     path('profile/', views.profile, name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('user/<str:username>/', views.public_profile, name='public_profile'),
     path('notifications/', views.notifications_view, name='notifications'),
     path('profile/export/', views.export_my_data, name='export_my_data'),
-    path(
-        'login/',
-        auth_views.LoginView.as_view(
-            template_name='accounts/login.html',
-            redirect_authenticated_user=True,
-        ),
-        name='login',
-    ),
     # Logout only accepts POST, so the navbar uses a small form, not a link.
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]

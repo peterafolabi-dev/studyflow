@@ -1,4 +1,4 @@
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -8,7 +8,7 @@ from library.models import BookRating, SavedBook
 from planner.models import Course, Task, TimetableEntry
 from resources.models import Loan, Resource, ResourceRating
 
-from .forms import SignUpForm
+from .forms import LoginForm, SignUpForm
 
 
 def signup(request):
@@ -25,6 +25,32 @@ def signup(request):
         form = SignUpForm()
 
     return render(request, 'accounts/signup.html', {'form': form})
+
+
+def login_view(request):
+    """Custom login that authenticates via ModelBackend (username + password).
+    This bypasses allauth's email-first flow so username-only accounts can log in."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+
+    error = None
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password,
+                                backend='django.contrib.auth.backends.ModelBackend')
+            if user is not None:
+                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                next_url = request.GET.get('next', '')
+                return redirect(next_url if next_url else 'dashboard')
+            else:
+                error = 'Invalid username or password. Please try again.'
+    else:
+        form = LoginForm()
+
+    return render(request, 'accounts/login.html', {'form': form, 'error': error})
 
 
 @login_required

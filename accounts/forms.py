@@ -1,4 +1,16 @@
+from django import forms
 from django.contrib.auth.forms import UserCreationForm
+
+
+class LoginForm(forms.Form):
+    """Simple username + password login form that works with ModelBackend."""
+    username = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(attrs={'autofocus': True, 'autocomplete': 'username'}),
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password'}),
+    )
 
 
 class SignUpForm(UserCreationForm):
@@ -6,16 +18,13 @@ class SignUpForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         fields = ('username',)
-        
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.help_text = ''
-
-
-
-from django import forms
 from .models import Profile
+
 
 class ProfileForm(forms.ModelForm):
     class Meta:
