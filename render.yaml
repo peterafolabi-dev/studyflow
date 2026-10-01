@@ -28,7 +28,7 @@ services:
       - key: DJANGO_SUPERUSER_USERNAME
         value: admin
       - key: DJANGO_SUPERUSER_EMAIL
-        value: admin@studyflow.local
+        value: afolabiprosper329@gmail.com
       - key: DJANGO_SUPERUSER_PASSWORD
         sync: false          # set a strong password in the Render dashboard
 
