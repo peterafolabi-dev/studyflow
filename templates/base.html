@@ -283,6 +283,15 @@
 
           </div>
         </div>
+      {% else %}
+        <div class="ml-auto flex items-center gap-3">
+          <button type="button" class="theme-toggle-btn p-2 rounded-xl border border-brand-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-700 transition shadow-sm" aria-label="Toggle theme" title="Toggle Light/Dark Theme">
+            <span class="dark:hidden text-sm">🌙</span>
+            <span class="hidden dark:inline text-sm">☀️</span>
+          </button>
+          <a href="{% url 'login' %}" class="px-4 py-2 rounded-xl text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-slate-800 transition">Log in</a>
+          <a href="{% url 'signup' %}" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 transition">Sign up free</a>
+        </div>
       {% endif %}
     </div>
 
@@ -477,16 +486,24 @@
       }
     });
 
-    // Light/dark toggle
+    // Light/dark toggle (syncs all theme toggle buttons across the app)
     (function () {
-      var toggle = document.getElementById('theme-toggle');
-      if (!toggle) return;
       var root = document.documentElement;
-      toggle.setAttribute('aria-pressed', String(root.classList.contains('dark')));
-      toggle.addEventListener('click', function () {
-        var isDark = root.classList.toggle('dark');
+      function syncTheme(isDark) {
+        root.classList.toggle('dark', isDark);
         localStorage.setItem('studyflow-theme', isDark ? 'dark' : 'light');
-        toggle.setAttribute('aria-pressed', String(isDark));
+        document.querySelectorAll('#theme-toggle, #profile-theme-toggle, .theme-toggle-btn').forEach(function (btn) {
+          btn.setAttribute('aria-pressed', String(isDark));
+        });
+      }
+
+      document.querySelectorAll('#theme-toggle, #profile-theme-toggle, .theme-toggle-btn').forEach(function (btn) {
+        btn.setAttribute('aria-pressed', String(root.classList.contains('dark')));
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var isDark = !root.classList.contains('dark');
+          syncTheme(isDark);
+        });
       });
     })();
   </script>
