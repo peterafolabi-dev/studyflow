@@ -1,21 +1,35 @@
 {% load planner_extras %}
-<li class="task c{{ task.course.color_index }}{% if task.is_done %} is-done{% endif %}">
-  <form method="post" action="{% url 'task_toggle' task.pk %}" class="toggle-form">
+<li class="group flex items-center gap-3.5 p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-brand-100 dark:border-slate-700/60 hover:border-brand-300 dark:hover:border-brand-500/50 transition-all shadow-sm {% if task.is_done %}opacity-65 bg-slate-50/70 dark:bg-slate-900/40{% endif %}">
+  <form method="post" action="{% url 'task_toggle' task.pk %}" class="m-0 flex items-center shrink-0">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
-    <button type="submit" class="toggle" aria-label="{% if task.is_done %}Mark {{ task.title }} as not done{% else %}Mark {{ task.title }} as done{% endif %}"></button>
+    <button type="submit"
+            class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 shrink-0 {% if task.is_done %}bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20{% else %}border-slate-300 dark:border-slate-600 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/40 text-transparent hover:text-brand-300{% endif %}"
+            aria-label="{% if task.is_done %}Mark {{ task.title }} as not done{% else %}Mark {{ task.title }} as done{% endif %}"
+            title="{% if task.is_done %}Click to mark incomplete{% else %}Click to mark complete{% endif %}">
+      <svg class="w-3.5 h-3.5 stroke-[3] transition-all duration-150 {% if task.is_done %}block text-white{% else %}hidden group-hover:block text-slate-300 dark:text-slate-500{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+      </svg>
+    </button>
   </form>
-  <div class="task-main">
-    <div class="task-title">{{ task.title }}</div>
+  <div class="flex-1 min-w-0">
+    <div class="font-medium text-sm text-slate-800 dark:text-slate-100 truncate {% if task.is_done %}line-through text-slate-400 dark:text-slate-500{% endif %}">
+      {{ task.title }}
+    </div>
     {% if show_course %}
-      <a class="task-course" href="{% url 'course_detail' task.course.pk %}">{{ task.course.name }}</a>
+      <a class="text-xs text-brand-600 dark:text-brand-400 hover:underline inline-block mt-0.5" href="{% url 'course_detail' task.course.pk %}">
+        {{ task.course.name }}
+      </a>
     {% endif %}
   </div>
-  <span class="chip {{ task|due_state }}">{{ task|due_label }}</span>
+  <span class="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap {% if task.is_done %}bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500{% elif task.is_overdue %}bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50{% else %}bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800/40{% endif %}">
+    {{ task|due_label }}
+  </span>
   {% if show_actions %}
-    <div class="row-actions">
-      <a href="{% url 'task_update' task.pk %}">Edit</a>
-      <a href="{% url 'task_delete' task.pk %}">Delete</a>
+    <div class="flex items-center gap-2 text-xs shrink-0 ml-1">
+      <a href="{% url 'task_update' task.pk %}" class="text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition">Edit</a>
+      <span class="text-slate-300 dark:text-slate-600">•</span>
+      <a href="{% url 'task_delete' task.pk %}" class="text-slate-400 hover:text-rose-500 transition">Delete</a>
     </div>
   {% endif %}
 </li>

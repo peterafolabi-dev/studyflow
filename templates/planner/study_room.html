@@ -27,11 +27,31 @@
     
     <h2 class="font-display text-2xl font-bold text-slate-800 dark:text-white mb-2">Pomodoro Timer</h2>
     
-    <div class="text-7xl font-display font-bold text-brand-600 dark:text-brand-400 my-8 tracking-tight font-mono tabular-nums" id="timer-display">
+    <!-- Duration Presets -->
+    <div class="flex items-center gap-2 my-2">
+      <button type="button" onclick="setDuration(15)" data-mins="15"
+              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
+        15m
+      </button>
+      <button type="button" onclick="setDuration(25)" data-mins="25"
+              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm transition">
+        25m
+      </button>
+      <button type="button" onclick="setDuration(45)" data-mins="45"
+              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
+        45m
+      </button>
+      <button type="button" onclick="setDuration(60)" data-mins="60"
+              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
+        60m
+      </button>
+    </div>
+
+    <div class="text-7xl font-display font-bold text-brand-600 dark:text-brand-400 my-6 tracking-tight font-mono tabular-nums" id="timer-display">
         25:00
     </div>
 
-    <div class="flex w-full gap-3 mb-8">
+    <div class="flex w-full gap-3 mb-6">
         <button id="start-btn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-4 py-3 rounded-xl font-medium transition-colors shadow-md">
             Start Focus
         </button>
@@ -46,13 +66,24 @@
         {% csrf_token %}
         <input type="hidden" name="duration" id="duration-input" value="25">
         <div class="text-left mb-4">
-            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">Log Focus Time To:</label>
-            <select name="course_id" class="w-full bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
-                <option value="">General Study</option>
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Log Focus Time To:</label>
+                <a href="{% url 'course_create' %}" class="text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline flex items-center gap-1">
+                    <span>+</span> Add Course
+                </a>
+            </div>
+            <select name="course_id" class="w-full bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none text-slate-800 dark:text-slate-200">
+                <option value="">🎯 General Study (No specific course)</option>
                 {% for c in courses %}
-                <option value="{{ c.id }}">{{ c.code }}</option>
+                <option value="{{ c.id }}">📖 {{ c.name }}{% if c.code %} ({{ c.code }}){% endif %}</option>
                 {% endfor %}
             </select>
+            {% if not courses %}
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-brand-50/50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-brand-100 dark:border-slate-700/60">
+              💡 <strong>Only General Study is shown</strong> because you haven't added any courses yet.
+              <a href="{% url 'course_create' %}" class="text-brand-600 dark:text-brand-400 font-semibold hover:underline">Add your courses here</a> to track study hours per course.
+            </p>
+            {% endif %}
         </div>
         <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl font-medium transition-colors shadow-md" id="log-btn">
             Save Session (25m)
@@ -62,6 +93,7 @@
 </div>
 
 <script>
+    let selectedDuration = 25;
     let timeLeft = 25 * 60;
     let timerId = null;
     let isRunning = false;
@@ -69,11 +101,28 @@
     const display = document.getElementById('timer-display');
     const startBtn = document.getElementById('start-btn');
     const resetBtn = document.getElementById('reset-btn');
+    const durationInput = document.getElementById('duration-input');
+    const logBtn = document.getElementById('log-btn');
 
     function updateDisplay() {
         const m = Math.floor(timeLeft / 60);
         const s = timeLeft % 60;
         display.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function setDuration(mins) {
+        if (isRunning) return;
+        selectedDuration = mins;
+        timeLeft = mins * 60;
+        durationInput.value = mins;
+        logBtn.textContent = `Save Session (${mins}m)`;
+        document.querySelectorAll('.duration-preset-btn').forEach(btn => {
+            const isMatch = parseInt(btn.dataset.mins) === mins;
+            btn.className = isMatch
+                ? 'duration-preset-btn px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm transition'
+                : 'duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition';
+        });
+        updateDisplay();
     }
 
     startBtn.addEventListener('click', () => {
@@ -107,7 +156,7 @@
     resetBtn.addEventListener('click', () => {
         isRunning = false;
         clearInterval(timerId);
-        timeLeft = 25 * 60;
+        timeLeft = selectedDuration * 60;
         updateDisplay();
         startBtn.textContent = 'Start Focus';
         startBtn.classList.replace('bg-amber-500', 'bg-brand-600');
