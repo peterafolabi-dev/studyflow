@@ -285,31 +285,79 @@
       ✕
     </button>
     
-    <div class="inline-block px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider mb-4">
-      <span id="quiz-progress">Card 1 of 1</span>
+    <!-- Active Quiz View -->
+    <div id="quiz-active-view">
+      <div class="flex items-center justify-between mb-4 px-1">
+        <div class="inline-block px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider">
+          <span id="quiz-progress">Card 1 of 1</span>
+        </div>
+        <div id="quiz-interval-tag" class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+          Interval: 1d
+        </div>
+      </div>
+
+      <!-- Interactive Flip Card -->
+      <div id="quiz-card" onclick="quizFlip()"
+           class="cursor-pointer min-h-[220px] rounded-2xl p-6 mb-4 flex flex-col items-center justify-center transition-all duration-300 shadow-inner select-none border border-brand-200/80 dark:border-slate-700">
+        <p id="quiz-text" class="text-lg sm:text-xl font-medium leading-relaxed max-w-md m-0"></p>
+      </div>
+
+      <p id="quiz-hint" class="text-xs text-slate-400 dark:text-slate-500 mb-4 flex items-center justify-center gap-1.5">
+        <span>🔄</span> Tap the card to reveal the answer
+      </p>
+
+      <!-- Spaced Repetition Rating Bar (Shown when flipped to back) -->
+      <div id="quiz-rating-bar" class="hidden mb-6 fade-in-up">
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2.5">
+          Rate your recall (SM-2 Spaced Repetition):
+        </p>
+        <div class="grid grid-cols-3 gap-2.5">
+          <button type="button" onclick="rateCard('hard')"
+                  class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-semibold text-xs sm:text-sm transition-all hover:scale-[1.02] shadow-sm">
+            <span class="text-base mb-0.5">🔴 Hard</span>
+            <span class="text-[10px] opacity-80">1 day</span>
+          </button>
+          <button type="button" onclick="rateCard('medium')"
+                  class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 font-semibold text-xs sm:text-sm transition-all hover:scale-[1.02] shadow-sm">
+            <span class="text-base mb-0.5">🟡 Medium</span>
+            <span class="text-[10px] opacity-80">Progress</span>
+          </button>
+          <button type="button" onclick="rateCard('easy')"
+                  class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold text-xs sm:text-sm transition-all hover:scale-[1.02] shadow-sm">
+            <span class="text-base mb-0.5">🟢 Easy</span>
+            <span class="text-[10px] opacity-80">Mastered</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div id="quiz-nav-bar" class="flex items-center justify-center gap-3">
+        <button onclick="quizNav(-1)"
+                class="rounded-xl border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold px-5 py-2.5 text-sm hover:bg-brand-50 dark:hover:bg-slate-700 transition">
+          ← Previous
+        </button>
+        <button onclick="quizNav(1)"
+                class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 text-sm shadow-md shadow-brand-500/20 transition-all hover:scale-105">
+          Next →
+        </button>
+      </div>
     </div>
 
-    <!-- Interactive Flip Card -->
-    <div id="quiz-card" onclick="quizFlip()"
-         class="cursor-pointer min-h-[220px] rounded-2xl p-6 mb-4 flex flex-col items-center justify-center transition-all duration-300 shadow-inner select-none border border-brand-200/80 dark:border-slate-700">
-      <p id="quiz-text" class="text-lg sm:text-xl font-medium leading-relaxed max-w-md m-0"></p>
+    <!-- Quiz Completion View -->
+    <div id="quiz-completion-view" class="hidden py-6 space-y-4">
+      <div class="text-5xl mb-2">🎉</div>
+      <h3 class="font-display font-bold text-2xl text-slate-900 dark:text-white">Review Session Complete!</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
+        Great work! Your recall ratings have updated the SM-2 spaced repetition schedule for every card.
+      </p>
+      <div class="pt-4 flex items-center justify-center gap-3">
+        <button onclick="closeQuiz(); location.reload();"
+                class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 text-sm shadow-lg shadow-brand-500/25 transition hover:scale-105">
+          Done & Refresh
+        </button>
+      </div>
     </div>
 
-    <p id="quiz-hint" class="text-xs text-slate-400 dark:text-slate-500 mb-6 flex items-center justify-center gap-1.5">
-      <span>🔄</span> Tap the card to reveal the answer
-    </p>
-
-    <!-- Navigation -->
-    <div class="flex items-center justify-center gap-3">
-      <button onclick="quizNav(-1)"
-              class="rounded-xl border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold px-5 py-2.5 text-sm hover:bg-brand-50 dark:hover:bg-slate-700 transition">
-        ← Previous
-      </button>
-      <button onclick="quizNav(1)"
-              class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 text-sm shadow-md shadow-brand-500/20 transition-all hover:scale-105">
-        Next →
-      </button>
-    </div>
   </div>
 </div>
 
@@ -360,6 +408,23 @@
 </style>
 
 <script>
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+const dueCardsData = {{ due_cards_json|safe }};
+
 function toggleAddCard(deckId) {
   const el = document.getElementById('add-card-' + deckId);
   el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
@@ -390,18 +455,47 @@ function closeNewDeckModal() {
   }
 }
 
-// ── Quiz Mode ──
-let quizCards = [], quizIdx = 0, quizShowingBack = false;
+// ── Quiz Mode & Spaced Repetition ──
+let quizCards = [], quizIdx = 0, quizShowingBack = false, isDueQueue = false;
+
+function startDueQueueQuiz() {
+  if (!dueCardsData || !dueCardsData.length) {
+    alert('No flashcards are currently due for spaced review!');
+    return;
+  }
+  isDueQueue = true;
+  quizCards = dueCardsData.map(c => ({
+    id: c.id,
+    front: c.front,
+    back: c.back,
+    interval_days: c.interval_days,
+    repetitions: c.repetitions,
+    deck_title: c.deck_title
+  }));
+  openQuizModal();
+}
 
 function startQuiz(deckId) {
   const container = document.getElementById('deck-data-' + deckId);
   if (!container) return;
+  isDueQueue = false;
   quizCards = Array.from(container.querySelectorAll('span')).map(s => ({
+    id: s.dataset.id ? parseInt(s.dataset.id) : null,
     front: s.dataset.front,
-    back: s.dataset.back
+    back: s.dataset.back,
+    interval_days: s.dataset.interval ? parseInt(s.dataset.interval) : 1,
+    repetitions: s.dataset.repetitions ? parseInt(s.dataset.repetitions) : 0,
+    deck_title: container.dataset.title || ''
   }));
   if (!quizCards.length) return;
-  quizIdx = 0; quizShowingBack = false;
+  openQuizModal();
+}
+
+function openQuizModal() {
+  quizIdx = 0;
+  quizShowingBack = false;
+  document.getElementById('quiz-active-view').classList.remove('hidden');
+  document.getElementById('quiz-completion-view').classList.add('hidden');
   const m = document.getElementById('quiz-modal');
   m.style.display = 'flex';
   const panel = m.querySelector('div');
@@ -414,12 +508,20 @@ function startQuiz(deckId) {
 
 function renderQuizCard() {
   const card = quizCards[quizIdx];
-  document.getElementById('quiz-progress').textContent = 'Card ' + (quizIdx + 1) + ' of ' + quizCards.length;
+  document.getElementById('quiz-progress').textContent = `Card ${quizIdx + 1} of ${quizCards.length}`;
+  document.getElementById('quiz-interval-tag').textContent = `Interval: ${card.interval_days || 1}d`;
   document.getElementById('quiz-text').textContent = quizShowingBack ? card.back : card.front;
   document.getElementById('quiz-hint').innerHTML = quizShowingBack
-    ? '<span>✨</span> Answer shown — tap to flip back'
+    ? '<span>✨</span> Answer shown — rate your recall below to schedule next review'
     : '<span>🔄</span> Tap the card to reveal the answer';
   
+  const ratingBar = document.getElementById('quiz-rating-bar');
+  if (quizShowingBack) {
+    ratingBar.classList.remove('hidden');
+  } else {
+    ratingBar.classList.add('hidden');
+  }
+
   const qc = document.getElementById('quiz-card');
   const isDark = document.documentElement.classList.contains('dark');
   if (quizShowingBack) {
@@ -442,6 +544,33 @@ function quizNav(dir) {
   renderQuizCard();
 }
 
+async function rateCard(rating) {
+  const card = quizCards[quizIdx];
+  if (card && card.id) {
+    try {
+      fetch(`/flashcards/${card.id}/review/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken') || ''
+        },
+        body: JSON.stringify({ rating: rating })
+      });
+    } catch (e) {
+      console.error('Failed to rate card:', e);
+    }
+  }
+
+  if (quizIdx < quizCards.length - 1) {
+    quizIdx++;
+    quizShowingBack = false;
+    renderQuizCard();
+  } else {
+    document.getElementById('quiz-active-view').classList.add('hidden');
+    document.getElementById('quiz-completion-view').classList.remove('hidden');
+  }
+}
+
 function closeQuiz() {
   const m = document.getElementById('quiz-modal');
   const panel = m.querySelector('div');
@@ -452,5 +581,13 @@ function closeQuiz() {
     m.style.display = 'none';
   }
 }
+
+// Auto launch due queue if query parameter queue=due is present
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('queue') === 'due' && dueCardsData && dueCardsData.length > 0) {
+    startDueQueueQuiz();
+  }
+});
 </script>
 {% endblock %}
