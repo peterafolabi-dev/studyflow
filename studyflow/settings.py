@@ -225,6 +225,8 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = 'Lax'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 
 LOGGING = {
     'version': 1,
