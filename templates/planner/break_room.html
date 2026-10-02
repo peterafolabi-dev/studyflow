@@ -1,274 +1,449 @@
 {% extends 'base.html' %}
 {% block title %}The Break Room · StudyFlow{% endblock %}
 {% block content %}
-<div class="mb-6 fade-in-up">
-  <div class="flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-1">
-        The Break Room 🎮
-      </h1>
-      <p class="text-slate-500 dark:text-slate-400 text-sm">
-        You've earned a 5-minute Pomodoro brain reset. Play 2048 or chat with fellow students!
-      </p>
+<div class="max-w-6xl mx-auto pb-12">
+  <div class="mb-8 fade-in-up">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="font-display text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-600 mb-2">
+          The Break Room 🎮
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 text-base max-w-xl">
+          You've earned your 5-minute Pomodoro brain reset. Play a quick game to recharge before your next study session.
+        </p>
+      </div>
+      <div class="flex gap-3">
+        <a href="{% url 'study_room' %}" class="rounded-2xl border border-brand-200 dark:border-brand-800 bg-white/50 dark:bg-slate-900/50 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-slate-800 font-bold px-5 py-3 text-sm transition shadow-sm">
+          ⏱️ Back to Study
+        </a>
+      </div>
     </div>
-    <a href="{% url 'global_chat' %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 text-xs shadow-md shadow-brand-500/20 transition-all hover:scale-105 flex items-center gap-1.5">
-      <span>💬</span> Join Campus Chat
-    </a>
+  </div>
+
+  <!-- Game Selector -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 fade-in-up">
+    <!-- 2048 Card -->
+    <button onclick="switchGame('2048')" id="btn-game-2048" class="game-btn active text-left group relative overflow-hidden rounded-3xl p-6 border-2 transition-all duration-300 border-brand-500 bg-brand-50/50 dark:bg-brand-900/20 shadow-lg shadow-brand-500/20">
+      <div class="absolute -right-10 -bottom-10 opacity-10 group-hover:opacity-20 transition-opacity text-9xl">🔢</div>
+      <h3 class="font-display text-2xl font-bold text-slate-900 dark:text-white mb-2">Neon 2048</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300">Slide and merge tiles to reach the legendary 2048 tile. A perfect low-stress puzzle.</p>
+    </button>
+    
+    <!-- Memory Match Card -->
+    <button onclick="switchGame('memory')" id="btn-game-memory" class="game-btn text-left group relative overflow-hidden rounded-3xl p-6 border-2 transition-all duration-300 border-transparent bg-white/60 dark:bg-slate-900/60 hover:border-emerald-400/50 hover:bg-emerald-50/30 dark:hover:bg-emerald-900/20">
+      <div class="absolute -right-10 -bottom-10 opacity-10 group-hover:opacity-20 transition-opacity text-9xl">🧠</div>
+      <h3 class="font-display text-2xl font-bold text-slate-900 dark:text-white mb-2">Memory Matrix</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-300">Test your short-term memory by matching pairs. Excellent for keeping your brain sharp.</p>
+    </button>
+  </div>
+
+  <!-- GAMES CONTAINER -->
+  <div class="relative bg-white/40 dark:bg-slate-900/40 backdrop-blur-3xl border border-white/60 dark:border-slate-700/50 rounded-[3rem] p-6 sm:p-10 shadow-2xl overflow-hidden fade-in-up">
+    
+    <!-- Decorative background blobs -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-brand-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute bottom-0 right-0 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <!-- 1. NEON 2048 VIEW -->
+    <div id="view-2048" class="game-view flex flex-col md:flex-row items-center justify-center gap-10">
+      <!-- Game Board -->
+      <div class="bg-slate-900/80 p-5 rounded-[2.5rem] shadow-2xl w-full max-w-[420px] border border-white/10 relative backdrop-blur-md shrink-0">
+          <div class="flex justify-between items-center mb-6">
+              <div class="flex gap-3">
+                  <div class="bg-slate-800/80 border border-white/10 px-4 py-2 rounded-2xl text-center shadow-inner">
+                      <span class="text-[10px] tracking-widest uppercase block text-brand-400 font-bold mb-0.5">Score</span>
+                      <span id="score-2048" class="text-xl font-black text-white leading-none">0</span>
+                  </div>
+                  <div class="bg-slate-800/80 border border-white/10 px-4 py-2 rounded-2xl text-center shadow-inner">
+                      <span class="text-[10px] tracking-widest uppercase block text-purple-400 font-bold mb-0.5">Best</span>
+                      <span id="best-2048" class="text-xl font-black text-white leading-none">0</span>
+                  </div>
+              </div>
+              <button id="restart-2048" class="bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold py-3 px-5 rounded-2xl transition hover:scale-105 shadow-lg shadow-brand-500/30">
+                  ↻ Restart
+              </button>
+          </div>
+          
+          <div class="relative bg-slate-950/50 p-3 rounded-3xl w-full aspect-square grid grid-cols-4 grid-rows-4 gap-3 shadow-inner" id="grid-2048">
+              <!-- JS will populate -->
+          </div>
+          <p class="text-center text-xs text-slate-400 mt-5 select-none font-medium">
+            Swipe or use <kbd class="px-2 py-1 bg-slate-800 rounded-lg text-slate-300 border border-slate-700">Arrow Keys</kbd>
+          </p>
+      </div>
+      
+      <!-- Info -->
+      <div class="max-w-xs text-center md:text-left z-10">
+        <div class="text-6xl mb-4">🔢</div>
+        <h3 class="font-display text-3xl font-bold text-slate-900 dark:text-white mb-4">Neon 2048</h3>
+        <p class="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+          Merge tiles of the same number to double their value. Can you reach the legendary 2048 tile before the grid fills up?
+        </p>
+        <div class="p-5 rounded-3xl bg-brand-50/50 dark:bg-brand-900/20 border border-brand-200/50 dark:border-brand-800/30">
+          <p class="text-xs font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400 mb-2">🎮 Pro Tip</p>
+          <p class="text-sm text-slate-700 dark:text-slate-300">Keep your highest value tile in one of the corners by rarely swiping in the opposite direction!</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MEMORY MATRIX VIEW -->
+    <div id="view-memory" class="game-view hidden flex flex-col md:flex-row items-center justify-center gap-10">
+      <!-- Game Board -->
+      <div class="bg-slate-900/80 p-5 rounded-[2.5rem] shadow-2xl w-full max-w-[460px] border border-white/10 relative backdrop-blur-md shrink-0">
+          <div class="flex justify-between items-center mb-6">
+              <div class="flex gap-3">
+                  <div class="bg-slate-800/80 border border-white/10 px-4 py-2 rounded-2xl text-center shadow-inner">
+                      <span class="text-[10px] tracking-widest uppercase block text-emerald-400 font-bold mb-0.5">Moves</span>
+                      <span id="moves-memory" class="text-xl font-black text-white leading-none">0</span>
+                  </div>
+                  <div class="bg-slate-800/80 border border-white/10 px-4 py-2 rounded-2xl text-center shadow-inner">
+                      <span class="text-[10px] tracking-widest uppercase block text-amber-400 font-bold mb-0.5">Pairs</span>
+                      <span id="pairs-memory" class="text-xl font-black text-white leading-none">0/8</span>
+                  </div>
+              </div>
+              <button id="restart-memory" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 px-5 rounded-2xl transition hover:scale-105 shadow-lg shadow-emerald-500/30">
+                  ↻ Shuffle
+              </button>
+          </div>
+          
+          <div class="relative w-full aspect-square grid grid-cols-4 grid-rows-4 gap-3" id="grid-memory">
+              <!-- JS will populate -->
+          </div>
+      </div>
+      
+      <!-- Info -->
+      <div class="max-w-xs text-center md:text-left z-10">
+        <div class="text-6xl mb-4">🧠</div>
+        <h3 class="font-display text-3xl font-bold text-slate-900 dark:text-white mb-4">Memory Matrix</h3>
+        <p class="text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+          Flip the cards and match all the pairs in the fewest moves possible. 
+        </p>
+        <div class="p-5 rounded-3xl bg-emerald-50/50 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/30">
+          <p class="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">🔬 Science Note</p>
+          <p class="text-sm text-slate-700 dark:text-slate-300">Working memory exercises activate the prefrontal cortex, enhancing your focus right before you jump back into studying.</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<div class="flex flex-col md:flex-row gap-8 fade-in-up">
-    
-    <!-- Game Container -->
-    <div class="bg-[#bbada0] dark:bg-slate-800 p-4 sm:p-5 rounded-3xl shadow-2xl w-full max-w-[400px] mx-auto md:mx-0 border border-black/10 dark:border-slate-700">
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex gap-2">
-                <div class="bg-[#8f7a66] dark:bg-slate-700 text-white px-3.5 py-1.5 rounded-xl font-bold text-center min-w-[70px]">
-                    <span class="text-[10px] tracking-wider uppercase block text-amber-200">SCORE</span>
-                    <span id="score" class="text-xl leading-none">0</span>
-                </div>
-                <div class="bg-[#8f7a66] dark:bg-slate-700 text-white px-3.5 py-1.5 rounded-xl font-bold text-center min-w-[70px]">
-                    <span class="text-[10px] tracking-wider uppercase block text-amber-200">BEST</span>
-                    <span id="best-score" class="text-xl leading-none">0</span>
-                </div>
-            </div>
-            <button id="restart-btn" class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 px-4 rounded-xl transition text-xs shadow-md shadow-brand-500/20 hover:scale-105">
-                New Game
-            </button>
-        </div>
-        
-        <!-- Grid -->
-        <div class="relative bg-[#a39485] dark:bg-slate-900 p-3 rounded-2xl w-full aspect-square grid grid-cols-4 grid-rows-4 gap-2.5 sm:gap-3" id="grid-container">
-            <!-- JS will populate tiles -->
-        </div>
-        <p class="text-center text-[11px] text-white/80 dark:text-slate-400 mt-3 select-none">
-          Swipe on mobile or use Arrow Keys to move
-        </p>
-    </div>
-
-    <!-- Leaderboard / Instructions / Actions -->
-    <div class="flex-1 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-brand-100 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between">
-        <div>
-          <h2 class="font-display text-2xl font-bold mb-3 text-slate-800 dark:text-white">How to play</h2>
-          <p class="text-slate-600 dark:text-slate-300 text-sm mb-6 leading-relaxed">
-            Use your <strong>Arrow Keys</strong> (or swipe on touchscreens) to slide the tiles. When two tiles with the same number touch, they merge into one. Add them up to reach <strong>2048!</strong>
-          </p>
-          
-          <h3 class="font-display text-lg font-bold mb-2 text-brand-600 dark:text-brand-400 flex items-center gap-1.5">
-            <span>⏱️</span> Study Science Tip
-          </h3>
-          <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6">
-            Puzzles like 2048 activate pattern recognition without inducing social media burnout. Play one 5-minute round to give your memory consolidation time to work, then hop back into your Pomodoro study session!
-          </p>
-        </div>
-        
-        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-3">
-            <a href="{% url 'study_room' %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2.5 text-xs shadow-md shadow-brand-500/20 transition-all hover:scale-105 flex items-center gap-1.5">
-                <span>⏱️</span> Return to Study Room
-            </a>
-            <a href="{% url 'global_chat' %}" class="rounded-xl border border-brand-200 dark:border-slate-700 bg-brand-50/50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 hover:bg-brand-100 font-semibold px-4 py-2.5 text-xs transition flex items-center gap-1.5">
-                <span>💬</span> Campus Chat
-            </a>
-            <a href="{% url 'dashboard' %}" class="rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium px-4 py-2.5 text-xs transition">
-                Dashboard
-            </a>
-        </div>
-    </div>
-</div>
-
 <style>
-    .tile {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1.6rem;
-        font-weight: 800;
-        border-radius: 12px;
-        background-color: #cdc1b4;
-        color: #776e65;
-        transition: transform 0.12s ease-in-out;
-        user-select: none;
-    }
-    .tile-2 { background: #eee4da; color: #475569; }
-    .tile-4 { background: #ede0c8; color: #475569; }
-    .tile-8 { background: #f2b179; color: white; }
-    .tile-16 { background: #f59563; color: white; }
-    .tile-32 { background: #f67c5f; color: white; }
-    .tile-64 { background: #f65e3b; color: white; }
-    .tile-128 { background: #edcf72; color: white; font-size: 1.3rem; box-shadow: 0 0 10px rgba(243, 215, 116, 0.5); }
-    .tile-256 { background: #edcc61; color: white; font-size: 1.3rem; box-shadow: 0 0 15px rgba(243, 215, 116, 0.6); }
-    .tile-512 { background: #edc850; color: white; font-size: 1.3rem; box-shadow: 0 0 20px rgba(243, 215, 116, 0.7); }
-    .tile-1024 { background: #edc53f; color: white; font-size: 1.1rem; box-shadow: 0 0 25px rgba(243, 215, 116, 0.8); }
-    .tile-2048 { background: #7c3aed; color: white; font-size: 1.1rem; box-shadow: 0 0 30px rgba(124, 58, 237, 0.9); }
+/* Neon 2048 Styles */
+.tile-2048 {
+  display: flex; justify-content: center; align-items: center;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.75rem; font-weight: 900;
+  border-radius: 1rem;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: transparent;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
+}
+.tile-val-2 { background: rgba(255,255,255,0.9); color: #0f172a; }
+.tile-val-4 { background: #e2e8f0; color: #0f172a; }
+.tile-val-8 { background: #f59e0b; color: white; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+.tile-val-16 { background: #f97316; color: white; box-shadow: 0 0 15px rgba(249, 115, 22, 0.5); }
+.tile-val-32 { background: #ef4444; color: white; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+.tile-val-64 { background: #dc2626; color: white; box-shadow: 0 0 20px rgba(220, 38, 38, 0.6); }
+.tile-val-128 { background: #eab308; color: white; box-shadow: 0 0 25px rgba(234, 179, 8, 0.6); font-size: 1.5rem;}
+.tile-val-256 { background: #ca8a04; color: white; box-shadow: 0 0 30px rgba(202, 138, 4, 0.7); font-size: 1.5rem;}
+.tile-val-512 { background: #10b981; color: white; box-shadow: 0 0 30px rgba(16, 185, 129, 0.8); font-size: 1.5rem;}
+.tile-val-1024 { background: #06b6d4; color: white; box-shadow: 0 0 35px rgba(6, 182, 212, 0.9); font-size: 1.25rem;}
+.tile-val-2048 { background: #8b5cf6; color: white; box-shadow: 0 0 40px rgba(139, 92, 246, 1); font-size: 1.25rem;}
+.tile-val-super { background: #d946ef; color: white; box-shadow: 0 0 50px rgba(217, 70, 239, 1); font-size: 1.1rem;}
+
+/* Memory Matrix Styles */
+.memory-card {
+  perspective: 1000px;
+  cursor: pointer;
+}
+.memory-card-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  text-align: center;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  border-radius: 1rem;
+}
+.memory-card.flipped .memory-card-inner {
+  transform: rotateY(180deg);
+}
+.memory-card-front, .memory-card-back {
+  position: absolute;
+  width: 100%; height: 100%;
+  backface-visibility: hidden;
+  border-radius: 1rem;
+  display: flex; justify-content: center; align-items: center;
+  font-size: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+.memory-card-front {
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.2)"/></svg>');
+}
+.memory-card-back {
+  background: linear-gradient(135deg, #10b981, #059669);
+  transform: rotateY(180deg);
+  border: 2px solid rgba(255,255,255,0.3);
+}
+.memory-card.matched .memory-card-back {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  animation: pulse 1s infinite;
+}
 </style>
 
 <script>
-    const gridContainer = document.getElementById('grid-container');
-    const scoreDisplay = document.getElementById('score');
-    const bestDisplay = document.getElementById('best-score');
-    let board = [];
-    let score = 0;
-    let bestScore = parseInt(localStorage.getItem('studyflow_2048_best') || '0', 10);
-    bestDisplay.textContent = bestScore;
+// --- UI TABS ---
+function switchGame(gameId) {
+  document.querySelectorAll('.game-view').forEach(el => el.classList.add('hidden'));
+  document.getElementById('view-' + gameId).classList.remove('hidden');
+  
+  document.querySelectorAll('.game-btn').forEach(btn => {
+    btn.classList.remove('border-brand-500', 'bg-brand-50/50', 'dark:bg-brand-900/20', 'shadow-lg', 'shadow-brand-500/20', 'border-emerald-500', 'bg-emerald-50/50', 'dark:bg-emerald-900/20', 'shadow-emerald-500/20');
+    btn.classList.add('border-transparent', 'bg-white/60', 'dark:bg-slate-900/60');
+  });
+  
+  const activeBtn = document.getElementById('btn-game-' + gameId);
+  activeBtn.classList.remove('border-transparent', 'bg-white/60', 'dark:bg-slate-900/60');
+  
+  if (gameId === '2048') {
+    activeBtn.classList.add('border-brand-500', 'bg-brand-50/50', 'dark:bg-brand-900/20', 'shadow-lg', 'shadow-brand-500/20');
+  } else {
+    activeBtn.classList.add('border-emerald-500', 'bg-emerald-50/50', 'dark:bg-emerald-900/20', 'shadow-lg', 'shadow-emerald-500/20');
+  }
+}
 
-    function initGame() {
-        board = [...Array(4)].map(e => Array(4).fill(0));
-        score = 0;
-        scoreDisplay.textContent = score;
-        addRandomTile();
-        addRandomTile();
-        drawBoard();
+// ==========================================
+// 1. NEON 2048 LOGIC
+// ==========================================
+const grid2048 = document.getElementById('grid-2048');
+const scoreDisplay2048 = document.getElementById('score-2048');
+const bestDisplay2048 = document.getElementById('best-2048');
+let board2048 = [];
+let score2048 = 0;
+let bestScore2048 = parseInt(localStorage.getItem('sf_2048_neon_best') || '0', 10);
+bestDisplay2048.textContent = bestScore2048;
+
+function init2048() {
+    board2048 = [...Array(4)].map(e => Array(4).fill(0));
+    score2048 = 0;
+    scoreDisplay2048.textContent = score2048;
+    addRandomTile2048();
+    addRandomTile2048();
+    drawBoard2048();
+}
+
+function updateScore2048(added) {
+    score2048 += added;
+    scoreDisplay2048.textContent = score2048;
+    if (score2048 > bestScore2048) {
+        bestScore2048 = score2048;
+        bestDisplay2048.textContent = bestScore2048;
+        localStorage.setItem('sf_2048_neon_best', bestScore2048);
     }
+}
 
-    function updateScore(added) {
-        score += added;
-        scoreDisplay.textContent = score;
-        if (score > bestScore) {
-            bestScore = score;
-            bestDisplay.textContent = bestScore;
-            localStorage.setItem('studyflow_2048_best', bestScore);
-        }
-    }
-
-    function addRandomTile() {
-        let empty = [];
-        for(let r=0; r<4; r++) {
-            for(let c=0; c<4; c++) {
-                if(board[r][c] === 0) empty.push({r, c});
-            }
-        }
-        if(empty.length > 0) {
-            let rand = empty[Math.floor(Math.random() * empty.length)];
-            board[rand.r][rand.c] = Math.random() < 0.9 ? 2 : 4;
-        }
-    }
-
-    function drawBoard() {
-        gridContainer.innerHTML = '';
-        for(let r=0; r<4; r++) {
-            for(let c=0; c<4; c++) {
-                let val = board[r][c];
-                let tile = document.createElement('div');
-                tile.className = `tile ${val > 0 ? 'tile-'+val : 'opacity-20 bg-slate-300 dark:bg-slate-800'}`;
-                tile.textContent = val > 0 ? val : '';
-                gridContainer.appendChild(tile);
-            }
-        }
-    }
-
-    function slide(row) {
-        let arr = row.filter(val => val);
-        let missing = 4 - arr.length;
-        let zeros = Array(missing).fill(0);
-        return arr.concat(zeros);
-    }
-
-    function combine(row) {
-        for(let i=0; i<3; i++) {
-            if(row[i] !== 0 && row[i] === row[i+1]) {
-                row[i] *= 2;
-                updateScore(row[i]);
-                row[i+1] = 0;
-            }
-        }
-        return row;
-    }
-
-    function operate(row) {
-        row = slide(row);
-        row = combine(row);
-        row = slide(row);
-        return row;
-    }
-
-    function moveLeft() {
-        let changed = false;
-        for(let r=0; r<4; r++) {
-            let oldRow = [...board[r]];
-            board[r] = operate(board[r]);
-            if(oldRow.join(',') !== board[r].join(',')) changed = true;
-        }
-        return changed;
-    }
-
-    function moveRight() {
-        let changed = false;
-        for(let r=0; r<4; r++) {
-            let oldRow = [...board[r]];
-            let row = [...board[r]].reverse();
-            row = operate(row);
-            board[r] = row.reverse();
-            if(oldRow.join(',') !== board[r].join(',')) changed = true;
-        }
-        return changed;
-    }
-
-    function moveUp() {
-        let changed = false;
+function addRandomTile2048() {
+    let empty = [];
+    for(let r=0; r<4; r++) {
         for(let c=0; c<4; c++) {
-            let col = [board[0][c], board[1][c], board[2][c], board[3][c]];
-            let oldCol = [...col];
-            col = operate(col);
-            for(let r=0; r<4; r++) board[r][c] = col[r];
-            if(oldCol.join(',') !== col.join(',')) changed = true;
+            if(board2048[r][c] === 0) empty.push({r, c});
         }
-        return changed;
     }
+    if(empty.length > 0) {
+        let rand = empty[Math.floor(Math.random() * empty.length)];
+        board2048[rand.r][rand.c] = Math.random() < 0.9 ? 2 : 4;
+    }
+}
 
-    function moveDown() {
-        let changed = false;
+function drawBoard2048() {
+    grid2048.innerHTML = '';
+    for(let r=0; r<4; r++) {
         for(let c=0; c<4; c++) {
-            let col = [board[0][c], board[1][c], board[2][c], board[3][c]].reverse();
-            let oldCol = [board[0][c], board[1][c], board[2][c], board[3][c]];
-            col = operate(col);
-            col.reverse();
-            for(let r=0; r<4; r++) board[r][c] = col[r];
-            if(oldCol.join(',') !== col.join(',')) changed = true;
-        }
-        return changed;
-    }
-
-    function handleMove(changed) {
-        if(changed) {
-            addRandomTile();
-            drawBoard();
-        }
-    }
-
-    document.addEventListener('keydown', e => {
-        if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
-            e.preventDefault();
-        }
-        if(e.key === 'ArrowLeft') handleMove(moveLeft());
-        else if(e.key === 'ArrowRight') handleMove(moveRight());
-        else if(e.key === 'ArrowUp') handleMove(moveUp());
-        else if(e.key === 'ArrowDown') handleMove(moveDown());
-    });
-
-    // Touch Swipe Support for Mobile
-    let touchStartX = 0, touchStartY = 0;
-    gridContainer.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
-    }, { passive: true });
-
-    gridContainer.addEventListener('touchend', e => {
-        let diffX = e.changedTouches[0].screenX - touchStartX;
-        let diffY = e.changedTouches[0].screenY - touchStartY;
-        if (Math.abs(diffX) > Math.abs(diffY)) {
-            if (Math.abs(diffX) > 30) {
-                if (diffX > 0) handleMove(moveRight());
-                else handleMove(moveLeft());
+            let val = board2048[r][c];
+            let tile = document.createElement('div');
+            let valClass = val > 2048 ? 'super' : val;
+            tile.className = `tile-2048 ${val > 0 ? 'tile-val-'+valClass : 'bg-white/5 dark:bg-white/5 border border-white/5'}`;
+            tile.textContent = val > 0 ? val : '';
+            if(val > 0) {
+                tile.style.animation = 'pulse 0.2s ease-out';
             }
+            grid2048.appendChild(tile);
+        }
+    }
+}
+
+function slide2048(row) {
+    let arr = row.filter(val => val);
+    let missing = 4 - arr.length;
+    let zeros = Array(missing).fill(0);
+    return arr.concat(zeros);
+}
+
+function combine2048(row) {
+    for(let i=0; i<3; i++) {
+        if(row[i] !== 0 && row[i] === row[i+1]) {
+            row[i] *= 2;
+            updateScore2048(row[i]);
+            row[i+1] = 0;
+        }
+    }
+    return row;
+}
+
+function operate2048(row) {
+    row = slide2048(row);
+    row = combine2048(row);
+    row = slide2048(row);
+    return row;
+}
+
+function move2048(dir) {
+    let changed = false;
+    for(let r=0; r<4; r++) {
+        let oldRow, newRow;
+        if(dir === 'L' || dir === 'R') {
+            oldRow = [...board2048[r]];
+            newRow = dir === 'L' ? operate2048([...board2048[r]]) : operate2048([...board2048[r]].reverse()).reverse();
+            board2048[r] = newRow;
         } else {
-            if (Math.abs(diffY) > 30) {
-                if (diffY > 0) handleMove(moveDown());
-                else handleMove(moveUp());
-            }
+            let col = [board2048[0][r], board2048[1][r], board2048[2][r], board2048[3][r]];
+            oldRow = [...col];
+            newRow = dir === 'U' ? operate2048([...col]) : operate2048([...col].reverse()).reverse();
+            for(let i=0; i<4; i++) board2048[i][r] = newRow[i];
         }
-    }, { passive: true });
+        if(oldRow.join(',') !== newRow.join(',')) changed = true;
+    }
+    if(changed) {
+        addRandomTile2048();
+        drawBoard2048();
+    }
+}
 
-    document.getElementById('restart-btn').addEventListener('click', initGame);
-    initGame();
+document.addEventListener('keydown', e => {
+    if(document.getElementById('view-2048').classList.contains('hidden')) return;
+    
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+    if(e.key === 'ArrowLeft') move2048('L');
+    else if(e.key === 'ArrowRight') move2048('R');
+    else if(e.key === 'ArrowUp') move2048('U');
+    else if(e.key === 'ArrowDown') move2048('D');
+});
+
+let tX=0, tY=0;
+grid2048.addEventListener('touchstart', e => { tX = e.changedTouches[0].screenX; tY = e.changedTouches[0].screenY; }, { passive: true });
+grid2048.addEventListener('touchend', e => {
+    if(document.getElementById('view-2048').classList.contains('hidden')) return;
+    let dX = e.changedTouches[0].screenX - tX, dY = e.changedTouches[0].screenY - tY;
+    if (Math.abs(dX) > Math.abs(dY)) {
+        if (Math.abs(dX) > 30) move2048(dX > 0 ? 'R' : 'L');
+    } else {
+        if (Math.abs(dY) > 30) move2048(dY > 0 ? 'D' : 'U');
+    }
+}, { passive: true });
+
+document.getElementById('restart-2048').addEventListener('click', init2048);
+init2048();
+
+
+// ==========================================
+// 2. MEMORY MATRIX LOGIC
+// ==========================================
+const gridMemory = document.getElementById('grid-memory');
+const movesDisplay = document.getElementById('moves-memory');
+const pairsDisplay = document.getElementById('pairs-memory');
+
+const EMOJIS = ['🚀', '🧠', '📚', '💻', '☕', '🎧', '🎮', '🏆'];
+let cards = [];
+let flippedCards = [];
+let matchedPairs = 0;
+let moves = 0;
+let canFlip = true;
+
+function initMemory() {
+    gridMemory.innerHTML = '';
+    moves = 0;
+    matchedPairs = 0;
+    movesDisplay.textContent = '0';
+    pairsDisplay.textContent = '0/8';
+    flippedCards = [];
+    canFlip = true;
+
+    // Create pairs and shuffle
+    cards = [...EMOJIS, ...EMOJIS]
+        .sort(() => Math.random() - 0.5)
+        .map((emoji, index) => ({ id: index, emoji, isFlipped: false, isMatched: false }));
+
+    cards.forEach(card => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'memory-card';
+        cardEl.dataset.id = card.id;
+        cardEl.innerHTML = `
+            <div class="memory-card-inner">
+                <div class="memory-card-front"></div>
+                <div class="memory-card-back">${card.emoji}</div>
+            </div>
+        `;
+        cardEl.addEventListener('click', () => handleCardClick(card, cardEl));
+        gridMemory.appendChild(cardEl);
+    });
+}
+
+function handleCardClick(card, cardEl) {
+    if (!canFlip || card.isFlipped || card.isMatched) return;
+
+    // Flip card
+    cardEl.classList.add('flipped');
+    card.isFlipped = true;
+    flippedCards.push({ card, cardEl });
+
+    if (flippedCards.length === 2) {
+        moves++;
+        movesDisplay.textContent = moves;
+        checkMatch();
+    }
+}
+
+function checkMatch() {
+    canFlip = false;
+    const [c1, c2] = flippedCards;
+
+    if (c1.card.emoji === c2.card.emoji) {
+        // Match!
+        c1.card.isMatched = true;
+        c2.card.isMatched = true;
+        matchedPairs++;
+        pairsDisplay.textContent = `${matchedPairs}/8`;
+        
+        c1.cardEl.classList.add('matched');
+        c2.cardEl.classList.add('matched');
+        
+        flippedCards = [];
+        canFlip = true;
+        
+        if (matchedPairs === 8) {
+            setTimeout(() => {
+                alert(`Legendary! You solved the Memory Matrix in ${moves} moves!`);
+            }, 500);
+        }
+    } else {
+        // No match
+        setTimeout(() => {
+            c1.cardEl.classList.remove('flipped');
+            c2.cardEl.classList.remove('flipped');
+            c1.card.isFlipped = false;
+            c2.card.isFlipped = false;
+            flippedCards = [];
+            canFlip = true;
+        }, 800);
+    }
+}
+
+document.getElementById('restart-memory').addEventListener('click', initMemory);
+initMemory();
+
 </script>
 {% endblock %}
