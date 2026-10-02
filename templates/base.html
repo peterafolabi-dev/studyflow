@@ -810,10 +810,16 @@
 
                 chatMessages.innerHTML += `
                     <div class="bg-brand-600 text-white rounded-xl rounded-tr-none p-3 text-sm self-end max-w-[85%] shadow-sm whitespace-pre-wrap leading-relaxed">
-                        ${escapeHtml(msg)}
+                        ${escapeHtml(displayMsg)}
                     </div>
                 `;
                 chatInput.value = '';
+                if(aiChatFileInput) aiChatFileInput.value = '';
+                attachedFileContent = '';
+                if(aiChatFilePreview) aiChatFilePreview.classList.add('hidden');
+                chatInput.placeholder = "Ask StudyFlow AI...";
+                chatInput.required = true;
+
                 chatMessages.scrollTop = chatMessages.scrollHeight;
 
                 const typingId = 'typing-' + Date.now();
@@ -835,7 +841,7 @@
                             'Content-Type': 'application/json',
                             'X-CSRFToken': csrf
                         },
-                        body: JSON.stringify({ message: msg, history: chatHistory })
+                        body: JSON.stringify({ message: fullPrompt, history: chatHistory })
                     });
                     const data = await response.json();
                     
@@ -850,7 +856,7 @@
                     chatMessages.scrollTop = chatMessages.scrollHeight;
 
                     // Append turn to history
-                    chatHistory.push({ role: 'user', content: msg });
+                    chatHistory.push({ role: 'user', content: fullPrompt });
                     chatHistory.push({ role: 'assistant', content: data.reply });
         } catch (error) {
                     const t = document.getElementById(typingId);
