@@ -1,40 +1,83 @@
 {% extends 'base.html' %}
 {% block title %}Study Groups · StudyFlow{% endblock %}
 {% block content %}
-  <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
-    <div>
-      <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Study Groups</h1>
-      <p class="text-slate-500 dark:text-slate-400 mt-1">Open discussions, grouped by course code.</p>
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 fade-in-up">
+      <div>
+        <h1 class="font-display text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2 flex items-center gap-3">
+          <span>📚 Campus Study Groups</span>
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 mt-1 max-w-xl">
+          Join open discussions, grouped by course code. Ask questions, share notes, and collaborate.
+        </p>
+      </div>
+      <a href="{% url 'thread_create' %}{% if course_code %}?course={{ course_code }}{% endif %}"
+         class="rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold px-6 py-3.5 text-sm shadow-lg shadow-brand-500/30 transition-all hover:scale-105 shrink-0 flex items-center gap-2 group">
+        <span class="group-hover:rotate-90 transition-transform">➕</span> Start a discussion
+      </a>
     </div>
-    <a href="{% url 'thread_create' %}{% if course_code %}?course={{ course_code }}{% endif %}"
-       class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm shrink-0">
-      + Start a discussion
-    </a>
-  </div>
 
-  <form method="get" class="flex gap-2 mb-6">
-    <input type="text" name="q" value="{{ query }}" placeholder="Search discussions or course code&hellip;"
-           class="flex-1 rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
-    <button class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2">Search</button>
-  </form>
+    <!-- Search Bar -->
+    <form method="get" class="relative max-w-2xl mb-8 fade-in-up">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </div>
+      <input type="text" name="q" value="{{ query }}" placeholder="Search discussions or course code&hellip;"
+             class="w-full rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md pl-11 pr-32 py-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm transition-all">
+      <div class="absolute inset-y-0 right-2 flex items-center">
+        <button class="rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold px-5 py-2.5 transition-transform hover:scale-105 shadow-md">
+          Search
+        </button>
+      </div>
+    </form>
 
-  {% if threads %}
-    <div class="divide-y divide-brand-100 dark:divide-slate-800 rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900">
-      {% for t in threads %}
-        <a href="{% url 'thread_detail' t.pk %}" class="flex items-center justify-between gap-3 px-5 py-4 hover:bg-brand-50 dark:hover:bg-slate-800">
-          <div>
-            {% if t.course_code %}<span class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ t.course_code }}</span><br>{% endif %}
-            <span class="font-medium">{{ t.title }}</span>
-            <p class="text-xs text-slate-400 mt-0.5">Started by {{ t.starter_name }}</p>
-          </div>
-          <span class="text-sm text-slate-400 shrink-0">{{ t.posts.count }} repl{{ t.posts.count|pluralize:"y,ies" }}</span>
+    <!-- Threads Grid/List -->
+    {% if threads %}
+      <div class="grid grid-cols-1 gap-4 fade-in-up">
+        {% for t in threads %}
+          <a href="{% url 'thread_detail' t.pk %}" class="group block rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xl p-5 sm:p-6 transition-all hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-1 hover:bg-white dark:hover:bg-slate-800/80">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex-1">
+                {% if t.course_code %}
+                  <span class="inline-block mb-2 text-[10px] font-extrabold uppercase tracking-widest text-brand-700 dark:text-brand-300 bg-brand-100/80 dark:bg-brand-900/40 border border-brand-200 dark:border-brand-800 px-2.5 py-1 rounded-full">
+                    {{ t.course_code }}
+                  </span>
+                {% endif %}
+                <h3 class="font-bold text-lg text-slate-800 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                  {{ t.title }}
+                </h3>
+                <div class="flex items-center gap-3 mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px]">👤</span>
+                    {{ t.starter_name }}
+                  </span>
+                  <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                  <span>{{ t.created_at|date:"d M Y" }}</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 shrink-0">
+                <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 text-xs font-semibold">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                  {{ t.posts.count }} repl{{ t.posts.count|pluralize:"y,ies" }}
+                </div>
+                <div class="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-900/20 text-brand-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rounded-3xl border border-dashed border-brand-300 dark:border-slate-700 bg-brand-50/40 dark:bg-slate-900/40 p-12 text-center text-slate-500 dark:text-slate-400 fade-in-up">
+        <div class="text-5xl mb-4 opacity-50">📂</div>
+        <h3 class="font-display text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">No discussions found</h3>
+        <p class="mb-6 max-w-md mx-auto">It looks a little quiet here. Be the first to start a conversation or ask a question about your courses!</p>
+        <a href="{% url 'thread_create' %}" class="inline-flex items-center gap-2 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-3 text-sm transition hover:scale-105 shadow-md">
+          <span>➕</span> Start the first one
         </a>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">
-      <p class="mb-3">No discussions yet.</p>
-      <a href="{% url 'thread_create' %}" class="inline-block rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Start the first one</a>
-    </div>
-  {% endif %}
+      </div>
+    {% endif %}
+  </div>
 {% endblock %}
