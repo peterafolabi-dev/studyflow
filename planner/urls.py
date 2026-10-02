@@ -25,4 +25,6 @@ urlpatterns = [
     path('timetable/new/', views.timetable_create, name='timetable_create'),
     path('timetable/<int:pk>/delete/', views.timetable_delete, name='timetable_delete'),
     path('calendar.ics', views.export_calendar, name='export_calendar'),
+    # Phase 5
+    path('progress/', views.progress, name='progress'),
 ]

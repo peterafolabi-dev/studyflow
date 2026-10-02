@@ -67,6 +67,67 @@ class ChatMessage(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     text = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-created_at']
+
+
+# ── Phase 6: Moderation ──────────────────────────────────────────────────────
+
+class PostReport(models.Model):
+    REASONS = [
+        ('spam', 'Spam'),
+        ('harassment', 'Harassment'),
+        ('inappropriate', 'Inappropriate content'),
+        ('misinformation', 'Misinformation'),
+        ('other', 'Other'),
+    ]
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports_made')
+    post = models.ForeignKey('community.Post', on_delete=models.CASCADE, related_name='reports')
+    reason = models.CharField(max_length=30, choices=REASONS, default='other')
+    detail = models.CharField(max_length=300, blank=True)
+    reviewed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('reporter', 'post')
+
+    def __str__(self):
+        return f"Report by {self.reporter.username} on post {self.post_id}"
+
+
+class MutedUser(models.Model):
+    """User A mutes User B — A won't see B's posts/messages."""
+    muter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='muting')
+    muted = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='muted_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('muter', 'muted')
+
+    def __str__(self):
+        return f"{self.muter.username} muted {self.muted.username}"
+
+
+# ── Phase 7: Feedback ────────────────────────────────────────────────────────
+
+class Feedback(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='feedback'
+    )
+    rating = models.PositiveSmallIntegerField(
+        choices=[(1,'⭐'),(2,'⭐⭐'),(3,'⭐⭐⭐'),(4,'⭐⭐⭐⭐'),(5,'⭐⭐⭐⭐⭐')]
+    )
+    message = models.TextField(max_length=1000, blank=True)
+    page = models.CharField(max_length=200, blank=True, help_text='URL path where feedback was submitted')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Feedback'
+
+    def __str__(self):
+        return f"{'⭐'*self.rating} from {self.user.username if self.user else 'anonymous'}"
+

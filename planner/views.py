@@ -188,6 +188,10 @@ def task_toggle(request, pk):
     task.is_done = not task.is_done
     task.save(update_fields=['is_done'])
 
+    # Award XP when task is completed
+    if task.is_done:
+        _award_xp(request.user, 'task_done', points=15)
+
     # Go back to the page the click came from, but only if it's a safe local URL.
     next_url = request.POST.get('next', '')
     if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
@@ -195,6 +199,7 @@ def task_toggle(request, pk):
     if next_url:
         return redirect(next_url)
     return redirect('course_detail', pk=task.course_id)
+
 
 
 @login_required
@@ -305,7 +310,9 @@ def log_study(request):
     if duration > 0:
         course = Course.objects.filter(id=course_id, user=request.user).first() if course_id else None
         StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
+        _award_xp(request.user, 'pomodoro', points=20)
     return redirect('study_room')
+
 
 @login_required
 def flashcard_hubs(request):
@@ -393,6 +400,7 @@ def flashcard_rate_review(request, pk):
         return JsonResponse({'error': 'Rating must be hard, medium, or easy.'}, status=400)
 
     next_date = card.process_review(rating)
+    _award_xp(request.user, 'flashcard', points=5)
     return JsonResponse({
         'success': True,
         'card_id': card.id,
@@ -401,6 +409,7 @@ def flashcard_rate_review(request, pk):
         'interval_days': card.interval_days,
         'repetitions': card.repetitions,
     })
+
 
 
 from django.http import JsonResponse
@@ -527,3 +536,111 @@ Do not add a stray number or heading before the card."""
 @login_required
 def break_room(request):
     return render(request, 'planner/break_room.html')
+
+
+# ── Phase 5: Progress & Gamification ────────────────────────────────────────
+
+def _award_xp(user, reason, points=10):
+    """Award XP and update streak. Call after any study activity."""
+    from .models import XPLog, StudyStreak
+    XPLog.objects.create(user=user, reason=reason, points=points)
+    streak, _ = StudyStreak.objects.get_or_create(user=user)
+    streak.record_activity()
+    _check_badges(user, streak)
+
+
+def _check_badges(user, streak):
+    """Award badges based on milestones."""
+    from .models import Badge, UserBadge, XPLog, StudyStreak
+    from django.db.models import Sum
+
+    total_xp = XPLog.objects.filter(user=user).aggregate(s=Sum('points'))['s'] or 0
+    milestones = [
+        ('first-task', 'First Step', 'Complete your first task', '🎯', 20,
+         lambda: XPLog.objects.filter(user=user, reason='task_done').exists()),
+        ('streak-3', '3-Day Streak', 'Study 3 days in a row', '🔥', 30,
+         lambda: streak.current_streak >= 3),
+        ('streak-7', 'Week Warrior', 'Study 7 days in a row', '🏆', 100,
+         lambda: streak.current_streak >= 7),
+        ('xp-100', 'Century Club', 'Earn 100 XP', '💯', 0,
+         lambda: total_xp >= 100),
+        ('pomodoro-5', 'Focus Master', 'Complete 5 Pomodoro sessions', '⏱️', 50,
+         lambda: XPLog.objects.filter(user=user, reason='pomodoro').count() >= 5),
+        ('flashcard-10', 'Card Sharp', 'Review 10 flashcards', '🃏', 50,
+         lambda: XPLog.objects.filter(user=user, reason='flashcard').count() >= 10),
+    ]
+
+    for slug, name, desc, icon, xp_reward, condition in milestones:
+        badge, _ = Badge.objects.get_or_create(
+            slug=slug,
+            defaults={'name': name, 'description': desc, 'icon': icon, 'xp_reward': xp_reward}
+        )
+        if not UserBadge.objects.filter(user=user, badge=badge).exists():
+            if condition():
+                UserBadge.objects.create(user=user, badge=badge)
+                if xp_reward:
+                    XPLog.objects.create(user=user, reason='streak_bonus', points=xp_reward)
+
+
+@login_required
+def progress(request):
+    """Phase 5: Progress dashboard — streak, XP, badges, weekly stats."""
+    from django.db.models import Sum, Count
+    from datetime import date
+    from .models import XPLog, StudyStreak, UserBadge, StudySession
+
+    today = timezone.localdate()
+    week_start = today - timedelta(days=today.weekday())  # Monday
+
+    streak, _ = StudyStreak.objects.get_or_create(user=request.user)
+    total_xp = XPLog.total_xp(request.user)
+    badges = UserBadge.objects.filter(user=request.user).select_related('badge').order_by('-awarded_at')
+
+    # Weekly study hours per course
+    weekly_sessions = StudySession.objects.filter(
+        user=request.user,
+        date__gte=week_start,
+    ).select_related('course')
+
+    weekly_minutes = weekly_sessions.aggregate(total=Sum('duration_minutes'))['total'] or 0
+    sessions_by_course = {}
+    for s in weekly_sessions:
+        name = s.course.name if s.course else 'General'
+        sessions_by_course[name] = sessions_by_course.get(name, 0) + s.duration_minutes
+
+    # Weekly counts
+    pomodoro_count = StudySession.objects.filter(user=request.user, date__gte=week_start).count()
+    tasks_done_week = Task.objects.filter(
+        course__user=request.user, is_done=True,
+        created_at__date__gte=week_start
+    ).count()
+    flashcards_reviewed_week = XPLog.objects.filter(
+        user=request.user, reason='flashcard', created_at__date__gte=week_start
+    ).count()
+
+    # Recent XP log
+    recent_xp = XPLog.objects.filter(user=request.user)[:10]
+
+    # XP level: every 200 XP = 1 level
+    level = (total_xp // 200) + 1
+    xp_in_level = total_xp % 200
+    xp_to_next = 200
+
+    context = {
+        'streak': streak,
+        'total_xp': total_xp,
+        'level': level,
+        'xp_in_level': xp_in_level,
+        'xp_to_next': xp_to_next,
+        'xp_pct': min(100, int(xp_in_level / xp_to_next * 100)),
+        'badges': badges,
+        'weekly_hours': round(weekly_minutes / 60, 1),
+        'weekly_minutes': weekly_minutes,
+        'pomodoro_count': pomodoro_count,
+        'tasks_done_week': tasks_done_week,
+        'flashcards_reviewed_week': flashcards_reviewed_week,
+        'sessions_by_course': sessions_by_course,
+        'recent_xp': recent_xp,
+    }
+    return render(request, 'planner/progress.html', context)
+
