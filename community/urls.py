@@ -11,4 +11,11 @@ urlpatterns = [
     path('study-groups/<int:pk>/delete/', views.thread_delete, name='thread_delete'),
     path('study-groups/buddies/', views.find_buddies, name='find_buddies'),
     path('study-groups/<int:pk>/vote/', views.vote_thread, name='vote_thread'),
+    # Phase 6 — Moderation
+    path('posts/<int:pk>/report/', views.report_post, name='report_post'),
+    path('users/<str:username>/mute/', views.mute_user, name='mute_user'),
+    # Phase 7 — Feedback & Analytics
+    path('feedback/', views.submit_feedback, name='submit_feedback'),
+    path('analytics/', views.admin_dashboard, name='admin_dashboard'),
 ]
+
