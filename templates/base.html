@@ -735,7 +735,85 @@
     }
 </script>
 
+<!-- ── Feedback floating button (Phase 7) ────────────────────────────── -->
+{% if user.is_authenticated %}
+<div class="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
+
+  <!-- Slide-up feedback panel -->
+  <div id="feedback-panel"
+       class="hidden w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/30 p-5 transition-all">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-slate-900 dark:text-white text-sm">💬 Share Feedback</h3>
+      <button onclick="document.getElementById('feedback-panel').classList.add('hidden')"
+              class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg leading-none">&times;</button>
+    </div>
+
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">How's StudyFlow working for you?</p>
+
+    <!-- Star rating -->
+    <div class="flex gap-1.5 mb-4" id="star-row">
+      {% for i in "12345" %}
+      <button type="button" data-star="{{ forloop.counter }}"
+              class="star-btn text-2xl text-slate-300 dark:text-slate-600 hover:text-yellow-400 transition-colors">★</button>
+      {% endfor %}
+    </div>
+
+    <form id="feedback-form" method="post" action="{% url 'submit_feedback' %}" class="space-y-3">
+      {% csrf_token %}
+      <input type="hidden" name="rating" id="feedback-rating" value="0">
+      <input type="hidden" name="page" value="{{ request.path }}">
+      <textarea name="message" rows="3" placeholder="Tell us what you think (optional)..."
+                class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"></textarea>
+      <button type="submit"
+              class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-xl py-2.5 font-semibold text-xs transition shadow-lg shadow-brand-500/25">
+        Send Feedback
+      </button>
+    </form>
+    <p id="feedback-thanks" class="hidden text-center text-emerald-600 dark:text-emerald-400 text-sm font-semibold mt-2">Thanks! 🙏</p>
+  </div>
+
+  <!-- Toggle button -->
+  <button onclick="document.getElementById('feedback-panel').classList.toggle('hidden')"
+          class="w-12 h-12 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center text-xl transition hover:scale-110"
+          title="Share feedback">
+    💬
+  </button>
+</div>
+
+<script>
+  // Star rating interaction
+  const stars = document.querySelectorAll('.star-btn');
+  stars.forEach(btn => {
+    btn.addEventListener('click', function () {
+      const val = parseInt(this.dataset.star);
+      document.getElementById('feedback-rating').value = val;
+      stars.forEach((s, i) => {
+        s.classList.toggle('text-yellow-400', i < val);
+        s.classList.toggle('text-slate-300', i >= val);
+        s.classList.toggle('dark:text-slate-600', i >= val);
+      });
+    });
+  });
+
+  // Submit via fetch so page doesn't reload
+  document.getElementById('feedback-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const rating = parseInt(document.getElementById('feedback-rating').value);
+    if (!rating) { alert('Please pick a star rating first.'); return; }
+    const fd = new FormData(this);
+    const res = await fetch(this.action, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.success) {
+      this.classList.add('hidden');
+      document.getElementById('feedback-thanks').classList.remove('hidden');
+      setTimeout(() => document.getElementById('feedback-panel').classList.add('hidden'), 2000);
+    }
+  });
+</script>
+{% endif %}
+
 <!-- ── PWA: Service-worker registration ─────────────────────────────── -->
+
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
