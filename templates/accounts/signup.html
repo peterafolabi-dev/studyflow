@@ -2,18 +2,20 @@
 {% load socialaccount %}
 {% block title %}Sign up · StudyFlow{% endblock %}
 {% block content %}
-<div class="fixed inset-0 z-[-1]">
-    <img src="/static/img/bg-desktop.jpg" alt="Background" class="hidden sm:block w-full h-full object-cover opacity-90 dark:opacity-70 scale-105 animate-[slow-zoom_20s_ease-in-out_infinite_alternate]" />
-    <img src="/static/img/bg-mobile.jpg" alt="Background" class="block sm:hidden w-full h-full object-cover opacity-90 dark:opacity-70 scale-105 animate-[slow-zoom_20s_ease-in-out_infinite_alternate]" />
-    <div class="absolute inset-0 bg-brand-50/70 dark:bg-slate-950/80 backdrop-blur-[2px]"></div>
-</div>
+<div class="fixed inset-0 z-[-1] overflow-hidden bg-slate-950">
+    <!-- Desktop Video (Hidden on Mobile) -->
+    <video autoplay loop muted playsinline poster="/static/img/bg-desktop.jpg" class="hidden sm:block absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-90 dark:opacity-70">
+        <source src="/static/video/cinematic-desktop.mp4" type="video/mp4">
+    </video>
+    
+    <!-- Mobile Video (Hidden on Desktop) -->
+    <video autoplay loop muted playsinline poster="/static/img/bg-mobile.jpg" class="block sm:hidden absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-90 dark:opacity-70">
+        <source src="/static/video/cinematic-mobile.mp4" type="video/mp4">
+    </video>
 
-<style>
-@keyframes slow-zoom {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.05); }
-}
-</style>
+    <!-- Glass Overlay -->
+    <div class="absolute inset-0 bg-brand-900/30 dark:bg-slate-950/80 backdrop-blur-[2px]"></div>
+</div>
 
 <div class="max-w-6xl mx-auto py-4 sm:py-12 relative z-10">
 
