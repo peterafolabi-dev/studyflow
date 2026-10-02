@@ -689,13 +689,18 @@
         chatBtn.addEventListener('click', () => {
             chatModal.classList.remove('hidden');
             chatBtn.classList.add('hidden');
+            const feedbackWidget = document.getElementById('feedback-widget');
+            if (feedbackWidget) feedbackWidget.classList.add('hidden');
             if(chatInput) chatInput.focus();
         });
 
         chatClose.addEventListener('click', () => {
             chatModal.classList.add('hidden');
             chatBtn.classList.remove('hidden');
+            const feedbackWidget = document.getElementById('feedback-widget');
+            if (feedbackWidget) feedbackWidget.classList.remove('hidden');
         });
+
 
         if(chatForm) {
             chatForm.addEventListener('submit', async (e) => {
@@ -758,18 +763,21 @@
 
 <!-- ── Feedback floating button (Phase 7) ────────────────────────────── -->
 {% if user.is_authenticated %}
-<div class="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
+<div id="feedback-widget" class="fixed bottom-24 right-[30px] z-40">
 
   <!-- Slide-up feedback panel -->
   <div id="feedback-panel"
-       class="hidden w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/30 p-5 transition-all">
+       class="hidden absolute bottom-14 right-0 w-80 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/40 p-5 transition-all">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="font-bold text-slate-900 dark:text-white text-sm">💬 Share Feedback</h3>
-      <button onclick="document.getElementById('feedback-panel').classList.add('hidden')"
-              class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg leading-none">&times;</button>
+      <div class="flex items-center gap-2">
+        <span class="text-amber-500">⭐</span>
+        <h3 class="font-bold text-slate-900 dark:text-white text-sm">Share Feedback</h3>
+      </div>
+      <button onclick="toggleFeedbackPanel(false)"
+              class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-lg leading-none p-1">&times;</button>
     </div>
 
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">How's StudyFlow working for you?</p>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">How is StudyFlow helping your studies?</p>
 
     <!-- Star rating -->
     <div class="flex gap-1.5 mb-4" id="star-row">
@@ -783,25 +791,51 @@
       {% csrf_token %}
       <input type="hidden" name="rating" id="feedback-rating" value="0">
       <input type="hidden" name="page" value="{{ request.path }}">
-      <textarea name="message" rows="3" placeholder="Tell us what you think (optional)..."
+      <textarea name="message" rows="3" placeholder="Tell us what you like or what to improve..."
                 class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"></textarea>
       <button type="submit"
-              class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-xl py-2.5 font-semibold text-xs transition shadow-lg shadow-brand-500/25">
-        Send Feedback
+              class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-xl py-2.5 font-semibold text-xs transition shadow-lg shadow-brand-500/25 flex items-center justify-center gap-1.5">
+        <span>🚀</span> <span>Send Feedback</span>
       </button>
     </form>
-    <p id="feedback-thanks" class="hidden text-center text-emerald-600 dark:text-emerald-400 text-sm font-semibold mt-2">Thanks! 🙏</p>
+    <p id="feedback-thanks" class="hidden text-center text-emerald-600 dark:text-emerald-400 text-sm font-semibold mt-2">Thank you for your feedback! 🙏</p>
   </div>
 
-  <!-- Toggle button -->
-  <button onclick="document.getElementById('feedback-panel').classList.toggle('hidden')"
-          class="w-12 h-12 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/30 flex items-center justify-center text-xl transition hover:scale-110"
-          title="Share feedback">
-    💬
-  </button>
+  <!-- Distinct Amber Feedback Floating Button with Tooltip -->
+  <div class="relative group">
+    <button type="button" id="feedback-toggle-btn" onclick="toggleFeedbackPanel()"
+            class="w-11 h-11 rounded-full bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700/60 shadow-lg shadow-amber-500/15 hover:shadow-amber-500/30 flex items-center justify-center transition-all hover:scale-110 active:scale-95 focus:outline-none"
+            title="Rate & Feedback">
+      <span class="text-base select-none">⭐</span>
+    </button>
+    <!-- Tooltip -->
+    <span class="absolute right-14 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-xl text-xs font-semibold bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+      ⭐ Feedback & Rating
+    </span>
+  </div>
 </div>
 
 <script>
+  function toggleFeedbackPanel(forceState) {
+    const panel = document.getElementById('feedback-panel');
+    if (!panel) return;
+    if (typeof forceState === 'boolean') {
+      panel.classList.toggle('hidden', !forceState);
+    } else {
+      panel.classList.toggle('hidden');
+    }
+
+    // If opening feedback, ensure AI chat modal is closed
+    if (!panel.classList.contains('hidden')) {
+      const chatModal = document.getElementById('ai-chat-modal');
+      const chatBtn = document.getElementById('ai-chat-btn');
+      if (chatModal && !chatModal.classList.contains('hidden')) {
+        chatModal.classList.add('hidden');
+        if (chatBtn) chatBtn.classList.remove('hidden');
+      }
+    }
+  }
+
   // Star rating interaction
   const stars = document.querySelectorAll('.star-btn');
   stars.forEach(btn => {
@@ -817,19 +851,27 @@
   });
 
   // Submit via fetch so page doesn't reload
-  document.getElementById('feedback-form').addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const rating = parseInt(document.getElementById('feedback-rating').value);
-    if (!rating) { alert('Please pick a star rating first.'); return; }
-    const fd = new FormData(this);
-    const res = await fetch(this.action, { method: 'POST', body: fd });
-    const data = await res.json();
-    if (data.success) {
-      this.classList.add('hidden');
-      document.getElementById('feedback-thanks').classList.remove('hidden');
-      setTimeout(() => document.getElementById('feedback-panel').classList.add('hidden'), 2000);
-    }
-  });
+  const feedbackForm = document.getElementById('feedback-form');
+  if (feedbackForm) {
+    feedbackForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const rating = parseInt(document.getElementById('feedback-rating').value);
+      if (!rating) { alert('Please pick a star rating first.'); return; }
+      const fd = new FormData(this);
+      const res = await fetch(this.action, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        this.classList.add('hidden');
+        document.getElementById('feedback-thanks').classList.remove('hidden');
+        setTimeout(() => {
+          toggleFeedbackPanel(false);
+          this.reset();
+          this.classList.remove('hidden');
+          document.getElementById('feedback-thanks').classList.add('hidden');
+        }, 2200);
+      }
+    });
+  }
 </script>
 {% endif %}
 
