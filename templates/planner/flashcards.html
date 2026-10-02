@@ -275,85 +275,80 @@
   </div>
 </div>
 
-<!-- ─── Quiz Modal (Sleek Purple / Dark Theme) ─── -->
+<!-- ─── Quiz Modal (Legendary Game Mode) ─── -->
 <div id="quiz-modal" style="display:none;"
-     class="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
-  <div class="bg-brand-50 dark:bg-slate-900 border border-brand-200 dark:border-brand-900/60 rounded-3xl p-6 sm:p-8 w-full max-w-lg shadow-2xl shadow-brand-500/15 backdrop-blur-xl relative text-center">
+     class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+  <div class="bg-white/10 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 rounded-3xl p-6 sm:p-10 w-full max-w-2xl shadow-2xl backdrop-blur-2xl relative text-center">
     
     <button onclick="closeQuiz()"
-            class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 flex items-center justify-center text-sm text-slate-500 dark:text-slate-400 transition">
+            class="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center text-lg transition-all hover:rotate-90">
       ✕
     </button>
     
     <!-- Active Quiz View -->
     <div id="quiz-active-view">
-      <div class="flex items-center justify-between mb-4 px-1">
-        <div class="inline-block px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 text-xs font-bold uppercase tracking-wider">
+      <div class="flex items-center justify-between mb-6 px-2">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-100 text-xs font-black uppercase tracking-widest shadow-inner">
+          <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse"></span>
           <span id="quiz-progress">Card 1 of 1</span>
         </div>
-        <div id="quiz-interval-tag" class="text-xs text-slate-500 dark:text-slate-400 font-medium">
+        <div class="text-xs font-bold uppercase tracking-widest text-slate-300 bg-white/10 px-3 py-1.5 rounded-full border border-white/10" id="quiz-interval-tag">
           Interval: 1d
         </div>
       </div>
 
-      <!-- Interactive Flip Card -->
+      <!-- Interactive Flip Card (Game Style) -->
       <div id="quiz-card" onclick="quizFlip()"
-           class="cursor-pointer min-h-[220px] rounded-2xl p-6 mb-4 flex flex-col items-center justify-center transition-all duration-300 shadow-inner select-none border border-brand-200/80 dark:border-slate-700">
-        <p id="quiz-text" class="text-lg sm:text-xl font-medium leading-relaxed max-w-md m-0"></p>
+           class="cursor-pointer min-h-[300px] w-full rounded-[2rem] p-8 mb-8 flex flex-col items-center justify-center transition-all duration-500 shadow-2xl select-none border-2 border-white/20 hover:scale-[1.02] hover:shadow-brand-500/40 relative overflow-hidden group">
+        <!-- Shine effect -->
+        <div class="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none transform -translate-x-full group-hover:translate-x-full"></div>
+        <p id="quiz-text" class="text-2xl sm:text-3xl font-display font-bold leading-snug max-w-lg m-0 text-balance"></p>
       </div>
 
-      <p id="quiz-hint" class="text-xs text-slate-400 dark:text-slate-500 mb-4 flex items-center justify-center gap-1.5">
-        <span>🔄</span> Tap the card to reveal the answer
+      <p id="quiz-hint" class="text-sm font-medium text-slate-300 mb-8 flex items-center justify-center gap-2 animate-bounce">
+        <span class="text-xl">👆</span> Tap the card to reveal the answer
       </p>
 
       <!-- Spaced Repetition Rating Bar (Shown when flipped to back) -->
-      <div id="quiz-rating-bar" class="hidden mb-6 fade-in-up">
-        <p class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-2.5">
-          Rate your recall (SM-2 Spaced Repetition):
+      <div id="quiz-rating-bar" class="hidden mb-2 fade-in-up">
+        <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
+          Rate your recall to update the algorithm:
         </p>
-        <div class="grid grid-cols-3 gap-2.5">
+        <div class="grid grid-cols-3 gap-4">
           <button type="button" onclick="rateCard('hard')"
-                  class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 font-semibold text-xs sm:text-sm transition-all hover:scale-[1.02] shadow-sm">
-            <span class="text-base mb-0.5">🔴 Hard</span>
-            <span class="text-[10px] opacity-80">1 day</span>
+                  class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-rose-500/10">
+            <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">😅</span>
+            <span>Hard</span>
+            <span class="text-[10px] opacity-70 font-medium uppercase mt-1">1 day</span>
           </button>
           <button type="button" onclick="rateCard('medium')"
-                  class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 font-semibold text-xs sm:text-sm transition-all hover:scale-[1.02] shadow-sm">
-            <span class="text-base mb-0.5">🟡 Medium</span>
-            <span class="text-[10px] opacity-80">Progress</span>
+                  class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-amber-500/10">
+            <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🤔</span>
+            <span>Good</span>
+            <span class="text-[10px] opacity-70 font-medium uppercase mt-1">Progress</span>
           </button>
           <button type="button" onclick="rateCard('easy')"
-                  class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold text-xs sm:text-sm transition-all hover:scale-[1.02] shadow-sm">
-            <span class="text-base mb-0.5">🟢 Easy</span>
-            <span class="text-[10px] opacity-80">Mastered</span>
+                  class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-emerald-500/10">
+            <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">😎</span>
+            <span>Easy</span>
+            <span class="text-[10px] opacity-70 font-medium uppercase mt-1">Mastered</span>
           </button>
         </div>
       </div>
 
-      <!-- Navigation -->
-      <div id="quiz-nav-bar" class="flex items-center justify-center gap-3">
-        <button onclick="quizNav(-1)"
-                class="rounded-xl border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold px-5 py-2.5 text-sm hover:bg-brand-50 dark:hover:bg-slate-700 transition">
-          ← Previous
-        </button>
-        <button onclick="quizNav(1)"
-                class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-2.5 text-sm shadow-md shadow-brand-500/20 transition-all hover:scale-105">
-          Next →
-        </button>
-      </div>
     </div>
 
     <!-- Quiz Completion View -->
-    <div id="quiz-completion-view" class="hidden py-6 space-y-4">
-      <div class="text-5xl mb-2">🎉</div>
-      <h3 class="font-display font-bold text-2xl text-slate-900 dark:text-white">Review Session Complete!</h3>
-      <p class="text-sm text-slate-600 dark:text-slate-300 max-w-sm mx-auto leading-relaxed">
-        Great work! Your recall ratings have updated the SM-2 spaced repetition schedule for every card.
+    <div id="quiz-completion-view" class="hidden py-12 space-y-6">
+      <div class="text-7xl mb-4 animate-bounce">🏆</div>
+      <h3 class="font-display font-extrabold text-4xl text-white">Legendary Session!</h3>
+      <p class="text-lg text-slate-300 max-w-md mx-auto leading-relaxed">
+        Great work! Your recall ratings have updated the SM-2 spaced repetition schedule. Your memory is getting stronger.
       </p>
-      <div class="pt-4 flex items-center justify-center gap-3">
+      <div class="pt-8 flex items-center justify-center">
         <button onclick="closeQuiz(); location.reload();"
-                class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 text-sm shadow-lg shadow-brand-500/25 transition hover:scale-105">
-          Done & Refresh
+                class="rounded-2xl bg-gradient-to-r from-brand-500 to-emerald-500 hover:from-brand-400 hover:to-emerald-400 text-white font-bold px-10 py-4 text-lg shadow-xl shadow-brand-500/30 transition-all hover:scale-110">
+          Finish & Return
         </button>
       </div>
     </div>
@@ -362,18 +357,19 @@
 </div>
 
 <style>
+/* Legendary Flashcard Grid Styles */
 .sf-flashcard {
   position: relative;
-  height: 180px;
+  height: 220px;
   cursor: pointer;
-  perspective: 900px;
+  perspective: 1200px;
 }
 .sf-flashcard-inner {
   width: 100%; height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transition: transform .45s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 1.25rem;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-radius: 1.5rem;
 }
 .sf-flashcard-inner.flipped { transform: rotateY(180deg); }
 .sf-flashcard-front,
@@ -381,29 +377,30 @@
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
-  border-radius: 1.25rem;
+  border-radius: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 1.25rem;
+  padding: 1.5rem;
   text-align: left;
   overflow: hidden;
-  box-shadow: 0 4px 16px -4px rgba(0,0,0,0.06);
+  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
 }
 .sf-flashcard-front {
-  background: rgba(245, 243, 255, 0.85); /* brand-50 with opacity */
-  border: 1px solid rgba(221, 214, 254, 0.9); /* brand-200 */
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 .dark .sf-flashcard-front {
-  background: rgba(30, 41, 59, 0.8); /* slate-800 */
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 .sf-flashcard-back {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9); /* brand-600 to brand-700 */
-  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5); /* brand to indigo */
+  color: #ffffff;
   transform: rotateY(180deg);
-  border: 1px solid rgba(167, 139, 250, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 </style>
 
