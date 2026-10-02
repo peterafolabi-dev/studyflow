@@ -136,7 +136,7 @@
         <div class="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-800">
           <iframe id="lofigirl-iframe"
                   class="w-full aspect-video rounded-xl border-0 shadow-lg block"
-                  src="https://www.youtube-nocookie.com/embed/1-LpQekNa9g?enablejsapi=1&origin=https://studyflow-xt1x.onrender.com"
+                  src="https://www.youtube-nocookie.com/embed/rFZHOHl-L8A?enablejsapi=1&origin=https://studyflow-xt1x.onrender.com"
                   title="Lofi Girl Official Livestream"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerpolicy="strict-origin-when-cross-origin"
@@ -147,19 +147,28 @@
 
       <!-- Livestream Switcher Options -->
       <div class="p-3.5 bg-slate-50 dark:bg-slate-900 border-t border-brand-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
-        <span class="text-xs text-slate-500 dark:text-slate-400">Stream Source:</span>
-        <div class="flex gap-2">
-          <button type="button" onclick="setYoutubeStream('1-LpQekNa9g', this)"
-                  class="yt-stream-btn active-yt px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white transition">
-            🎧 Active Stream (1-LpQekNa9g)
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Stream Station:</span>
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="setYoutubeStream('rFZHOHl-L8A', this)"
+                  class="yt-stream-btn active-yt px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white transition shadow-sm">
+            🎧 Beats to Relax/Study (Live)
           </button>
-          <button type="button" onclick="setYoutubeStream('live_stream?channel=UCSJ4gkVC6NrvII8umztf0Ow', this)"
-                  class="yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition">
-            📺 Channel Live Feed
+          <button type="button" onclick="setYoutubeStream('0muHFBSiybw', this)"
+                  class="yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition hover:bg-brand-50 dark:hover:bg-slate-700">
+            ☀️ Chill Lofi Radio
+          </button>
+          <button type="button" onclick="setYoutubeStream('nI725iVsyoQ', this)"
+                  class="yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition hover:bg-brand-50 dark:hover:bg-slate-700">
+            💤 Deep Sleep
+          </button>
+          <button type="button" onclick="setYoutubeStream('1-LpQekNa9g', this)"
+                  class="yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition hover:bg-brand-50 dark:hover:bg-slate-700">
+            🎃 Seasonal Ambience
           </button>
         </div>
       </div>
     </div>
+
 
   </div>
 
@@ -285,15 +294,17 @@
         const iframe = document.getElementById('lofigirl-iframe');
         if (iframe) {
             const origin = window.location.origin;
-            iframe.src = `https://www.youtube-nocookie.com/embed/${streamId}?enablejsapi=1&origin=${encodeURIComponent(origin)}`;
+            const separator = streamId.includes('?') ? '&' : '?';
+            iframe.src = `https://www.youtube-nocookie.com/embed/${streamId}${separator}enablejsapi=1&origin=${encodeURIComponent(origin)}`;
         }
         document.querySelectorAll('.yt-stream-btn').forEach(b => {
-            b.className = 'yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition';
+            b.className = 'yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition hover:bg-brand-50 dark:hover:bg-slate-700';
         });
         if (btn) {
-            btn.className = 'yt-stream-btn active-yt px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white transition';
+            btn.className = 'yt-stream-btn active-yt px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white transition shadow-sm';
         }
     }
+
 
 
     // ── Pomodoro Timer Controls ──────────────────────────────────────────────
