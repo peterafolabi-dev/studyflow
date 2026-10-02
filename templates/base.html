@@ -334,19 +334,47 @@
     </div>
   {% endif %}
 
-  <main class="mx-auto max-w-6xl px-4 py-6 flex-1 w-full">
+  <!-- Toast Notifications -->
+  <div id="toast-container" class="fixed top-24 right-4 z-[100] flex flex-col gap-3 pointer-events-none w-full max-w-sm">
     {% if messages %}
-      <ul class="messages mb-4 space-y-2" role="status">
-        {% for message in messages %}
-          <li class="message {{ message.tags }} rounded-lg px-4 py-2 text-sm
-                     {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300
-                     {% elif message.tags == 'error' %}bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300
-                     {% else %}bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-200{% endif %}">
-            {{ message }}
-          </li>
-        {% endfor %}
-      </ul>
+      {% for message in messages %}
+        <div class="toast-message pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/20 transition-all duration-500 translate-x-full opacity-0
+             {% if message.tags == 'success' %}bg-emerald-600/95 text-white
+             {% elif message.tags == 'error' %}bg-rose-600/95 text-white
+             {% else %}bg-brand-600/95 text-white{% endif %}">
+          <div class="flex items-start gap-3">
+            <span class="text-xl mt-0.5">
+              {% if message.tags == 'success' %}✅
+              {% elif message.tags == 'error' %}⚠️
+              {% else %}💡{% endif %}
+            </span>
+            <p class="text-sm font-semibold leading-snug">{{ message }}</p>
+          </div>
+          <button onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(),300)" class="ml-4 opacity-70 hover:opacity-100 transition-opacity">✕</button>
+        </div>
+      {% endfor %}
     {% endif %}
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toasts = document.querySelectorAll('.toast-message');
+      toasts.forEach((toast, index) => {
+        // Slide in animation
+        setTimeout(() => {
+          toast.classList.remove('translate-x-full', 'opacity-0');
+        }, 100 + (index * 150));
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-x-4');
+          setTimeout(() => toast.remove(), 500);
+        }, 5000 + (index * 1000));
+      });
+    });
+  </script>
+
+  <main class="mx-auto max-w-6xl px-4 py-6 flex-1 w-full">
     {% block content %}{% endblock %}
   </main>
 
