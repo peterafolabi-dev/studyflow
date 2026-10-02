@@ -245,9 +245,18 @@
               <a href="{% url 'gpa_calculator' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
                 <span class="text-base">📊</span> <span>GPA Calculator</span>
               </a>
+              <a href="{% url 'progress' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
+                <span class="text-base">📈</span> <span>My Progress</span>
+              </a>
               <a href="{% url 'thread_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
                 <span class="text-base"></span> <span>Study Groups</span>
               </a>
+              {% if user.is_staff %}
+              <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition font-medium">
+                <span class="text-base">🔧</span> <span>Analytics</span>
+              </a>
+              {% endif %}
+
               <a href="{% url 'global_chat' %}" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
                 <span class="flex items-center gap-2.5">
                   <span class="text-base">💬</span> <span>Campus Chat</span>
