@@ -2,66 +2,246 @@
 {% block title %}Lo-Fi Study Room · StudyFlow{% endblock %}
 {% block content %}
 <div class="mb-6 fade-in-up">
-  <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Lo-Fi Study Room</h1>
-  <p class="text-slate-500 dark:text-slate-400 mt-1">Put your headphones on, start the timer, and focus.</p>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <span>🎧</span> Lo-Fi Study Room
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        Put your headphones on, stream focus audio, and boost productivity with the Pomodoro technique.
+      </p>
+    </div>
+    
+    <!-- Audio Source Switcher Tabs -->
+    <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-inner">
+      <button type="button" onclick="switchAudioSource('spotify')" id="tab-btn-spotify"
+              class="audio-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-brand-600 text-white shadow-sm">
+        <span>🟢</span> Spotify Player
+      </button>
+      <button type="button" onclick="switchAudioSource('ambient')" id="tab-btn-ambient"
+              class="audio-tab-btn px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white">
+        <span>🌧️</span> Direct Ambient & Lo-Fi
+      </button>
+      <button type="button" onclick="switchAudioSource('youtube')" id="tab-btn-youtube"
+              class="audio-tab-btn px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white">
+        <span>📺</span> Lo-Fi Girl Live
+      </button>
+    </div>
+  </div>
 </div>
 
 <div class="grid lg:grid-cols-5 gap-6">
   
-  <!-- Spotify Player Column -->
-  <div class="lg:col-span-3 rounded-3xl overflow-hidden border border-brand-200 dark:border-slate-800 shadow-lg bg-black fade-in-up flex flex-col justify-center items-center" style="background-color: #1e1e1e;">
+  <!-- Left Column: Music & Ambient Players -->
+  <div class="lg:col-span-3 flex flex-col gap-4 fade-in-up">
     
-    <div class="w-full p-4">
-        <iframe id="spotify-player" style="border-radius:12px" src="https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator&theme=0" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+    <!-- 1. SPOTIFY PLAYER VIEW -->
+    <div id="source-spotify" class="audio-source-view rounded-3xl border border-brand-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden transition-all">
+      
+      <!-- Spotify Header Bar -->
+      <div class="p-4 bg-gradient-to-r from-brand-50 to-purple-50 dark:from-slate-900 dark:to-brand-950/30 border-b border-brand-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-base shadow-sm">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.494 17.307a.753.753 0 01-1.034.25c-2.83-1.73-6.393-2.12-10.59-1.162a.75.75 0 11-.334-1.462c4.593-1.048 8.528-.604 11.708 1.34a.753.753 0 01.25 1.034zm1.465-3.26a.94.94 0 01-1.293.313c-3.238-1.99-8.175-2.567-12.006-1.403a.94.94 0 11-.548-1.798c4.38-1.33 9.816-.688 13.534 1.595a.94.94 0 01.313 1.293zm.126-3.393c-3.882-2.306-10.288-2.518-13.987-1.395a1.127 1.127 0 11-.652-2.158c4.25-1.288 11.317-1.042 15.787 1.611a1.127 1.127 0 11-1.148 1.942z"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Spotify Focus Player</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Official Spotify curated study playlists</p>
+          </div>
+        </div>
+
+        <a id="spotify-direct-link" href="https://open.spotify.com/playlist/37i9dQZF1DXc8kgYqQLMfH" target="_blank" rel="noopener noreferrer"
+           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 transition">
+          <span>Open in App</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        </a>
+      </div>
+
+      <!-- Iframe Container -->
+      <div class="p-4 bg-slate-900 flex justify-center">
+        <iframe id="spotify-player"
+                class="w-full shadow-2xl transition-all"
+                style="border-radius:16px; height: 352px; min-height: 352px;"
+                src="https://open.spotify.com/embed/playlist/37i9dQZF1DXc8kgYqQLMfH?utm_source=generator"
+                width="100%"
+                height="352"
+                frameBorder="0"
+                allowfullscreen=""
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy">
+        </iframe>
+      </div>
+
+      <!-- Verified Spotify Playlist Switchers -->
+      <div class="p-4 bg-slate-50 dark:bg-slate-900 border-t border-brand-100 dark:border-slate-800">
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
+          Select Study Playlist:
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button type="button" onclick="setSpotifyPlaylist('37i9dQZF1DXc8kgYqQLMfH', this)"
+                  class="spotify-preset-btn active-spotify px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-brand-600 text-white shadow-sm">
+            <span>🎧</span> <span>Lo-Fi Beats</span>
+          </button>
+          <button type="button" onclick="setSpotifyPlaylist('37i9dQZF1DWZeKCadgRdKQ', this)"
+                  class="spotify-preset-btn px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700">
+            <span>🧠</span> <span>Deep Focus</span>
+          </button>
+          <button type="button" onclick="setSpotifyPlaylist('37i9dQZF1DWWEJlAGA9gs0', this)"
+                  class="spotify-preset-btn px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700">
+            <span>🎻</span> <span>Peaceful Piano</span>
+          </button>
+          <button type="button" onclick="setSpotifyPlaylist('37i9dQZF1DWWQRwui0ExPn', this)"
+                  class="spotify-preset-btn px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700">
+            <span>☕</span> <span>Lo-Fi Cafe</span>
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 text-center">
+          💡 Click the green Play button inside the Spotify player to listen.
+        </p>
+      </div>
     </div>
-    <div class="flex gap-2 p-4 w-full border-t border-brand-100 dark:border-slate-800">
-        <button onclick="document.getElementById('spotify-player').src='https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator&theme=0'" class="flex-1 bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-xs py-2 rounded-lg hover:bg-brand-50 transition">🎧 Lo-Fi Beats</button>
-        <button onclick="document.getElementById('spotify-player').src='https://open.spotify.com/embed/playlist/37i9dQZF1DWWEJlAGA9gs0?utm_source=generator&theme=0'" class="flex-1 bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-xs py-2 rounded-lg hover:bg-brand-50 transition">🎻 Classical Focus</button>
-        <button onclick="document.getElementById('spotify-player').src='https://open.spotify.com/embed/playlist/37i9dQZF1DWZeKCadgRdKQ?utm_source=generator&theme=0'" class="flex-1 bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-xs py-2 rounded-lg hover:bg-brand-50 transition">🧠 Deep Focus</button>
+
+
+    <!-- 2. DIRECT AMBIENT & LO-FI PLAYER (NO LOGIN NEEDED, GUARANTEED PLAY BUTTON) -->
+    <div id="source-ambient" class="audio-source-view hidden rounded-3xl border border-brand-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden transition-all">
+      <div class="p-6 bg-gradient-to-br from-brand-500/10 via-purple-500/5 to-transparent border-b border-brand-100 dark:border-slate-800">
+        <div class="flex items-center justify-between mb-4">
+          <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">
+            ✨ Always Free · No Login Required
+          </span>
+          <span id="ambient-status" class="text-xs font-semibold text-slate-500 dark:text-slate-400">Ready to play</span>
+        </div>
+
+        <h3 class="font-display text-xl font-bold text-slate-900 dark:text-white mb-1" id="ambient-track-title">
+          🌧️ Gentle Rainfall & Calm Study
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">High quality continuous background focus sound</p>
+
+        <!-- Big Dedicated Play / Pause Control Button -->
+        <div class="flex items-center justify-center my-6">
+          <button type="button" id="ambient-play-btn" onclick="toggleAmbientAudio()"
+                  class="flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 text-white font-bold text-lg shadow-xl shadow-brand-500/30 transition-all hover:scale-105 active:scale-95">
+            <span id="ambient-play-icon" class="text-2xl">▶</span>
+            <span id="ambient-play-text">Play Sound</span>
+          </button>
+        </div>
+
+        <!-- Volume Slider -->
+        <div class="flex items-center justify-center gap-3 max-w-xs mx-auto">
+          <span class="text-xs text-slate-500">🔈</span>
+          <input type="range" id="ambient-volume" min="0" max="1" step="0.05" value="0.7" oninput="setAmbientVolume(this.value)"
+                 class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600">
+          <span class="text-xs text-slate-500">🔊</span>
+        </div>
+      </div>
+
+      <!-- Sound Selector Pills -->
+      <div class="p-4 bg-slate-50 dark:bg-slate-900">
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
+          Select Background Sound:
+        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button type="button" onclick="selectAmbientSound('rain', '🌧️ Gentle Rainfall', this)"
+                  class="ambient-pill active-ambient px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-brand-600 text-white shadow-sm">
+            <span>🌧️</span> <span>Rain</span>
+          </button>
+          <button type="button" onclick="selectAmbientSound('waves', '🌊 Ocean Waves', this)"
+                  class="ambient-pill px-3 py-2.5 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700">
+            <span>🌊</span> <span>Waves</span>
+          </button>
+          <button type="button" onclick="selectAmbientSound('whitenoise', '💨 White Noise Focus', this)"
+                  class="ambient-pill px-3 py-2.5 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700">
+            <span>💨</span> <span>White Noise</span>
+          </button>
+          <button type="button" onclick="selectAmbientSound('binaural', '🧠 Deep Alpha Waves (40Hz)', this)"
+                  class="ambient-pill px-3 py-2.5 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700">
+            <span>🧠</span> <span>Alpha Waves</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- 3. YOUTUBE LO-FI GIRL LIVE STREAM -->
+    <div id="source-youtube" class="audio-source-view hidden rounded-3xl border border-brand-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden transition-all">
+      <div class="p-4 bg-gradient-to-r from-red-50 to-orange-50 dark:from-slate-900 dark:to-red-950/30 border-b border-brand-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📺</span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white leading-tight">Lofi Girl Official Livestream</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Live 24/7 beats to relax/study to</p>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-100 dark:bg-red-900/60 text-red-600 dark:text-red-300 animate-pulse">
+          ● LIVE
+        </span>
+      </div>
+      <div class="aspect-video w-full bg-black">
+        <iframe class="w-full h-full"
+                src="https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=0&mute=0&controls=1&rel=0"
+                title="Lo-Fi Girl Live Stream"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+        </iframe>
+      </div>
+      <div class="p-3 bg-slate-50 dark:bg-slate-900 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-brand-100 dark:border-slate-800">
+        Click the play button in the center of the video to start the stream.
+      </div>
     </div>
 
   </div>
 
-  <!-- Timer Column -->
-  <div class="lg:col-span-2 relative overflow-hidden rounded-3xl border border-brand-200 dark:border-slate-800 shadow-lg bg-brand-50 dark:bg-slate-900/80 p-8 flex flex-col items-center justify-center fade-in-up" style="animation-delay: 0.1s">
+  <!-- Right Column: Pomodoro Focus Timer -->
+  <div class="lg:col-span-2 relative overflow-hidden rounded-3xl border border-brand-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/90 p-6 sm:p-8 flex flex-col items-center justify-center fade-in-up" style="animation-delay: 0.1s">
     
-    <h2 class="font-display text-2xl font-bold text-slate-800 dark:text-white mb-2">Pomodoro Timer</h2>
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-xl">⏱️</span>
+      <h2 class="font-display text-2xl font-bold text-slate-900 dark:text-white">Pomodoro Timer</h2>
+    </div>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 text-center">Focus blocks help you study deeper with zero burnout.</p>
     
     <!-- Duration Presets -->
     <div class="flex items-center gap-2 my-2">
       <button type="button" onclick="setDuration(15)" data-mins="15"
-              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
+              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
         15m
       </button>
       <button type="button" onclick="setDuration(25)" data-mins="25"
-              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm transition">
+              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-md shadow-brand-500/25 transition">
         25m
       </button>
       <button type="button" onclick="setDuration(45)" data-mins="45"
-              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
+              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
         45m
       </button>
       <button type="button" onclick="setDuration(60)" data-mins="60"
-              class="duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
+              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
         60m
       </button>
     </div>
 
-    <div class="text-7xl font-display font-bold text-brand-600 dark:text-brand-400 my-6 tracking-tight font-mono tabular-nums" id="timer-display">
+    <!-- Timer Countdown Display -->
+    <div class="text-6xl sm:text-7xl font-display font-black text-brand-600 dark:text-brand-400 my-6 tracking-tight font-mono tabular-nums select-none" id="timer-display">
         25:00
     </div>
 
+    <!-- Timer Actions: Start / Pause / Reset -->
     <div class="flex w-full gap-3 mb-6">
-        <button id="start-btn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-4 py-3 rounded-xl font-medium transition-colors shadow-md">
-            Start Focus
+        <button id="start-btn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 hover:scale-[1.02]">
+            <span id="timer-btn-icon">▶</span>
+            <span id="timer-btn-text">Start Focus</span>
         </button>
-        <button id="reset-btn" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl font-medium transition-colors hidden">
-            Reset
+        <button id="reset-btn" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl font-semibold text-sm transition-all hidden flex items-center gap-1.5">
+            <span>🔄</span> <span>Reset</span>
         </button>
     </div>
 
-    <hr class="w-full border-brand-200 dark:border-slate-700 mb-6">
+    <hr class="w-full border-slate-200 dark:border-slate-800 mb-6">
 
+    <!-- Log Focus Session Form -->
     <form method="post" action="{% url 'log_study' %}" id="log-form" class="w-full">
         {% csrf_token %}
         <input type="hidden" name="duration" id="duration-input" value="25">
@@ -72,7 +252,7 @@
                     <span>+</span> Add Course
                 </a>
             </div>
-            <select name="course_id" class="w-full bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-600 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none text-slate-800 dark:text-slate-200">
+            <select name="course_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none text-slate-800 dark:text-slate-200">
                 <option value="">🎯 General Study (No specific course)</option>
                 {% for c in courses %}
                 <option value="{{ c.id }}">📖 {{ c.name }}{% if c.code %} ({{ c.code }}){% endif %}</option>
@@ -85,14 +265,226 @@
             </p>
             {% endif %}
         </div>
-        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl font-medium transition-colors shadow-md" id="log-btn">
-            Save Session (25m)
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-emerald-500/25 flex items-center justify-center gap-2 hover:scale-[1.01]" id="log-btn">
+            <span>💾</span> <span>Save Session (25m)</span>
         </button>
     </form>
   </div>
 </div>
 
 <script>
+    // ── Tab Switcher: Spotify vs Ambient vs YouTube ──────────────────────────
+    function switchAudioSource(source) {
+        document.querySelectorAll('.audio-source-view').forEach(el => el.classList.add('hidden'));
+        document.getElementById('source-' + source).classList.remove('hidden');
+
+        document.querySelectorAll('.audio-tab-btn').forEach(btn => {
+            btn.className = 'audio-tab-btn px-4 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white';
+        });
+
+        const activeBtn = document.getElementById('tab-btn-' + source);
+        if (activeBtn) {
+            activeBtn.className = 'audio-tab-btn px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-brand-600 text-white shadow-sm';
+        }
+    }
+
+    // ── Spotify Playlist Selector ────────────────────────────────────────────
+    function setSpotifyPlaylist(playlistId, btn) {
+        const player = document.getElementById('spotify-player');
+        player.src = `https://open.spotify.com/embed/playlist/${playlistId}?utm_source=generator`;
+        
+        // Update direct app link
+        const directLink = document.getElementById('spotify-direct-link');
+        if (directLink) {
+            directLink.href = `https://open.spotify.com/playlist/${playlistId}`;
+        }
+
+        // Update active pill button state
+        document.querySelectorAll('.spotify-preset-btn').forEach(b => {
+            b.className = 'spotify-preset-btn px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700';
+        });
+        btn.className = 'spotify-preset-btn active-spotify px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-brand-600 text-white shadow-sm';
+    }
+
+
+    // ── Web Audio Ambient Sound Generator (100% Free, Instant Play Button) ──
+    let audioCtx = null;
+    let ambientNode = null;
+    let gainNode = null;
+    let isAmbientPlaying = false;
+    let currentAmbientType = 'rain';
+
+    function initAudioContext() {
+        if (!audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            gainNode = audioCtx.createGain();
+            gainNode.gain.value = parseFloat(document.getElementById('ambient-volume').value || 0.7);
+            gainNode.connect(audioCtx.destination);
+        }
+    }
+
+    function createPinkNoiseNode() {
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+            b6 = white * 0.115926;
+        }
+        const whiteNoise = audioCtx.createBufferSource();
+        whiteNoise.buffer = noiseBuffer;
+        whiteNoise.loop = true;
+        return whiteNoise;
+    }
+
+    function createRainFilter(source) {
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 1000;
+        source.connect(filter);
+        return filter;
+    }
+
+    function createWavesFilter(source) {
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 400;
+        filter.Q.value = 3;
+
+        // LFO to create ocean surge
+        const lfo = audioCtx.createOscillator();
+        lfo.frequency.value = 0.15; // wave cycle every ~7s
+        const lfoGain = audioCtx.createGain();
+        lfoGain.gain.value = 250;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+        lfo.start();
+
+        source.connect(filter);
+        return filter;
+    }
+
+    function createBinauralBeats() {
+        const oscLeft = audioCtx.createOscillator();
+        const oscRight = audioCtx.createOscillator();
+        oscLeft.frequency.value = 200; // Base tone
+        oscRight.frequency.value = 240; // 40Hz gamma/alpha beat
+
+        const merger = audioCtx.createChannelMerger(2);
+        oscLeft.connect(merger, 0, 0);
+        oscRight.connect(merger, 0, 1);
+        oscLeft.start();
+        oscRight.start();
+        return merger;
+    }
+
+    function startAmbientSound() {
+        initAudioContext();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+
+        stopAmbientSound();
+
+        if (currentAmbientType === 'rain') {
+            const noise = createPinkNoiseNode();
+            const filter = createRainFilter(noise);
+            filter.connect(gainNode);
+            noise.start();
+            ambientNode = noise;
+        } else if (currentAmbientType === 'waves') {
+            const noise = createPinkNoiseNode();
+            const filter = createWavesFilter(noise);
+            filter.connect(gainNode);
+            noise.start();
+            ambientNode = noise;
+        } else if (currentAmbientType === 'whitenoise') {
+            const noise = createPinkNoiseNode();
+            noise.connect(gainNode);
+            noise.start();
+            ambientNode = noise;
+        } else if (currentAmbientType === 'binaural') {
+            const binaural = createBinauralBeats();
+            binaural.connect(gainNode);
+            ambientNode = binaural;
+        }
+
+        isAmbientPlaying = true;
+        updateAmbientUI();
+    }
+
+    function stopAmbientSound() {
+        if (ambientNode) {
+            try {
+                if (ambientNode.stop) ambientNode.stop();
+                if (ambientNode.disconnect) ambientNode.disconnect();
+            } catch (e) {}
+            ambientNode = null;
+        }
+        isAmbientPlaying = false;
+        updateAmbientUI();
+    }
+
+    function toggleAmbientAudio() {
+        if (!isAmbientPlaying) {
+            startAmbientSound();
+        } else {
+            stopAmbientSound();
+        }
+    }
+
+    function updateAmbientUI() {
+        const btn = document.getElementById('ambient-play-btn');
+        const icon = document.getElementById('ambient-play-icon');
+        const text = document.getElementById('ambient-play-text');
+        const status = document.getElementById('ambient-status');
+
+        if (isAmbientPlaying) {
+            icon.textContent = '⏸';
+            text.textContent = 'Pause Sound';
+            status.textContent = 'Playing now 🎧';
+            status.className = 'text-xs font-semibold text-emerald-600 dark:text-emerald-400 animate-pulse';
+            btn.className = 'flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg shadow-xl shadow-amber-500/30 transition-all hover:scale-105 active:scale-95';
+        } else {
+            icon.textContent = '▶';
+            text.textContent = 'Play Sound';
+            status.textContent = 'Ready to play';
+            status.className = 'text-xs font-semibold text-slate-500 dark:text-slate-400';
+            btn.className = 'flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 text-white font-bold text-lg shadow-xl shadow-brand-500/30 transition-all hover:scale-105 active:scale-95';
+        }
+    }
+
+    function selectAmbientSound(type, title, btn) {
+        currentAmbientType = type;
+        document.getElementById('ambient-track-title').textContent = title;
+
+        document.querySelectorAll('.ambient-pill').forEach(b => {
+            b.className = 'ambient-pill px-3 py-2.5 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700';
+        });
+        btn.className = 'ambient-pill active-ambient px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-brand-600 text-white shadow-sm';
+
+        if (isAmbientPlaying) {
+            startAmbientSound();
+        }
+    }
+
+    function setAmbientVolume(val) {
+        if (gainNode) {
+            gainNode.gain.value = parseFloat(val);
+        }
+    }
+
+
+    // ── Pomodoro Timer Controls ──────────────────────────────────────────────
     let selectedDuration = 25;
     let timeLeft = 25 * 60;
     let timerId = null;
@@ -100,6 +492,8 @@
     
     const display = document.getElementById('timer-display');
     const startBtn = document.getElementById('start-btn');
+    const timerBtnIcon = document.getElementById('timer-btn-icon');
+    const timerBtnText = document.getElementById('timer-btn-text');
     const resetBtn = document.getElementById('reset-btn');
     const durationInput = document.getElementById('duration-input');
     const logBtn = document.getElementById('log-btn');
@@ -115,12 +509,12 @@
         selectedDuration = mins;
         timeLeft = mins * 60;
         durationInput.value = mins;
-        logBtn.textContent = `Save Session (${mins}m)`;
+        logBtn.innerHTML = `<span>💾</span> <span>Save Session (${mins}m)</span>`;
         document.querySelectorAll('.duration-preset-btn').forEach(btn => {
             const isMatch = parseInt(btn.dataset.mins) === mins;
             btn.className = isMatch
-                ? 'duration-preset-btn px-3 py-1 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm transition'
-                : 'duration-preset-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-brand-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition';
+                ? 'duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-md shadow-brand-500/25 transition'
+                : 'duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition';
         });
         updateDisplay();
     }
@@ -128,7 +522,8 @@
     startBtn.addEventListener('click', () => {
         if (!isRunning) {
             isRunning = true;
-            startBtn.textContent = 'Pause';
+            timerBtnIcon.textContent = '⏸';
+            timerBtnText.textContent = 'Pause Focus';
             startBtn.classList.replace('bg-brand-600', 'bg-amber-500');
             startBtn.classList.replace('hover:bg-brand-700', 'hover:bg-amber-600');
             resetBtn.classList.remove('hidden');
@@ -140,14 +535,16 @@
                 } else {
                     clearInterval(timerId);
                     isRunning = false;
-                    startBtn.textContent = 'Done!';
-                    alert('Focus session complete! Great job.');
+                    timerBtnIcon.textContent = '🎉';
+                    timerBtnText.textContent = 'Done!';
+                    alert('Focus session complete! Great job logging your progress.');
                 }
             }, 1000);
         } else {
             isRunning = false;
             clearInterval(timerId);
-            startBtn.textContent = 'Resume';
+            timerBtnIcon.textContent = '▶';
+            timerBtnText.textContent = 'Resume Focus';
             startBtn.classList.replace('bg-amber-500', 'bg-brand-600');
             startBtn.classList.replace('hover:bg-amber-600', 'hover:bg-brand-700');
         }
@@ -158,7 +555,8 @@
         clearInterval(timerId);
         timeLeft = selectedDuration * 60;
         updateDisplay();
-        startBtn.textContent = 'Start Focus';
+        timerBtnIcon.textContent = '▶';
+        timerBtnText.textContent = 'Start Focus';
         startBtn.classList.replace('bg-amber-500', 'bg-brand-600');
         startBtn.classList.replace('hover:bg-amber-600', 'hover:bg-brand-700');
         resetBtn.classList.add('hidden');
