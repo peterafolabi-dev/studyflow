@@ -597,11 +597,21 @@
             </div>
         </div>
 
-        <form id="ai-chat-form" class="p-3 bg-white dark:bg-slate-900 border-t border-brand-100 dark:border-slate-800 flex gap-2">
-            <input type="text" id="ai-chat-input" class="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none" placeholder="Ask something..." required>
-            <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white p-2 rounded-xl transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-            </button>
+        <form id="ai-chat-form" class="p-3 bg-white dark:bg-slate-900 border-t border-brand-100 dark:border-slate-800 flex flex-col gap-2">
+            <div id="ai-chat-file-preview" class="hidden text-xs bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 p-2 rounded-lg flex justify-between items-center border border-brand-100 dark:border-slate-700">
+                <span class="truncate max-w-[200px] font-medium flex items-center gap-1">📎 <span id="ai-chat-file-name">file.pdf</span></span>
+                <button type="button" id="ai-chat-file-remove" class="text-brand-500 hover:text-rose-500 font-bold transition">✕</button>
+            </div>
+            <div class="flex gap-2 items-center">
+                <label for="ai-chat-file" class="cursor-pointer text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                </label>
+                <input type="file" id="ai-chat-file" class="hidden" accept=".pdf,.txt,.md,.csv">
+                <input type="text" id="ai-chat-input" class="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none placeholder-slate-400" required placeholder="Ask StudyFlow AI...">
+                <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white p-2.5 rounded-xl transition-colors shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -732,11 +742,71 @@
         });
 
 
+        let attachedFileContent = "";
+
+        const aiChatFileInput = document.getElementById('ai-chat-file');
+        const aiChatFilePreview = document.getElementById('ai-chat-file-preview');
+        const aiChatFileName = document.getElementById('ai-chat-file-name');
+        const aiChatFileRemove = document.getElementById('ai-chat-file-remove');
+
+        if(aiChatFileInput) {
+            aiChatFileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                aiChatFileName.textContent = file.name;
+                aiChatFilePreview.classList.remove('hidden');
+                chatInput.placeholder = "Ask about this file...";
+                chatInput.required = false;
+                
+                if (file.name.endsWith('.txt') || file.name.endsWith('.md') || file.name.endsWith('.csv')) {
+                    const text = await file.text();
+                    attachedFileContent = `\n\n--- FILE CONTENT (${file.name}) ---\n${text.substring(0, 5000)}`;
+                } else if (file.name.endsWith('.pdf')) {
+                    attachedFileContent = `\n\n--- FILE CONTENT (${file.name}) ---\n`;
+                    // Load pdf.js dynamically
+                    if (!window.pdfjsLib) {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+                        document.head.appendChild(script);
+                        await new Promise(r => script.onload = r);
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+                    }
+                    try {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        let text = '';
+                        for (let i = 1; i <= Math.min(pdf.numPages, 5); i++) {
+                            const page = await pdf.getPage(i);
+                            const content = await page.getTextContent();
+                            text += content.items.map(item => item.str).join(' ') + '\n';
+                        }
+                        attachedFileContent += text.substring(0, 8000);
+                    } catch (err) {
+                        console.error(err);
+                        attachedFileContent = `\n\n[Error reading PDF. The user attached ${file.name} but it could not be read.]`;
+                    }
+                }
+            });
+
+            aiChatFileRemove.addEventListener('click', () => {
+                aiChatFileInput.value = '';
+                attachedFileContent = "";
+                aiChatFilePreview.classList.add('hidden');
+                chatInput.placeholder = "Ask StudyFlow AI...";
+                chatInput.required = true;
+            });
+        }
+
         if(chatForm) {
             chatForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const msg = chatInput.value.trim();
-                if(!msg) return;
+                let msg = chatInput.value.trim();
+                if(!msg && !attachedFileContent) return;
+                if(!msg && attachedFileContent) msg = "Please summarize the attached file.";
+
+                const displayMsg = msg;
+                const fullPrompt = msg + attachedFileContent;
 
                 chatMessages.innerHTML += `
                     <div class="bg-brand-600 text-white rounded-xl rounded-tr-none p-3 text-sm self-end max-w-[85%] shadow-sm whitespace-pre-wrap leading-relaxed">
