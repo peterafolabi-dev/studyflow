@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}My Progress · StudyFlow{% endblock %}
+{% block content %}
+
+<div class="mb-8 fade-in-up">
+  <h1 class="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+    📈 My Progress
+  </h1>
+  <p class="text-slate-500 dark:text-slate-400">Your study streak, XP, badges and weekly report.</p>
+</div>
+
+<!-- Top stats row -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 fade-in-up">
+
+  <!-- Streak -->
+  <div class="rounded-2xl border border-orange-200 dark:border-orange-900/50 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-slate-900 p-5 flex flex-col items-center justify-center text-center shadow-sm">
+    <div class="text-4xl mb-1">🔥</div>
+    <div class="font-display text-3xl font-extrabold text-orange-600 dark:text-orange-400">{{ streak.current_streak }}</div>
+    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">Day Streak</div>
+    <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Best: {{ streak.longest_streak }} days</div>
+  </div>
+
+  <!-- XP / Level -->
+  <div class="rounded-2xl border border-brand-200 dark:border-brand-900/50 bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-950/40 dark:to-slate-900 p-5 flex flex-col items-center justify-center text-center shadow-sm">
+    <div class="text-4xl mb-1">⚡</div>
+    <div class="font-display text-3xl font-extrabold text-brand-600 dark:text-brand-400">{{ total_xp }}</div>
+    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">Total XP</div>
+    <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Level {{ level }}</div>
+  </div>
+
+  <!-- Weekly hours -->
+  <div class="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-slate-900 p-5 flex flex-col items-center justify-center text-center shadow-sm">
+    <div class="text-4xl mb-1">⏱️</div>
+    <div class="font-display text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ weekly_hours }}h</div>
+    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">This Week</div>
+    <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{{ pomodoro_count }} sessions</div>
+  </div>
+
+  <!-- Badges -->
+  <div class="rounded-2xl border border-yellow-200 dark:border-yellow-900/50 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/40 dark:to-slate-900 p-5 flex flex-col items-center justify-center text-center shadow-sm">
+    <div class="text-4xl mb-1">🏆</div>
+    <div class="font-display text-3xl font-extrabold text-yellow-600 dark:text-yellow-400">{{ badges.count }}</div>
+    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">Badges</div>
+    <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Earned so far</div>
+  </div>
+
+</div>
+
+<!-- XP Level bar -->
+<div class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 p-6 mb-6 fade-in-up shadow-sm">
+  <div class="flex items-center justify-between mb-3">
+    <span class="font-bold text-slate-800 dark:text-white text-sm">Level {{ level }} Progress</span>
+    <span class="text-xs text-slate-500 dark:text-slate-400">{{ xp_in_level }} / {{ xp_to_next }} XP</span>
+  </div>
+  <div class="h-3 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+    <div class="h-3 rounded-full bg-gradient-to-r from-brand-500 to-purple-500 transition-all duration-700"
+         style="width: {{ xp_pct }}%"></div>
+  </div>
+  <p class="text-xs text-slate-400 dark:text-slate-500 mt-2">{{ xp_to_next|add:"-"|add:xp_in_level }} XP to Level {{ level|add:"1" }}</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+  <!-- Weekly stats -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 p-6 shadow-sm fade-in-up">
+    <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mb-5">📊 This Week's Activity</h2>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
+        <span class="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"><span>✅</span> Tasks completed</span>
+        <span class="font-bold text-slate-900 dark:text-white text-sm bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full">{{ tasks_done_week }}</span>
+      </div>
+      <div class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
+        <span class="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"><span>⏱️</span> Pomodoro sessions</span>
+        <span class="font-bold text-slate-900 dark:text-white text-sm bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 px-3 py-1 rounded-full">{{ pomodoro_count }}</span>
+      </div>
+      <div class="flex items-center justify-between py-3 border-b border-slate-100 dark:border-slate-800">
+        <span class="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"><span>🃏</span> Flashcards reviewed</span>
+        <span class="font-bold text-slate-900 dark:text-white text-sm bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-3 py-1 rounded-full">{{ flashcards_reviewed_week }}</span>
+      </div>
+      <div class="flex items-center justify-between py-3">
+        <span class="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2"><span>🕒</span> Total study time</span>
+        <span class="font-bold text-slate-900 dark:text-white text-sm bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 px-3 py-1 rounded-full">{{ weekly_hours }}h</span>
+      </div>
+    </div>
+
+    {% if sessions_by_course %}
+    <div class="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+      <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Study time by course</p>
+      {% for course_name, mins in sessions_by_course.items %}
+      <div class="mb-2">
+        <div class="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
+          <span>{{ course_name }}</span>
+          <span>{{ mins }}m</span>
+        </div>
+        <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-800">
+          <div class="h-2 rounded-full bg-brand-500 dark:bg-brand-400" style="width: {{ mins|add:0 }}px; max-width:100%"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Badges -->
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 p-6 shadow-sm fade-in-up">
+    <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mb-5">🏅 Badges Earned</h2>
+
+    {% if badges %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {% for ub in badges %}
+      <div class="rounded-xl border border-yellow-200 dark:border-yellow-900/40 bg-yellow-50 dark:bg-yellow-950/30 p-3 text-center flex flex-col items-center gap-1 hover:scale-105 transition-transform">
+        <div class="text-3xl">{{ ub.badge.icon }}</div>
+        <div class="text-xs font-bold text-slate-800 dark:text-white leading-tight">{{ ub.badge.name }}</div>
+        <div class="text-[10px] text-slate-500 dark:text-slate-400">{{ ub.badge.description }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-10 text-center text-slate-400 dark:text-slate-500">
+      <div class="text-5xl mb-3">🎯</div>
+      <p class="text-sm font-medium">No badges yet — complete tasks, study sessions and review flashcards to earn them!</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Recent XP log -->
+{% if recent_xp %}
+<div class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 p-6 shadow-sm fade-in-up">
+  <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mb-4">⚡ Recent XP Activity</h2>
+  <div class="space-y-2">
+    {% for log in recent_xp %}
+    <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+      <span class="text-sm text-slate-600 dark:text-slate-400">{{ log.get_reason_display }}</span>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400 dark:text-slate-500">{{ log.created_at|date:"M j" }}</span>
+        <span class="font-bold text-brand-600 dark:text-brand-400 text-sm">+{{ log.points }} XP</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -192,7 +192,6 @@ def chat_api(request):
         except Exception as e:
             pass
         return JsonResponse({'status': 'error'}, status=400)
-    
     messages = ChatMessage.objects.filter(room=room).order_by('-created_at')[:50]
     data = []
     for msg in reversed(messages):
@@ -203,3 +202,134 @@ def chat_api(request):
             'is_me': msg.user == request.user
         })
     return JsonResponse({'messages': data})
+
+
+# ── Phase 6: Moderation ──────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def report_post(request, pk):
+    from .models import PostReport
+    post = get_object_or_404(Post, pk=pk)
+    reason = request.POST.get('reason', 'other')
+    detail = request.POST.get('detail', '')[:300]
+
+    _, created = PostReport.objects.get_or_create(
+        reporter=request.user,
+        post=post,
+        defaults={'reason': reason, 'detail': detail},
+    )
+    if created:
+        messages.success(request, 'Report submitted. Our team will review it.')
+    else:
+        messages.info(request, 'You already reported this post.')
+    return redirect(request.META.get('HTTP_REFERER', 'thread_list'))
+
+
+@login_required
+@require_POST
+def mute_user(request, username):
+    from django.contrib.auth import get_user_model
+    from .models import MutedUser
+    User = get_user_model()
+    target = get_object_or_404(User, username=username)
+
+    if target == request.user:
+        messages.error(request, "You can't mute yourself.")
+        return redirect(request.META.get('HTTP_REFERER', 'thread_list'))
+
+    obj, created = MutedUser.objects.get_or_create(muter=request.user, muted=target)
+    if created:
+        messages.success(request, f'@{target.username} muted. You won\'t see their posts.')
+    else:
+        # Toggle off — unmute
+        obj.delete()
+        messages.success(request, f'@{target.username} unmuted.')
+    return redirect(request.META.get('HTTP_REFERER', 'thread_list'))
+
+
+# ── Phase 7: Feedback ────────────────────────────────────────────────────────
+
+@login_required
+@require_POST
+def submit_feedback(request):
+    from .models import Feedback
+    from django.http import JsonResponse
+    try:
+        rating = int(request.POST.get('rating', 0))
+        message_text = request.POST.get('message', '').strip()[:1000]
+        page = request.POST.get('page', '')[:200]
+
+        if rating < 1 or rating > 5:
+            return JsonResponse({'error': 'Rating must be 1–5.'}, status=400)
+
+        Feedback.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            rating=rating,
+            message=message_text,
+            page=page,
+        )
+        return JsonResponse({'success': True, 'message': 'Thanks for your feedback! 🙏'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def admin_dashboard(request):
+    """Phase 7: Admin-only analytics dashboard."""
+    from django.contrib.auth import get_user_model
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate, TruncWeek
+    from datetime import timedelta
+    from django.utils import timezone
+    from .models import Feedback
+    from planner.models import StudySession, XPLog
+    from accounts.models import LoginRecord
+
+    if not request.user.is_staff:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    User = get_user_model()
+    today = timezone.localdate()
+    thirty_days_ago = today - timedelta(days=30)
+
+    # Signups over last 30 days
+    signups = (
+        User.objects.filter(date_joined__date__gte=thirty_days_ago)
+        .annotate(day=TruncDate('date_joined'))
+        .values('day')
+        .annotate(count=Count('id'))
+        .order_by('day')
+    )
+
+    # Active users (logged in last 7 days)
+    active_users = LoginRecord.objects.filter(
+        timestamp__date__gte=today - timedelta(days=7)
+    ).values('user').distinct().count()
+
+    # Feature usage this week
+    week_ago = today - timedelta(days=7)
+    feature_usage = {
+        'Pomodoro sessions': StudySession.objects.filter(date__gte=week_ago).count(),
+        'Flashcard reviews': XPLog.objects.filter(reason='flashcard', created_at__date__gte=week_ago).count(),
+        'Tasks completed': XPLog.objects.filter(reason='task_done', created_at__date__gte=week_ago).count(),
+        'Quizzes done': XPLog.objects.filter(reason='quiz_done', created_at__date__gte=week_ago).count(),
+    }
+
+    # Recent feedback
+    recent_feedback = Feedback.objects.select_related('user')[:20]
+    avg_rating = Feedback.objects.aggregate(avg=models.Avg('rating'))['avg'] or 0
+
+    context = {
+        'total_users': User.objects.count(),
+        'active_users': active_users,
+        'total_signups_30d': User.objects.filter(date_joined__date__gte=thirty_days_ago).count(),
+        'signups': list(signups),
+        'feature_usage': feature_usage,
+        'recent_feedback': recent_feedback,
+        'avg_rating': round(avg_rating, 1),
+        'feedback_count': Feedback.objects.count(),
+    }
+    return render(request, 'community/admin_dashboard.html', context)
+
