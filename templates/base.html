@@ -726,13 +726,37 @@
                     // Append turn to history
                     chatHistory.push({ role: 'user', content: msg });
                     chatHistory.push({ role: 'assistant', content: data.reply });
-                } catch (error) {
+        } catch (error) {
                     const t = document.getElementById(typingId);
                     if (t) t.innerHTML = "Sorry, I'm offline right now! Did you set the API key in .env?";
                 }
             });
         }
     }
+</script>
+
+<!-- ── PWA: Service-worker registration ─────────────────────────────── -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('{% url "pwa_service_worker" %}', { scope: '/' })
+        .catch(function (err) { console.warn('SW registration failed:', err); });
+    });
+  }
+
+  // Online / offline indicator
+  const offlineBanner = document.createElement('div');
+  offlineBanner.id = 'offline-banner';
+  offlineBanner.style.cssText = 'display:none;position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);z-index:9999;padding:.5rem 1.25rem;border-radius:9999px;background:#1e293b;color:#f8fafc;font-size:.8rem;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,.35);gap:.5rem;align-items:center;';
+  offlineBanner.innerHTML = '📶 You\'re offline — some features may not work';
+  document.body.appendChild(offlineBanner);
+
+  function updateOnlineStatus() {
+    offlineBanner.style.display = navigator.onLine ? 'none' : 'flex';
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
 </script>
 
 </body>
