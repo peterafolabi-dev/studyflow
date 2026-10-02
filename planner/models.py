@@ -146,3 +146,82 @@ class Flashcard(models.Model):
         self.next_review_date = today + timedelta(days=self.interval_days)
         self.save(update_fields=['repetitions', 'interval_days', 'ease_factor', 'next_review_date', 'last_reviewed_at'])
         return self.next_review_date
+
+
+# ── Phase 5: Gamification ────────────────────────────────────────────────────
+
+class StudyStreak(models.Model):
+    """Tracks the user's current and longest daily-activity streak."""
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='streak')
+    current_streak = models.PositiveIntegerField(default=0)
+    longest_streak = models.PositiveIntegerField(default=0)
+    last_activity_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.username}: {self.current_streak} day streak"
+
+    def record_activity(self):
+        """Call whenever the user does something (task, Pomodoro, flashcard)."""
+        today = timezone.localdate()
+        if self.last_activity_date == today:
+            return  # already recorded today
+        yesterday = today - timedelta(days=1)
+        if self.last_activity_date == yesterday:
+            self.current_streak += 1
+        else:
+            self.current_streak = 1  # streak broken
+        self.last_activity_date = today
+        self.longest_streak = max(self.longest_streak, self.current_streak)
+        self.save(update_fields=['current_streak', 'longest_streak', 'last_activity_date'])
+
+
+class XPLog(models.Model):
+    """One row per XP-earning event."""
+    REASONS = [
+        ('task_done', 'Task completed'),
+        ('pomodoro', 'Pomodoro session'),
+        ('flashcard', 'Flashcard reviewed'),
+        ('quiz_done', 'Quiz completed'),
+        ('streak_bonus', 'Streak bonus'),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='xp_logs')
+    reason = models.CharField(max_length=30, choices=REASONS)
+    points = models.PositiveIntegerField(default=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} +{self.points}XP ({self.reason})"
+
+    @classmethod
+    def total_xp(cls, user):
+        from django.db.models import Sum
+        return cls.objects.filter(user=user).aggregate(total=Sum('points'))['total'] or 0
+
+
+class Badge(models.Model):
+    """A badge definition — seeded once via a data migration or Django admin."""
+    ICONS = '🏆🥇🔥📚⏱️🃏🎯💡🌟🚀'
+    slug = models.SlugField(unique=True)
+    name = models.CharField(max_length=60)
+    description = models.CharField(max_length=200)
+    icon = models.CharField(max_length=4, default='🏆')
+    xp_reward = models.PositiveIntegerField(default=50)
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+
+class UserBadge(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='badges')
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    awarded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'badge')
+
+    def __str__(self):
+        return f"{self.user.username} earned {self.badge.name}"
+
