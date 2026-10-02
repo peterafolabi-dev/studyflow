@@ -2,107 +2,56 @@
 {% load socialaccount %}
 {% block title %}Log in · StudyFlow{% endblock %}
 {% block content %}
-<div class="fixed inset-0 z-[-1] overflow-hidden bg-slate-950">
-    <!-- Desktop Video (Hidden on Mobile) -->
-    <video autoplay loop muted playsinline poster="/static/img/bg-desktop.jpg" class="hidden sm:block absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-90 dark:opacity-70">
-        <source src="/static/video/cinematic-desktop.mp4" type="video/mp4">
-    </video>
+<div class="flex flex-col lg:flex-row min-h-[calc(100vh-60px)] -mx-4 -my-6 sm:-mx-0 sm:-my-0 sm:rounded-[2.5rem] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 mt-4 mb-4">
     
-    <!-- Mobile Video (Hidden on Desktop) -->
-    <video autoplay loop muted playsinline poster="/static/img/bg-mobile.jpg" class="block sm:hidden absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover opacity-90 dark:opacity-70">
-        <source src="/static/video/cinematic-mobile.mp4" type="video/mp4">
-    </video>
-
-    <!-- Glass Overlay -->
-    <div class="absolute inset-0 bg-brand-900/30 dark:bg-slate-950/80 backdrop-blur-[2px]"></div>
-</div>
-
-<div class="max-w-6xl mx-auto py-4 sm:py-12 relative z-10">
-
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-    
-    <!-- Left Hero Column (PC Showcase / Mobile Summary) -->
-    <div class="lg:col-span-7 space-y-6 fade-in-up bg-white/40 dark:bg-slate-900/40 p-8 rounded-3xl backdrop-blur-xl border border-white/50 dark:border-slate-800/50 shadow-2xl">
-      
-      <!-- Free Plan Badge -->
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/60 dark:bg-slate-800/80 border border-brand-200 dark:border-brand-700/60 shadow-sm backdrop-blur-md">
-        <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span class="text-xs font-extrabold uppercase tracking-wider text-brand-800 dark:text-brand-300">
-          ✨ 100% Free Forever for Students
-        </span>
-      </div>
-
-      <!-- Main Headline -->
-      <h1 class="font-display text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-        Master your studies with <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-purple-500 dark:from-brand-400 dark:to-purple-300 drop-shadow-sm">StudyFlow</span>
-      </h1>
-
-      <p class="text-base sm:text-lg text-slate-700 dark:text-slate-300 max-w-xl leading-relaxed font-medium">
-        The ultimate student planner and resource hub, built exclusively for university students. Plan terms, revise with flashcards, and learn faster.
-      </p>
-
-      <!-- Key Feature Highlights Grid (PC & Tablet) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+    <!-- Left side Video (Hidden on mobile) -->
+    <div class="hidden lg:flex lg:w-1/2 relative bg-slate-950 items-end p-12 overflow-hidden group">
+        <video autoplay loop muted playsinline poster="/static/img/bg-desktop.jpg" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-[20s] ease-out">
+            <source src="/static/video/cinematic-desktop.mp4" type="video/mp4">
+        </video>
+        <!-- Gradient fade to make text readable -->
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-slate-900/10"></div>
         
-        <div class="rounded-2xl border border-white/60 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/60 p-4 backdrop-blur-xl shadow-lg hover:shadow-xl transition hover:-translate-y-0.5">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl drop-shadow-md">🤖</span>
-            <div>
-              <h4 class="font-bold text-sm text-slate-800 dark:text-white">AI Study Coach</h4>
-              <p class="text-xs text-slate-600 dark:text-slate-400">Answers questions 24/7.</p>
+        <div class="relative z-10 w-full">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md mb-6 shadow-xl">
+                <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-white">
+                  100% Free Forever for Students
+                </span>
             </div>
-          </div>
+            <h1 class="font-display text-4xl xl:text-5xl font-extrabold tracking-tight text-white mb-4 leading-[1.1] drop-shadow-lg">
+                Master your studies with <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-purple-400 drop-shadow-sm">StudyFlow</span>
+            </h1>
+            <p class="text-slate-200 text-lg font-medium max-w-md drop-shadow-md">
+                The ultimate student planner and resource hub. Plan terms, revise with flashcards, and learn faster.
+            </p>
         </div>
-
-        <div class="rounded-2xl border border-white/60 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/60 p-4 backdrop-blur-xl shadow-lg hover:shadow-xl transition hover:-translate-y-0.5">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl drop-shadow-md">⏱️</span>
-            <div>
-              <h4 class="font-bold text-sm text-slate-800 dark:text-white">Pomodoro Study Room</h4>
-              <p class="text-xs text-slate-600 dark:text-slate-400">Deep Focus & Lo-Fi built in.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-white/60 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/60 p-4 backdrop-blur-xl shadow-lg hover:shadow-xl transition hover:-translate-y-0.5">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl drop-shadow-md">🃏</span>
-            <div>
-              <h4 class="font-bold text-sm text-slate-800 dark:text-white">Active Flashcards</h4>
-              <p class="text-xs text-slate-600 dark:text-slate-400">Custom decks & quizzes.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-white/60 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/60 p-4 backdrop-blur-xl shadow-lg hover:shadow-xl transition hover:-translate-y-0.5">
-          <div class="flex items-center gap-3">
-            <span class="text-2xl drop-shadow-md">📚</span>
-            <div>
-              <h4 class="font-bold text-sm text-slate-800 dark:text-white">IBB Library</h4>
-              <p class="text-xs text-slate-600 dark:text-slate-400">Reserve books & resources.</p>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
     </div>
 
-    <!-- Right Column (Login Form Card - Optimized for Mobile & Desktop) -->
-    <div class="lg:col-span-5 w-full">
-      <div class="bg-white/80 dark:bg-slate-900/80 border border-white/50 dark:border-slate-700/50 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl fade-in-up">
+    <!-- Right side Form -->
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 xl:p-20 bg-white dark:bg-slate-900 relative">
+      
+      <!-- Mobile Video Background (Only visible on small screens) -->
+      <div class="absolute inset-0 z-0 block lg:hidden overflow-hidden">
+        <video autoplay loop muted playsinline poster="/static/img/bg-mobile.jpg" class="absolute inset-0 w-full h-full object-cover opacity-30 dark:opacity-20 scale-105">
+            <source src="/static/video/cinematic-mobile.mp4" type="video/mp4">
+        </video>
+        <div class="absolute inset-0 bg-white/60 dark:bg-slate-950/70 backdrop-blur-sm"></div>
+      </div>
+
+      <div class="w-full max-w-md fade-in-up relative z-10">
         
-        <div class="text-center mb-6">
-          <div class="inline-flex w-12 h-12 rounded-2xl bg-brand-600 text-white items-center justify-center text-xl font-bold mb-3 shadow-lg shadow-brand-500/40 border border-brand-500">
+        <div class="text-center mb-8">
+          <div class="inline-flex w-14 h-14 rounded-2xl bg-brand-50 dark:bg-slate-800 text-brand-600 dark:text-brand-400 items-center justify-center text-2xl font-bold mb-4 shadow-sm border border-brand-100 dark:border-slate-700">
             📚
           </div>
-          <h2 class="font-display font-bold text-2xl text-slate-900 dark:text-white">Welcome back</h2>
-          <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 font-medium">Log in to resume your study sessions</p>
+          <h2 class="font-display font-bold text-3xl text-slate-900 dark:text-white">Welcome back</h2>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-2 font-medium">Log in to resume your study sessions</p>
         </div>
 
         <!-- Google OAuth Button -->
         <a href="{% provider_login_url 'google' %}"
-           class="google-btn flex items-center justify-center gap-3 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3 text-sm font-semibold transition hover:scale-[1.01] hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm">
+           class="google-btn flex items-center justify-center gap-3 w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-3.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-md hover:bg-slate-50 dark:hover:bg-slate-700">
           <svg class="h-5 w-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -113,10 +62,10 @@
         </a>
 
         <!-- Divider -->
-        <div class="relative flex items-center my-5">
-          <div class="flex-grow border-t border-slate-300 dark:border-slate-700"></div>
-          <span class="flex-shrink-0 mx-3 text-slate-500 dark:text-slate-400 text-[11px] font-extrabold uppercase tracking-widest">Or with username</span>
-          <div class="flex-grow border-t border-slate-300 dark:border-slate-700"></div>
+        <div class="relative flex items-center my-6">
+          <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
+          <span class="flex-shrink-0 mx-4 text-slate-500 dark:text-slate-400 text-[11px] font-extrabold uppercase tracking-widest">Or with username</span>
+          <div class="flex-grow border-t border-slate-200 dark:border-slate-700"></div>
         </div>
 
         <!-- Form -->
@@ -124,41 +73,38 @@
           {% csrf_token %}
 
           {% if error %}
-          <div class="rounded-xl bg-red-50/90 dark:bg-red-900/50 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-center gap-2 backdrop-blur-md">
+          <div class="rounded-xl bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
             <span>⚠️</span> {{ error }}
           </div>
           {% endif %}
 
-          <div class="space-y-1">
+          <div class="space-y-1.5">
             <label for="id_username" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Username</label>
             <input type="text" name="username" id="id_username" autocomplete="username" autofocus required
                    value="{{ form.username.value|default:'' }}"
-                   class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white px-4 py-2.5 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition backdrop-blur-sm">
+                   class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-white px-4 py-3 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-slate-900 transition backdrop-blur-sm">
           </div>
 
-          <div class="space-y-1">
+          <div class="space-y-1.5">
             <label for="id_password" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Password</label>
             <input type="password" name="password" id="id_password" autocomplete="current-password" required
-                   class="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 text-slate-900 dark:text-white px-4 py-2.5 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition backdrop-blur-sm">
+                   class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-white px-4 py-3 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-slate-900 transition backdrop-blur-sm">
           </div>
 
           <button type="submit"
-                  class="w-full bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 text-white rounded-xl py-3.5 font-bold text-sm transition shadow-xl shadow-brand-500/30 hover:scale-[1.02] mt-2 border border-brand-500/50">
+                  class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-xl py-3.5 font-bold text-sm transition shadow-lg shadow-brand-500/30 hover:scale-[1.01] mt-4">
             Log in to Dashboard
           </button>
         </form>
 
-        <p class="text-xs text-center text-slate-600 dark:text-slate-400 mt-6 font-medium">
+        <p class="text-sm text-center text-slate-600 dark:text-slate-400 mt-8 font-medium">
           Don't have an account?
-          <a href="{% url 'signup' %}" class="text-brand-700 dark:text-brand-400 font-extrabold hover:underline ml-1">
+          <a href="{% url 'signup' %}" class="text-brand-600 dark:text-brand-400 font-bold hover:underline ml-1">
             Create free account &rarr;
           </a>
         </p>
 
       </div>
     </div>
-
-  </div>
-
 </div>
 {% endblock %}
