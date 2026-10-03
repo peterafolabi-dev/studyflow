@@ -17,9 +17,7 @@ def create_demo_content_for_new_user(sender, instance, created, **kwargs):
         course = Course.objects.create(
             user=instance,
             code='DEMO 101',
-            name='Introduction to StudyFlow',
-            instructor='AI Study Coach',
-            description='A sample course to help you explore StudyFlow.'
+            name='Introduction to StudyFlow'
         )
 
         # Create a sample task due tomorrow
