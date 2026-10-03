@@ -4,6 +4,7 @@
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
     <button type="submit"
+            {% if not task.is_done %}onclick="playSuccessSound();"{% endif %}
             class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 shrink-0 {% if task.is_done %}bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20{% else %}border-slate-300 dark:border-slate-600 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-brand-950/40 text-transparent hover:text-brand-300{% endif %}"
             aria-label="{% if task.is_done %}Mark {{ task.title }} as not done{% else %}Mark {{ task.title }} as done{% endif %}"
             title="{% if task.is_done %}Click to mark incomplete{% else %}Click to mark complete{% endif %}">
