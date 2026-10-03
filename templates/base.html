@@ -215,47 +215,95 @@
             <div class="my-1 border-t border-brand-100 dark:border-slate-800"></div>
 
             <div class="px-1.5 py-1 space-y-0.5">
-              <a href="{% url 'break_room' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">🎮</span> <span>Break Room</span>
+              <a href="{% url 'break_room' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🎮</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Break Room</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Play games to unwind</span>
+                </div>
               </a>
-              <a href="{% url 'study_room' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">⏱️</span> <span>Pomodoro Timer</span>
+              <a href="{% url 'study_room' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">⏱️</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Pomodoro Timer</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Deep focus with Lofi & Spotify</span>
+                </div>
               </a>
-              <a href="{% url 'flashcards' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">🃏</span> <span>Flashcards</span>
+              <a href="{% url 'flashcards' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🃏</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Flashcards</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Spaced repetition training</span>
+                </div>
               </a>
-              <a href="{% url 'cbt_home' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">🎯</span> <span>CBT Practice</span>
+              <a href="{% url 'cbt_home' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🎯</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">CBT Practice</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Simulate past exams</span>
+                </div>
               </a>
-              <a href="{% url 'find_buddies' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">👥</span> <span>Find Buddies</span>
+              <a href="{% url 'find_buddies' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">👥</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Find Buddies</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Match with study partners</span>
+                </div>
               </a>
-              <a href="{% url 'my_library' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">📖</span> <span>My Library</span>
+              <a href="{% url 'my_library' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">📖</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">My Library</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Saved books & resources</span>
+                </div>
               </a>
-              <a href="{% url 'my_loans' %}" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="flex items-center gap-2.5">
-                  <span class="text-base">🏛️</span> <span>My Loans</span>
-                </span>
-                {% if overdue_loan_count %}
-                  <span class="inline-block h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
-                {% endif %}
+              <a href="{% url 'my_loans' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition relative">
+                <div class="relative text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
+                    🏛️
+                    {% if overdue_loan_count %}
+                      <span class="absolute -top-1 -right-1 block h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">My Loans</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Track borrowed books</span>
+                </div>
               </a>
-              <a href="{% url 'timetable' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">🗓️</span> <span>Timetable</span>
+              <a href="{% url 'timetable' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🗓️</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Timetable</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Weekly class schedule</span>
+                </div>
               </a>
-              <a href="{% url 'gpa_calculator' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">📊</span> <span>GPA Calculator</span>
+              <a href="{% url 'gpa_calculator' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">📊</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">GPA Calculator</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Forecast your final grades</span>
+                </div>
               </a>
-              <a href="{% url 'progress' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">📈</span> <span>My Progress</span>
+              <a href="{% url 'progress' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">📈</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">My Progress</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Gamified learning stats</span>
+                </div>
               </a>
-              <a href="{% url 'thread_list' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base"></span> <span>Study Groups</span>
+              <a href="{% url 'thread_list' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">💬</span> 
+                <div>
+                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Study Groups</span>
+                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Collaborate with peers</span>
+                </div>
               </a>
               {% if user.is_staff %}
-              <a href="{% url 'admin_dashboard' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition font-medium">
-                <span class="text-base">🔧</span> <span>Analytics</span>
+              <a href="{% url 'admin_dashboard' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
+                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🔧</span> 
+                <div>
+                    <span class="block font-bold text-rose-700 dark:text-rose-300 leading-none mb-1">Analytics</span>
+                    <span class="block text-[11px] text-rose-500 dark:text-rose-400 leading-tight">Admin oversight</span>
+                </div>
               </a>
               {% endif %}
 
