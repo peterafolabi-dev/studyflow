@@ -156,8 +156,10 @@
             <div class="grid grid-cols-2 gap-3">
             {% for label, icon, url_name in quick_links %}
                 {% if forloop.counter <= 6 %}
-                <a href="{% url url_name %}" class="rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 p-3 text-center transition-all hover:scale-105 backdrop-blur-md flex flex-col items-center justify-center aspect-square">
-                    <div class="text-3xl mb-2 drop-shadow-md">{{ icon }}</div>
+                <a href="{% url url_name %}" 
+                   data-tippy-content="Open {{ label }}"
+                   class="rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10 p-3 text-center transition-all hover:-translate-y-1 hover:shadow-lg backdrop-blur-md flex flex-col items-center justify-center aspect-square">
+                    <div class="text-3xl mb-2 drop-shadow-md group-hover:scale-110 transition-transform">{{ icon }}</div>
                     <div class="text-xs font-semibold tracking-wide">{{ label }}</div>
                 </a>
                 {% endif %}
@@ -187,4 +189,71 @@
 
     </div>
   </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Driver.js for Interactive Tour -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Only run tour if it hasn't been completed before
+    if (!localStorage.getItem('studyflow_tour_completed')) {
+        const driver = window.driver.js.driver;
+        
+        const tour = driver({
+            showProgress: true,
+            animate: true,
+            steps: [
+                {
+                    element: 'body',
+                    popover: {
+                        title: 'Welcome to StudyFlow! 🚀',
+                        description: 'We have pre-loaded your account with some demo content. Let me show you around your new workspace in 4 quick steps.',
+                        side: "over",
+                        align: 'center'
+                    }
+                },
+                {
+                    element: '.md\\:col-span-2 > div:first-child',
+                    popover: {
+                        title: 'Your Setup Checklist',
+                        description: 'This gamified tracker helps you learn the platform. Master the tools and get to 100%!',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#resources-menu-btn',
+                    popover: {
+                        title: 'University Resources',
+                        description: 'Find past questions, lecture slides, and notes for your exact modules.',
+                        side: "bottom",
+                        align: 'start'
+                    }
+                },
+                {
+                    element: '#profile-menu-wrapper',
+                    popover: {
+                        title: 'The Tools Menu',
+                        description: 'Everything else—Pomodoro Timer, Break Room games, GPA Calculator, and Flashcards—lives right here.',
+                        side: "bottom",
+                        align: 'end'
+                    }
+                }
+            ],
+            onDestroyStarted: () => {
+                if (!tour.hasNextStep() || confirm("Are you sure you want to skip the tour?")) {
+                    localStorage.setItem('studyflow_tour_completed', 'true');
+                    tour.destroy();
+                }
+            },
+        });
+        
+        // Start tour after a brief delay for rendering
+        setTimeout(() => tour.drive(), 500);
+    }
+});
+</script>
 {% endblock %}
