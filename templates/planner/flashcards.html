@@ -57,16 +57,20 @@
 
   <!-- Empty state -->
   {% if not decks %}
-    <div class="rounded-3xl border border-dashed border-brand-300 dark:border-slate-700 bg-brand-50/40 dark:bg-slate-900/40 p-12 text-center text-slate-500 dark:text-slate-400 fade-in-up flex flex-col items-center justify-center min-h-[320px]">
-      <div class="text-5xl mb-4">🗂️</div>
-      <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-200 mb-2">No flashcard decks yet</h3>
-      <p class="text-sm max-w-sm mb-6 text-slate-500 dark:text-slate-400">
-        Flashcards help you memorize course definitions, formulas, and concepts fast.
-      </p>
-      <button onclick="openNewDeckModal()"
-              class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2.5 text-sm shadow-lg shadow-brand-500/20 transition-all hover:scale-105">
-        + Create Your First Deck
-      </button>
+    <div class="rounded-[2.5rem] border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-12 text-center text-slate-500 dark:text-slate-400 fade-in-up flex flex-col items-center justify-center min-h-[320px] shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-400/10 dark:bg-brand-600/10 blur-3xl rounded-full pointer-events-none"></div>
+        
+        <div class="w-20 h-20 rounded-3xl bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center text-4xl mb-6 shadow-inner">
+            🗂️
+        </div>
+        
+        <h2 class="font-display font-bold text-2xl text-slate-900 dark:text-white mb-2">No flashcard decks yet.</h2>
+        <p class="mb-8 text-sm max-w-md mx-auto text-slate-600 dark:text-slate-400">
+            Create your first deck, add terms, and let our spaced repetition algorithm optimize your memory retention.
+        </p>
+        <button onclick="openNewDeckModal()" class="rounded-full bg-brand-600 hover:bg-brand-700 text-white font-semibold px-8 py-3.5 shadow-xl shadow-brand-500/25 transition-transform hover:-translate-y-1 inline-flex items-center gap-2">
+            <span>+ Create First Deck</span>
+        </button>
     </div>
   {% endif %}
 
