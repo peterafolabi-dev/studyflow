@@ -309,34 +309,40 @@
         <p id="quiz-text" class="text-2xl sm:text-3xl font-display font-bold leading-snug max-w-lg m-0 text-balance"></p>
       </div>
 
-      <p id="quiz-hint" class="text-sm font-medium text-slate-300 mb-8 flex items-center justify-center gap-2 animate-bounce">
-        <span class="text-xl">👆</span> Tap the card to reveal the answer
-      </p>
+      <!-- Interaction Area (Fixed height to prevent layout shift jumping) -->
+      <div class="relative h-[140px] w-full">
+        <!-- Hint (Shown when on front) -->
+        <div id="quiz-hint" class="absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300">
+          <p class="text-sm font-medium text-slate-300 flex items-center justify-center gap-2 animate-bounce">
+            <span class="text-xl">👆</span> Tap the card to reveal the answer
+          </p>
+        </div>
 
-      <!-- Spaced Repetition Rating Bar (Shown when flipped to back) -->
-      <div id="quiz-rating-bar" class="hidden mb-2 fade-in-up">
-        <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
-          Rate your recall to update the algorithm:
-        </p>
-        <div class="grid grid-cols-3 gap-4">
-          <button type="button" onclick="rateCard('hard')"
-                  class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-rose-500/10">
-            <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">😅</span>
-            <span>Hard</span>
-            <span class="text-[10px] opacity-70 font-medium uppercase mt-1">1 day</span>
-          </button>
-          <button type="button" onclick="rateCard('medium')"
-                  class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-amber-500/10">
-            <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🤔</span>
-            <span>Good</span>
-            <span class="text-[10px] opacity-70 font-medium uppercase mt-1">Progress</span>
-          </button>
-          <button type="button" onclick="rateCard('easy')"
-                  class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-emerald-500/10">
-            <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">😎</span>
-            <span>Easy</span>
-            <span class="text-[10px] opacity-70 font-medium uppercase mt-1">Mastered</span>
-          </button>
+        <!-- Spaced Repetition Rating Bar (Shown when flipped to back) -->
+        <div id="quiz-rating-bar" class="absolute inset-0 hidden opacity-0 transition-opacity duration-300 pointer-events-auto">
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
+            Rate your recall to update the algorithm:
+          </p>
+          <div class="grid grid-cols-3 gap-4">
+            <button type="button" onclick="rateCard('hard')"
+                    class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-rose-500/10">
+              <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">😅</span>
+              <span>Hard</span>
+              <span class="text-[10px] opacity-70 font-medium uppercase mt-1">1 day</span>
+            </button>
+            <button type="button" onclick="rateCard('medium')"
+                    class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-amber-500/10">
+              <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">🤔</span>
+              <span>Good</span>
+              <span class="text-[10px] opacity-70 font-medium uppercase mt-1">Progress</span>
+            </button>
+            <button type="button" onclick="rateCard('easy')"
+                    class="group flex flex-col items-center justify-center py-4 px-2 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-emerald-500/10">
+              <span class="text-2xl mb-1 group-hover:scale-110 transition-transform">😎</span>
+              <span>Easy</span>
+              <span class="text-[10px] opacity-70 font-medium uppercase mt-1">Mastered</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -515,12 +521,26 @@ function renderQuizCard() {
   document.getElementById('quiz-hint').innerHTML = quizShowingBack
     ? '<span>✨</span> Answer shown — rate your recall below to schedule next review'
     : '<span>🔄</span> Tap the card to reveal the answer';
-  
   const ratingBar = document.getElementById('quiz-rating-bar');
+  const quizHint = document.getElementById('quiz-hint');
+  
   if (quizShowingBack) {
     ratingBar.classList.remove('hidden');
+    // slight delay to allow display block to apply before opacity transition
+    setTimeout(() => {
+      ratingBar.classList.remove('opacity-0');
+      ratingBar.classList.add('opacity-100');
+    }, 10);
+    quizHint.classList.remove('opacity-100');
+    quizHint.classList.add('opacity-0');
   } else {
-    ratingBar.classList.add('hidden');
+    ratingBar.classList.remove('opacity-100');
+    ratingBar.classList.add('opacity-0');
+    setTimeout(() => {
+      if (!quizShowingBack) ratingBar.classList.add('hidden');
+    }, 300);
+    quizHint.classList.remove('opacity-0');
+    quizHint.classList.add('opacity-100');
   }
 
   const qc = document.getElementById('quiz-card');
@@ -589,6 +609,64 @@ document.addEventListener('DOMContentLoaded', () => {
   if (urlParams.get('queue') === 'due' && dueCardsData && dueCardsData.length > 0) {
     startDueQueueQuiz();
   }
+});
+// Robust touch/gesture handlers for #quiz-card
+document.addEventListener('DOMContentLoaded', () => {
+  const qc = document.getElementById('quiz-card');
+  if (!qc) return;
+
+  let touchStartY = 0;
+  let touchStartX = 0;
+  let touchStartTime = 0;
+  let isSwiping = false;
+
+  qc.addEventListener('touchstart', (e) => {
+    touchStartY = e.changedTouches[0].screenY;
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartTime = Date.now();
+    isSwiping = false;
+  }, { passive: true });
+
+  qc.addEventListener('touchmove', (e) => {
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    if (Math.abs(dy) > 10 || Math.abs(dx) > 10) {
+      isSwiping = true; // Minimum distance threshold met, it's a swipe, not a tap
+    }
+  }, { passive: true });
+
+  qc.addEventListener('touchend', (e) => {
+    const dy = e.changedTouches[0].screenY - touchStartY;
+    const dx = e.changedTouches[0].screenX - touchStartX;
+    const duration = Date.now() - touchStartTime;
+
+    // Minimum distance of 40px and maximum duration of 500ms for a valid swipe
+    if (isSwiping && duration < 500) {
+      if (dy < -40 && Math.abs(dx) < Math.abs(dy)) {
+        // Upward swipe -> close modal
+        closeQuiz();
+        e.preventDefault();
+      } else if (dx > 40 && Math.abs(dy) < Math.abs(dx)) {
+        // Swipe Right -> Easy
+        if (quizShowingBack) rateCard('easy');
+        e.preventDefault();
+      } else if (dx < -40 && Math.abs(dy) < Math.abs(dx)) {
+        // Swipe Left -> Hard
+        if (quizShowingBack) rateCard('hard');
+        e.preventDefault();
+      }
+    }
+  });
+
+  // Ensure click is ignored if we just swiped
+  qc.onclick = (e) => {
+    if (isSwiping) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    quizFlip();
+  };
 });
 </script>
 {% endblock %}
