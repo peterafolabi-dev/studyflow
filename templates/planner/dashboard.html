@@ -45,52 +45,68 @@
     <!-- Main Column (Tasks & Courses) -->
     <div class="md:col-span-2 flex flex-col gap-6">
       
-      {% if not course_count %}
-        <!-- ONBOARDING GUIDE FOR FIRST TIME USERS -->
-        <div class="rounded-[2.5rem] border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 sm:p-10 shadow-xl shadow-slate-200/20 dark:shadow-none fade-in-up relative overflow-hidden">
+      {% if show_onboarding %}
+        <!-- GAMIFIED ONBOARDING PROGRESS -->
+        <div class="rounded-[2.5rem] border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 sm:p-10 shadow-xl shadow-slate-200/20 dark:shadow-none fade-in-up relative overflow-hidden mb-6">
             <!-- Decorative background elements -->
             <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-400/20 dark:bg-brand-600/20 blur-3xl rounded-full pointer-events-none"></div>
             
-            <div class="text-center mb-10 relative z-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 text-3xl mb-4 shadow-inner">
-                    👋
+            <div class="flex flex-col sm:flex-row items-center gap-6 mb-8 relative z-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 text-3xl shadow-inner shrink-0">
+                    🚀
                 </div>
-                <h2 class="font-display text-3xl font-bold text-slate-900 dark:text-white mb-3">Welcome to StudyFlow!</h2>
-                <p class="text-slate-600 dark:text-slate-400 max-w-lg mx-auto text-base">
-                    You're 3 steps away from organizing your academic life. Let's get your workspace set up so you can start hitting those A's.
-                </p>
+                <div class="flex-1 text-center sm:text-left">
+                    <h2 class="font-display text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-2">Account Setup: {{ onboarding_percentage }}%</h2>
+                    <p class="text-slate-600 dark:text-slate-400 text-sm">
+                        Complete these 3 quick steps to master your StudyFlow workspace and unlock your first XP!
+                    </p>
+                    
+                    <!-- Progress Bar -->
+                    <div class="w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full mt-4 overflow-hidden shadow-inner">
+                        <div class="h-full bg-gradient-to-r from-brand-400 to-brand-600 rounded-full transition-all duration-1000 ease-out" style="width: {{ onboarding_percentage }}%"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-                <!-- Step 1 -->
-                <div class="relative bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700/50 hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold shadow-md">1</div>
-                    <div class="text-3xl mb-4">📚</div>
-                    <h3 class="font-bold text-slate-900 dark:text-white mb-2">Add a Course</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">Create a course to house your flashcards, tasks, and notes.</p>
-                    <a href="{% url 'course_create' %}" class="block w-full py-2.5 px-4 text-center text-xs font-bold bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 rounded-xl border border-brand-200 dark:border-brand-900/30 hover:bg-brand-50 transition-colors">Create Course</a>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                <!-- Step 1: Flashcards -->
+                <div class="relative bg-white dark:bg-slate-800/80 rounded-3xl p-5 border {% if has_reviewed_flashcards %}border-emerald-200 dark:border-emerald-900/50 opacity-70{% else %}border-brand-200 dark:border-brand-900/50 shadow-md hover:-translate-y-1{% endif %} transition-all">
+                    <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full {% if has_reviewed_flashcards %}bg-emerald-500{% else %}bg-brand-100 dark:bg-slate-700 text-brand-600 dark:text-slate-400{% endif %} flex items-center justify-center font-bold shadow-sm">
+                        {% if has_reviewed_flashcards %}<span class="text-white">✓</span>{% else %}1{% endif %}
+                    </div>
+                    <div class="text-2xl mb-3">🃏</div>
+                    <h3 class="font-bold text-slate-900 dark:text-white mb-1">Review Flashcards</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">Check out your auto-generated Demo Deck and do 1 review.</p>
+                    {% if not has_reviewed_flashcards %}
+                    <a href="{% url 'flashcards' %}" class="block w-full py-2 px-4 text-center text-xs font-bold bg-brand-50 dark:bg-slate-700 text-brand-700 dark:text-brand-300 rounded-xl hover:bg-brand-100 dark:hover:bg-slate-600 transition-colors">Start Review</a>
+                    {% endif %}
                 </div>
                 
-                <!-- Step 2 -->
-                <div class="relative bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700/50 hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold shadow-md">2</div>
-                    <div class="text-3xl mb-4">📝</div>
-                    <h3 class="font-bold text-slate-900 dark:text-white mb-2">Make Flashcards</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">Add terms you need to memorize. We'll handle the scheduling.</p>
-                    <a href="{% url 'flashcards' %}" class="block w-full py-2.5 px-4 text-center text-xs font-bold bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-100 transition-colors">Go to Flashcards</a>
+                <!-- Step 2: Tasks -->
+                <div class="relative bg-white dark:bg-slate-800/80 rounded-3xl p-5 border {% if has_done_tasks %}border-emerald-200 dark:border-emerald-900/50 opacity-70{% else %}border-slate-200 dark:border-slate-700 shadow-sm hover:-translate-y-1{% endif %} transition-all">
+                    <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full {% if has_done_tasks %}bg-emerald-500{% else %}bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400{% endif %} flex items-center justify-center font-bold shadow-sm">
+                        {% if has_done_tasks %}<span class="text-white">✓</span>{% else %}2{% endif %}
+                    </div>
+                    <div class="text-2xl mb-3">✅</div>
+                    <h3 class="font-bold text-slate-900 dark:text-white mb-1">Complete a Task</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">Find your demo task below and click the checkbox to finish it.</p>
                 </div>
 
-                <!-- Step 3 -->
-                <div class="relative bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700/50 hover:shadow-lg hover:-translate-y-1 transition-all">
-                    <div class="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold shadow-md">3</div>
-                    <div class="text-3xl mb-4">🎧</div>
-                    <h3 class="font-bold text-slate-900 dark:text-white mb-2">Enter Flow State</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">Jump into the Study Room, start a Pomodoro, and focus.</p>
-                    <a href="{% url 'study_room' %}" class="block w-full py-2.5 px-4 text-center text-xs font-bold bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-100 transition-colors">Open Study Room</a>
+                <!-- Step 3: Pomodoro -->
+                <div class="relative bg-white dark:bg-slate-800/80 rounded-3xl p-5 border {% if has_pomodoro %}border-emerald-200 dark:border-emerald-900/50 opacity-70{% else %}border-slate-200 dark:border-slate-700 shadow-sm hover:-translate-y-1{% endif %} transition-all">
+                    <div class="absolute -top-3 -right-3 w-8 h-8 rounded-full {% if has_pomodoro %}bg-emerald-500{% else %}bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400{% endif %} flex items-center justify-center font-bold shadow-sm">
+                        {% if has_pomodoro %}<span class="text-white">✓</span>{% else %}3{% endif %}
+                    </div>
+                    <div class="text-2xl mb-3">🎧</div>
+                    <h3 class="font-bold text-slate-900 dark:text-white mb-1">Enter Flow State</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">Run a Pomodoro session in the Study Room to log focus time.</p>
+                    {% if not has_pomodoro %}
+                    <a href="{% url 'study_room' %}" class="block w-full py-2 px-4 text-center text-xs font-bold bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors">Open Study Room</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
-      {% else %}
+      {% endif %}
 
         <!-- Overdue -->
         {% if overdue %}

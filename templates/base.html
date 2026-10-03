@@ -59,6 +59,49 @@
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <!-- Framer Motion web engine -->
   <script src="https://cdn.jsdelivr.net/npm/motion@11.11.17/dist/motion.umd.js"></script>
+  <!-- Tippy.js for elegant tooltips -->
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://unpkg.com/tippy.js@6"></script>
+  <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/animations/shift-away.css" />
+
+  <!-- Micro-interactions Engine -->
+  <script>
+    // Synthesize a soft, satisfying 'ding' using Web Audio API
+    function playSuccessSound() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+            osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.1); // Slide up to A6
+            
+            gainNode.gain.setValueAtTime(0, ctx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+            
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 0.5);
+        } catch (e) {
+            console.log("Audio not supported or blocked", e);
+        }
+    }
+
+    // Initialize global tooltips
+    document.addEventListener("DOMContentLoaded", () => {
+        tippy('[data-tippy-content]', {
+            animation: 'shift-away',
+            theme: 'translucent',
+            arrow: false,
+            delay: [200, 0],
+        });
+    });
+  </script>
+
   <style>
     .chat-bubble-content {
       line-height: 1.5;

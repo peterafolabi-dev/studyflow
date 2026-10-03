@@ -41,6 +41,16 @@ def dashboard(request):
         deck__course__user=request.user, next_review_date__lte=today
     ).count()
 
+    # Onboarding Checklist State
+    has_reviewed_flashcards = Flashcard.objects.filter(deck__course__user=request.user, last_reviewed_at__isnull=False).exists()
+    has_done_tasks = Task.objects.filter(course__user=request.user, is_done=True).exists()
+    from .models import StudySession
+    has_pomodoro = StudySession.objects.filter(user=request.user).exists()
+    
+    onboarding_completed = sum([has_reviewed_flashcards, has_done_tasks, has_pomodoro])
+    onboarding_percentage = int((onboarding_completed / 3) * 100)
+    show_onboarding = onboarding_completed < 3
+
     context = {
         'overdue': open_tasks.filter(due_date__lt=today),
         'due_soon': open_tasks.filter(due_date__gte=today, due_date__lte=week_end),
@@ -48,6 +58,12 @@ def dashboard(request):
         'open_count': open_tasks.count(),
         'done_count': Task.objects.filter(course__user=request.user, is_done=True).count(),
         'due_flashcards_count': due_flashcards_count,
+        'has_reviewed_flashcards': has_reviewed_flashcards,
+        'has_done_tasks': has_done_tasks,
+        'has_pomodoro': has_pomodoro,
+        'onboarding_completed': onboarding_completed,
+        'onboarding_percentage': onboarding_percentage,
+        'show_onboarding': show_onboarding,
         'trending_resources': Resource.objects.filter(
             last_downloaded_at__gte=timezone.now() - timedelta(days=7)
         ).order_by('-download_count')[:5],
