@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'library',
     'resources',
     'community',
+    'campus',
 ]
 
 MIDDLEWARE = [

@@ -11,5 +11,6 @@ urlpatterns = [
     path('books/<int:pk>/download/', views.download_pdf, name='download_pdf'),
     path('books/<int:pk>/toggle-save/', views.toggle_save, name='toggle_save'),
     path('books/<int:pk>/status/', views.update_status, name='update_status'),
+    path('books/<int:pk>/progress/', views.update_progress, name='update_progress'),
     path('books/<int:pk>/rate/', views.rate_book, name='rate_book'),
 ]

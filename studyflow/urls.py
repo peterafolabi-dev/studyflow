@@ -15,6 +15,7 @@ urlpatterns = [
     path('', include('library.urls')),
     path('', include('resources.urls')),
     path('', include('community.urls')),
+    path('campus/', include('campus.urls')),
 ]
 
 if settings.DEBUG:

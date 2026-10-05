@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from .models import (
     StudySpot, PowerVote, CourseNotice, LodgeReview, RoommateProfile,
     SIWESCompany, SIWESLogEntry, MarketplaceItem, EmergencyContact
@@ -83,7 +85,7 @@ def notice_board(request):
     if urgency:
         notices = notices.filter(urgency=urgency)
     if search:
-        notices = notices.filter(models.Q(title__icontains=search) | models.Q(course_code__icontains=search) | models.Q(department__icontains=search))
+        notices = notices.filter(Q(title__icontains=search) | Q(course_code__icontains=search) | Q(department__icontains=search))
 
     context = {
         'notices': notices,
@@ -254,13 +256,25 @@ def add_siwes_log(request):
 def marketplace(request):
     """Campus Marketplace (Textbooks, Drawing Boards, Lab Coats, Calculators)."""
     cat = request.GET.get('category', '')
-    items = MarketplaceItem.objects.filter(is_sold=False)
+    search = request.GET.get('q', '').strip()
+    show_mine = request.GET.get('mine') == '1' and request.user.is_authenticated
+
+    if show_mine:
+        items = MarketplaceItem.objects.filter(seller=request.user)
+    else:
+        items = MarketplaceItem.objects.filter(is_sold=False)
+
     if cat:
         items = items.filter(category=cat)
+    if search:
+        items = items.filter(Q(title__icontains=search) | Q(description__icontains=search))
 
     context = {
         'items': items,
         'selected_category': cat,
+        'search_query': search,
+        'show_mine': show_mine,
+        'my_items_count': MarketplaceItem.objects.filter(seller=request.user).count() if request.user.is_authenticated else 0,
     }
     return render(request, 'campus/marketplace.html', context)
 
@@ -296,6 +310,17 @@ def create_listing(request):
             return redirect('marketplace')
         else:
             messages.error(request, "Please enter an item title and valid WhatsApp number.")
+    return redirect('marketplace')
+
+
+@login_required
+@require_POST
+def toggle_item_sold(request, item_id):
+    item = get_object_or_404(MarketplaceItem, id=item_id, seller=request.user)
+    item.is_sold = not item.is_sold
+    item.save()
+    status_str = "marked as sold" if item.is_sold else "relisted as available"
+    messages.success(request, f"'{item.title}' {status_str}! 🎉")
     return redirect('marketplace')
 
 
