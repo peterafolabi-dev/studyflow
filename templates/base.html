@@ -120,15 +120,38 @@
               Library
               <svg class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
             </button>
-            <div class="hidden group-hover:block absolute left-0 mt-2 w-48 rounded-xl border border-slate-700 bg-slate-900 shadow-lg py-2 text-sm z-40">
+            <div class="hidden group-hover:block absolute left-0 mt-2 w-52 rounded-xl border border-slate-700 bg-slate-900 shadow-xl py-2 text-sm z-40">
               <a href="{% url 'catalogue' %}" class="block px-4 py-2 hover:bg-slate-800">Catalogue</a>
               <a href="{% url 'ibb_library' %}" class="block px-4 py-2 hover:bg-slate-800">IBB Library</a>
+              <a href="{% url 'cbt_home' %}" class="block px-4 py-2 hover:bg-slate-800 text-amber-300 font-medium">CBT Practice 🎯</a>
               <a href="{% url 'past_questions' %}" class="block px-4 py-2 hover:bg-slate-800">Past Questions</a>
               <a href="{% url 'notes_list' %}" class="block px-4 py-2 hover:bg-slate-800">Notes</a>
+              <a href="{% url 'theses_papers' %}" class="block px-4 py-2 hover:bg-slate-800">Theses & Papers</a>
+              <a href="{% url 'lecture_slides' %}" class="block px-4 py-2 hover:bg-slate-800">Lecture Slides</a>
+              <a href="{% url 'postgraduate' %}" class="block px-4 py-2 hover:bg-slate-800">Postgraduate</a>
             </div>
           </div>
           
           <a href="{% url 'study_room' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'study_room' %}text-brand-300 bg-slate-800{% endif %}">Study Room</a>
+
+          <!-- Campus Life Dropdown -->
+          <div class="relative group">
+            <button class="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-slate-800 {% if 'campus' in request.path %}text-brand-300 bg-slate-800{% endif %}">
+              Campus
+              <svg class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+            </button>
+            <div class="hidden group-hover:block absolute left-0 mt-2 w-56 rounded-xl border border-slate-700 bg-slate-900 shadow-xl py-2 text-sm z-40">
+              <a href="{% url 'campus_hub' %}" class="block px-4 py-2 hover:bg-slate-800 font-semibold text-brand-300">Campus Hub 🏛️</a>
+              <div class="border-t border-slate-800 my-1"></div>
+              <a href="{% url 'power_tracker' %}" class="block px-4 py-2 hover:bg-slate-800">Where is Light? ⚡</a>
+              <a href="{% url 'notice_board' %}" class="block px-4 py-2 hover:bg-slate-800">Notice Board 📢</a>
+              <a href="{% url 'lodge_roommate_hub' %}" class="block px-4 py-2 hover:bg-slate-800">Lodges & Roommates 🏠</a>
+              <a href="{% url 'siwes_hub' %}" class="block px-4 py-2 hover:bg-slate-800">SIWES & IT Directory 💼</a>
+              <a href="{% url 'marketplace' %}" class="block px-4 py-2 hover:bg-slate-800">Marketplace 🛍️</a>
+              <a href="{% url 'emergency_directory' %}" class="block px-4 py-2 hover:bg-slate-800 text-rose-400">Emergency Helplines 🚨</a>
+            </div>
+          </div>
+
           <a href="{% url 'global_chat' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800">Community</a>
         </nav>
 
@@ -156,7 +179,18 @@
               </div>
               <div class="px-1.5 py-1 space-y-0.5">
                 <a href="{% url 'profile' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200">My Profile</a>
+                <a href="{% url 'progress' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 flex items-center justify-between">
+                  <span>My Progress</span>
+                  <span class="text-xs">📈</span>
+                </a>
+                <a href="{% url 'notifications' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 flex items-center justify-between">
+                  <span>Notifications</span>
+                  <span class="text-xs">🔔</span>
+                </a>
                 <a href="{% url 'edit_profile' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200">Settings</a>
+                {% if user.is_staff %}
+                  <a href="{% url 'admin_dashboard' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-emerald-400 font-medium">Analytics 📊</a>
+                {% endif %}
                 <form method="post" action="{% url 'logout' %}">
                   {% csrf_token %}
                   <button type="submit" class="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 mt-1">Log out</button>
@@ -178,9 +212,26 @@
     <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900 px-4 py-4 space-y-2">
       <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Dashboard</a>
       <a href="{% url 'course_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Courses</a>
-      <a href="{% url 'catalogue' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Library</a>
+      <a href="{% url 'catalogue' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Library & Catalogue</a>
+      <a href="{% url 'cbt_home' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-amber-300 font-medium">CBT Practice 🎯</a>
       <a href="{% url 'study_room' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Study Room</a>
+      
+      <!-- Mobile Campus Life Header & Sublinks -->
+      <div class="pt-2 border-t border-slate-800/80">
+        <a href="{% url 'campus_hub' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-brand-300 font-semibold">Campus Life 🏛️</a>
+        <div class="pl-4 space-y-1 mt-1">
+          <a href="{% url 'power_tracker' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-300">Where is Light? ⚡</a>
+          <a href="{% url 'notice_board' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-300">Notice Board 📢</a>
+          <a href="{% url 'lodge_roommate_hub' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-300">Lodges & Roommates 🏠</a>
+          <a href="{% url 'siwes_hub' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-300">SIWES & IT Directory 💼</a>
+          <a href="{% url 'marketplace' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-300">Marketplace 🛍️</a>
+          <a href="{% url 'emergency_directory' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-rose-400">Emergency Helplines 🚨</a>
+        </div>
+      </div>
+
       <a href="{% url 'global_chat' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Community</a>
+      <a href="{% url 'progress' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">My Progress 📈</a>
+      <a href="{% url 'notifications' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Notifications 🔔</a>
     </div>
     {% endif %}
   </header>
