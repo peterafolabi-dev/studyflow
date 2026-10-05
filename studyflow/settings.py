@@ -34,13 +34,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-insecure-key-change-me')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+IS_RENDER = bool(os.environ.get('RENDER') or os.environ.get('RENDER_SERVICE_ID'))
+DEBUG = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', 'True')).lower() in ('true', '1', 'yes') if not IS_RENDER else (os.environ.get('DEBUG') == 'True')
 
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()] or (['*'] if DEBUG else [])
-_csrf_hosts = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
-if not _csrf_hosts:
-    _csrf_hosts = ['studyflow-xt1x.onrender.com'] # Fallback for Render
-CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in _csrf_hosts if h != '*']
+_allowed = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
+ALLOWED_HOSTS = _allowed if _allowed else (['*'] if (DEBUG or not IS_RENDER) else ['studyflow-xt1x.onrender.com'])
+_csrf_hosts = _allowed or ['studyflow-xt1x.onrender.com', 'localhost', '127.0.0.1']
+CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in _csrf_hosts if h != '*'] + [f"http://{h}" for h in _csrf_hosts if h != '*']
 
 
 # Application definition
