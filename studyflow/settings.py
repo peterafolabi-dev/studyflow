@@ -35,7 +35,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-insecure-key-change-me')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 IS_RENDER = bool(os.environ.get('RENDER') or os.environ.get('RENDER_SERVICE_ID'))
-DEBUG = os.environ.get('DJANGO_DEBUG', os.environ.get('DEBUG', 'True')).lower() in ('true', '1', 'yes') if not IS_RENDER else (os.environ.get('DEBUG') == 'True')
+DEBUG = os.environ.get('DEBUG', '').lower() not in ('false', '0', 'no') and not IS_RENDER
 
 _allowed = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
 ALLOWED_HOSTS = _allowed if _allowed else (['*'] if (DEBUG or not IS_RENDER) else ['studyflow-xt1x.onrender.com'])
