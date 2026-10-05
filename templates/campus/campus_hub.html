@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% block title %}Campus Life & Student Welfare · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-8 fade-in-up">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 mb-3">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>FUT Minna Campus Portal</span>
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+        Campus Life & Student Welfare
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1 max-w-2xl text-sm sm:text-base">
+        Live campus power tracker, official departmental notices, off-campus lodge reviews, verified SIWES placements, and student marketplace.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'emergency_directory' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs sm:text-sm font-semibold transition-all">
+        <span>🚨</span> Emergency Helplines
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Bento Quick Launch Navigation -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10 fade-in-up">
+  <!-- Power Tracker Card -->
+  <a href="{% url 'power_tracker' %}" class="group relative rounded-3xl border border-amber-200/80 dark:border-amber-900/40 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent dark:from-amber-950/30 dark:to-slate-900 p-6 hover:shadow-xl hover:border-amber-400/80 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+    <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:scale-110 transition-transform">⚡</div>
+    <div>
+      <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform shadow-inner">
+        ⚡
+      </div>
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+        Where is Light?
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300">Live</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        Real-time generator and NEPA power status for IBB Library, ETF Halls, SEET Complex, and reading rooms.
+      </p>
+    </div>
+    <div class="mt-6 flex items-center text-xs font-bold text-amber-600 dark:text-amber-400 group-hover:translate-x-1 transition-transform">
+      Check Study Spots &rarr;
+    </div>
+  </a>
+
+  <!-- Notice Board Card -->
+  <a href="{% url 'notice_board' %}" class="group relative rounded-3xl border border-brand-200/80 dark:border-brand-900/40 bg-gradient-to-br from-brand-500/10 via-brand-500/5 to-transparent dark:from-brand-950/30 dark:to-slate-900 p-6 hover:shadow-xl hover:border-brand-400/80 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+    <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:scale-110 transition-transform">📢</div>
+    <div>
+      <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform shadow-inner">
+        📢
+      </div>
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+        Notice Board
+        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-800 dark:text-brand-300">Official</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        Course rep announcements, emergency venue shifts, timetable changes, and test schedules by level & department.
+      </p>
+    </div>
+    <div class="mt-6 flex items-center text-xs font-bold text-brand-600 dark:text-brand-400 group-hover:translate-x-1 transition-transform">
+      View All Notices &rarr;
+    </div>
+  </a>
+
+  <!-- Lodges & Roommates Card -->
+  <a href="{% url 'lodge_roommate_hub' %}" class="group relative rounded-3xl border border-sky-200/80 dark:border-sky-900/40 bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-transparent dark:from-sky-950/30 dark:to-slate-900 p-6 hover:shadow-xl hover:border-sky-400/80 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+    <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:scale-110 transition-transform">🏠</div>
+    <div>
+      <div class="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform shadow-inner">
+        🏠
+      </div>
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+        Lodges & Roommates
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        Reviews for off-campus hostels around GK Gate, Bosso, and F-Layout (water, power, security) plus roommate matching.
+      </p>
+    </div>
+    <div class="mt-6 flex items-center text-xs font-bold text-sky-600 dark:text-sky-400 group-hover:translate-x-1 transition-transform">
+      Find Lodges & Buddies &rarr;
+    </div>
+  </a>
+
+  <!-- SIWES Hub Card -->
+  <a href="{% url 'siwes_hub' %}" class="group relative rounded-3xl border border-emerald-200/80 dark:border-emerald-900/40 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent dark:from-emerald-950/30 dark:to-slate-900 p-6 hover:shadow-xl hover:border-emerald-400/80 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+    <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:scale-110 transition-transform">💼</div>
+    <div>
+      <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform shadow-inner">
+        💼
+      </div>
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2">
+        SIWES & IT Placement
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        Top verified companies accepting industrial training students in Nigeria, with stipend details and a digital daily logbook.
+      </p>
+    </div>
+    <div class="mt-6 flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
+      Browse Placements & Logbook &rarr;
+    </div>
+  </a>
+
+  <!-- Campus Marketplace Card -->
+  <a href="{% url 'marketplace' %}" class="group relative rounded-3xl border border-purple-200/80 dark:border-purple-900/40 bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent dark:from-purple-950/30 dark:to-slate-900 p-6 hover:shadow-xl hover:border-purple-400/80 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+    <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:scale-110 transition-transform">🛍️</div>
+    <div>
+      <div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform shadow-inner">
+        🛍️
+      </div>
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2">
+        Campus Marketplace
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        Buy, sell, or giveaway course textbooks, engineering drawing boards, lab coats, calculators, and hostel appliances safely.
+      </p>
+    </div>
+    <div class="mt-6 flex items-center text-xs font-bold text-purple-600 dark:text-purple-400 group-hover:translate-x-1 transition-transform">
+      Explore Listings &rarr;
+    </div>
+  </a>
+
+  <!-- Emergency Helplines Card -->
+  <a href="{% url 'emergency_directory' %}" class="group relative rounded-3xl border border-rose-200/80 dark:border-rose-900/40 bg-gradient-to-br from-rose-500/10 via-rose-500/5 to-transparent dark:from-rose-950/30 dark:to-slate-900 p-6 hover:shadow-xl hover:border-rose-400/80 transition-all duration-300 flex flex-col justify-between overflow-hidden">
+    <div class="absolute -right-4 -bottom-4 text-7xl opacity-10 group-hover:scale-110 transition-transform">🚑</div>
+    <div>
+      <div class="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-500 flex items-center justify-center text-2xl mb-4 group-hover:scale-105 transition-transform shadow-inner">
+        🚑
+      </div>
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2">
+        Emergency & Health
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+        Direct tap-to-call helpline numbers for FUT Minna Clinic ambulances, GK & Bosso Security Gates, and SUG Welfare.
+      </p>
+    </div>
+    <div class="mt-6 flex items-center text-xs font-bold text-rose-600 dark:text-rose-400 group-hover:translate-x-1 transition-transform">
+      Emergency Numbers &rarr;
+    </div>
+  </a>
+</div>
+
+<!-- Two-Column Feed: Power Status Snapshot & Latest Notices -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+  
+  <!-- Left: Live Power Snapshot -->
+  <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl p-6 shadow-sm">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">⚡</span>
+        <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Live Study Spot Status</h3>
+      </div>
+      <a href="{% url 'power_tracker' %}" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+        All Spots ({{ spots|length }}) &rarr;
+      </a>
+    </div>
+
+    <div class="space-y-3">
+      {% for spot in spots %}
+      <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 hover:border-brand-500/40 transition-colors">
+        <div class="min-w-0 pr-3">
+          <div class="flex items-center gap-2">
+            <h4 class="font-bold text-sm text-slate-900 dark:text-white truncate">{{ spot.name }}</h4>
+            <span class="text-[10px] px-2 py-0.5 rounded-md font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+              {{ spot.campus }}
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{{ spot.location_desc }}</p>
+        </div>
+        <div class="shrink-0 text-right">
+          {% if spot.current_status == 'gen_on' %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+              ⚡ Generator On
+            </span>
+          {% elif spot.current_status == 'grid_on' %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              💡 NEPA / Light On
+            </span>
+          {% else %}
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+              🌑 Outage
+            </span>
+          {% endif %}
+          <div class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+            {{ spot.last_reported_at|timesince }} ago
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-8 text-slate-400 text-sm">
+        No study spots recorded yet.
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Right: Recent Departmental Notices -->
+  <section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl p-6 shadow-sm">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">📢</span>
+        <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Recent Notices</h3>
+      </div>
+      <a href="{% url 'notice_board' %}" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+        Notice Board &rarr;
+      </a>
+    </div>
+
+    <div class="space-y-3">
+      {% for notice in notices %}
+      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 hover:border-brand-500/40 transition-colors">
+        <div class="flex items-start justify-between gap-2 mb-1.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            {% if notice.course_code %}
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+                {{ notice.course_code }}
+              </span>
+            {% endif %}
+            <h4 class="font-bold text-sm text-slate-900 dark:text-white">{{ notice.title }}</h4>
+          </div>
+          {% if notice.urgency == 'urgent' %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 shrink-0">⚠️ Urgent</span>
+          {% elif notice.urgency == 'venue_change' %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0">📍 Shift</span>
+          {% elif notice.urgency == 'exam_alert' %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400 shrink-0">📝 Test</span>
+          {% endif %}
+        </div>
+        <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed mb-2">
+          {{ notice.body }}
+        </p>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
+          <span>By <strong>{{ notice.author.username }}</strong> · {{ notice.department }}</span>
+          <span>{{ notice.created_at|timesince }} ago</span>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-8 text-slate-400 text-sm">
+        No active course announcements. Be the first course rep to broadcast!
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</div>
+
+<!-- Quick Marketplace Preview -->
+{% if recent_market %}
+<section class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl p-6 shadow-sm mb-10">
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex items-center gap-2">
+      <span class="text-2xl">🛍️</span>
+      <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Recent Marketplace Finds</h3>
+    </div>
+    <a href="{% url 'marketplace' %}" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+      Browse All &rarr;
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {% for item in recent_market %}
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between hover:shadow-md transition-shadow">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 uppercase">
+            {{ item.get_condition_display }}
+          </span>
+          {% if item.is_free %}
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">FREE</span>
+          {% else %}
+            <span class="text-sm font-extrabold text-brand-600 dark:text-brand-400">₦{{ item.price|floatformat:0 }}</span>
+          {% endif %}
+        </div>
+        <h4 class="font-bold text-sm text-slate-900 dark:text-white line-clamp-1 mb-1">{{ item.title }}</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed mb-3">{{ item.description }}</p>
+      </div>
+      <a href="https://wa.me/{{ item.whatsapp_number }}?text=Hi%20{{ item.seller.username }},%20I%20saw%20your%20listing%20for%20{{ item.title|urlencode }}%20on%20StudyFlow!" target="_blank" rel="noopener noreferrer"
+         class="w-full text-center py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
+        <span>💬</span> Chat on WhatsApp
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

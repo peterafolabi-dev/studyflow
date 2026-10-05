@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}Notice Board · Course Rep Broadcasts · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-8 fade-in-up">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 mb-3">
+        <span>📢</span>
+        <span>Departmental & Level Broadcasts</span>
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+        Course Rep Notice Board
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1 max-w-2xl text-sm sm:text-base">
+        Official timetable shifts, test alerts, venue changes, and student notifications for FUT Minna faculties and departments.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      {% if user.is_authenticated %}
+        <button onclick="document.getElementById('notice-modal').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-brand-500/20 transition-all hover:scale-105">
+          <span>📢</span> Post an Announcement
+        </button>
+      {% else %}
+        <a href="{% url 'login' %}?next={% url 'notice_board' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all">
+          Log in to Post
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Search & Filter Controls -->
+<div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 mb-8 shadow-sm fade-in-up">
+  <form method="get" action="{% url 'notice_board' %}" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+    <!-- Search Query -->
+    <div class="sm:col-span-2">
+      <input type="text" name="q" value="{{ search_query }}" placeholder="Search by course code (e.g. CSC 301), title, or department..."
+             class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+    </div>
+
+    <!-- Level Filter -->
+    <div>
+      <select name="level" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <option value="">All Academic Levels</option>
+        <option value="100" {% if selected_level == '100' %}selected{% endif %}>100 Level</option>
+        <option value="200" {% if selected_level == '200' %}selected{% endif %}>200 Level</option>
+        <option value="300" {% if selected_level == '300' %}selected{% endif %}>300 Level</option>
+        <option value="400" {% if selected_level == '400' %}selected{% endif %}>400 Level</option>
+        <option value="500" {% if selected_level == '500' %}selected{% endif %}>500 Level</option>
+      </select>
+    </div>
+
+    <!-- Urgency Filter + Submit -->
+    <div class="flex gap-2">
+      <select name="urgency" class="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <option value="">All Urgencies</option>
+        <option value="normal" {% if selected_urgency == 'normal' %}selected{% endif %}>General</option>
+        <option value="venue_change" {% if selected_urgency == 'venue_change' %}selected{% endif %}>Venue/Time Shift 📍</option>
+        <option value="urgent" {% if selected_urgency == 'urgent' %}selected{% endif %}>Urgent Alert ⚠️</option>
+        <option value="exam_alert" {% if selected_urgency == 'exam_alert' %}selected{% endif %}>Exam/Test Alert 📝</option>
+      </select>
+      <button type="submit" class="px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-sm transition-colors">
+        Filter
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Notice Cards Stream -->
+<div class="space-y-4 mb-12">
+  {% for notice in notices %}
+  <div class="rounded-3xl border {% if notice.urgency == 'urgent' %}border-rose-300 dark:border-rose-900/60 bg-rose-50/30 dark:bg-rose-950/20{% elif notice.urgency == 'venue_change' %}border-amber-300 dark:border-amber-900/60 bg-amber-50/30 dark:bg-amber-950/20{% else %}border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900{% endif %} p-6 shadow-sm hover:shadow-md transition-shadow">
+    
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+      <div class="flex items-center gap-2 flex-wrap">
+        {% if notice.is_pinned %}
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white flex items-center gap-1 shadow-sm">
+            📌 Pinned
+          </span>
+        {% endif %}
+
+        {% if notice.course_code %}
+          <span class="px-3 py-1 rounded-xl text-xs font-bold bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+            {{ notice.course_code }}
+          </span>
+        {% endif %}
+
+        <span class="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          {% if notice.level == 0 %}All Levels{% else %}{{ notice.level }}L{% endif %}
+        </span>
+
+        <span class="text-xs text-slate-500 dark:text-slate-400">
+          {{ notice.department }}
+        </span>
+      </div>
+
+      <!-- Urgency Tag -->
+      <div>
+        {% if notice.urgency == 'urgent' %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+            ⚠️ Urgent Notice
+          </span>
+        {% elif notice.urgency == 'venue_change' %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+            📍 Venue / Time Shift
+          </span>
+        {% elif notice.urgency == 'exam_alert' %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+            📝 Test / Exam Alert
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+            General Update
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white mb-2">
+      {{ notice.title }}
+    </h2>
+
+    <!-- Body -->
+    <div class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed mb-4">
+      {{ notice.body }}
+    </div>
+
+    <!-- Meta / Author footer -->
+    <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+      <div class="flex items-center gap-2">
+        <span class="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold text-[10px]">
+          {{ notice.author.username|slice:":1"|upper }}
+        </span>
+        <span>Broadcasted by <strong>{{ notice.author.username }}</strong></span>
+      </div>
+      <span>{{ notice.created_at|date:"M j, Y · g:i A" }} ({{ notice.created_at|timesince }} ago)</span>
+    </div>
+  </div>
+  {% empty %}
+  <div class="rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 p-12 text-center">
+    <span class="text-5xl block mb-3">📢</span>
+    <h3 class="font-display font-bold text-lg text-slate-800 dark:text-white mb-1">No Announcements Match Your Filter</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+      Try resetting the filters or be the first Course Representative to broadcast an announcement to your colleagues.
+    </p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Modal: Post Notice Form -->
+<div id="notice-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">📢</span>
+        <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white">Broadcast an Announcement</h2>
+      </div>
+      <button onclick="document.getElementById('notice-modal').classList.add('hidden')"
+              class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center">
+        ✕
+      </button>
+    </div>
+
+    <form method="post" action="{% url 'create_notice' %}" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Notice Title *</label>
+        <input type="text" name="title" required placeholder="e.g. CSC 301 Lecture Shift to ETF 2 at 2:00 PM"
+               class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Course Code</label>
+          <input type="text" name="course_code" placeholder="e.g. CSC 301 or MAT 111"
+                 class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Department</label>
+          <input type="text" name="department" placeholder="e.g. Computer Science or SEET"
+                 class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Target Academic Level</label>
+          <select name="level" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="0">All Levels</option>
+            <option value="100">100 Level</option>
+            <option value="200">200 Level</option>
+            <option value="300">300 Level</option>
+            <option value="400">400 Level</option>
+            <option value="500">500 Level</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Urgency Category</label>
+          <select name="urgency" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option value="normal">General Notice</option>
+            <option value="venue_change">Venue / Time Shift 📍</option>
+            <option value="urgent">Urgent Announcement ⚠️</option>
+            <option value="exam_alert">Exam / Test Alert 📝</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">Announcement Body *</label>
+        <textarea name="body" required rows="4" placeholder="Enter the full announcement, meeting instructions, or rescheduled lecture details..."
+                  class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-3">
+        <button type="button" onclick="document.getElementById('notice-modal').classList.add('hidden')"
+                class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+          Cancel
+        </button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md transition-all">
+          Broadcast Now 📢
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
