@@ -129,51 +129,39 @@
   </div>
 
   <!-- Right Column: Pomodoro Focus Timer -->
-  <div class="w-full max-w-[500px] lg:max-w-none mx-auto relative overflow-hidden rounded-3xl border border-brand-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/90 p-6 sm:p-8 flex flex-col items-center justify-center fade-in-up" style="animation-delay: 0.1s">
+  <div class="w-full mx-auto relative overflow-hidden bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center fade-in-up" style="animation-delay: 0.1s">
     
     <div class="flex items-center gap-2 mb-1">
       <span class="text-xl">⏱️</span>
-      <h2 class="font-display text-2xl font-bold text-slate-900 dark:text-white">Pomodoro Timer</h2>
+      <h2 class="font-display text-2xl font-bold text-white">Pomodoro Timer</h2>
     </div>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 text-center">Focus blocks help you study deeper with zero burnout.</p>
+    <p class="text-xs text-slate-400 mb-4 text-center">Focus blocks help you study deeper with zero burnout.</p>
     
     <!-- Duration Presets -->
-    <div class="flex items-center gap-2 my-2">
-      <button type="button" onclick="setDuration(15)" data-mins="15"
-              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
-        15m
-      </button>
-      <button type="button" onclick="setDuration(25)" data-mins="25"
-              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-md shadow-brand-500/25 transition">
-        25m
-      </button>
-      <button type="button" onclick="setDuration(45)" data-mins="45"
-              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
-        45m
-      </button>
-      <button type="button" onclick="setDuration(60)" data-mins="60"
-              class="duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition">
-        60m
-      </button>
+    <div class="flex items-center gap-2 my-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+      <button type="button" onclick="setDuration(15)" data-mins="15" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">15m</button>
+      <button type="button" onclick="setDuration(25)" data-mins="25" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition">25m</button>
+      <button type="button" onclick="setDuration(45)" data-mins="45" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">45m</button>
+      <button type="button" onclick="setDuration(60)" data-mins="60" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">60m</button>
     </div>
 
     <!-- Timer Countdown Display -->
-    <div class="text-6xl sm:text-7xl font-display font-black text-brand-600 dark:text-brand-400 my-6 tracking-tight font-mono tabular-nums select-none" id="timer-display">
+    <div class="text-5xl font-mono font-bold tracking-wider my-4 text-white" id="timer-display">
         25:00
     </div>
 
     <!-- Timer Actions: Start / Pause / Reset -->
     <div class="flex w-full gap-3 mb-6">
-        <button id="start-btn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 hover:scale-[1.02]">
+        <button id="start-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl w-full transition-all flex items-center justify-center gap-2">
             <span id="timer-btn-icon">▶</span>
             <span id="timer-btn-text">Start Focus</span>
         </button>
-        <button id="reset-btn" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl font-semibold text-sm transition-all hidden flex items-center gap-1.5">
-            <span>🔄</span> <span>Reset</span>
+        <button id="reset-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-3 rounded-xl font-semibold text-sm transition-all hidden flex items-center justify-center gap-1.5">
+            <span>🔄</span>
         </button>
     </div>
 
-    <hr class="w-full border-slate-200 dark:border-slate-800 mb-6">
+    <hr class="w-full border-slate-800 mb-6">
 
     <!-- Log Focus Session Form -->
     <form method="post" action="{% url 'log_study' %}" id="log-form" class="w-full">
@@ -181,25 +169,24 @@
         <input type="hidden" name="duration" id="duration-input" value="25">
         <div class="text-left mb-4">
             <div class="flex items-center justify-between mb-2">
-                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Log Focus Time To:</label>
-                <a href="{% url 'course_create' %}" class="text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline flex items-center gap-1">
+                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Log Focus Time To:</label>
+                <a href="{% url 'course_create' %}" class="text-xs text-blue-400 font-semibold hover:underline flex items-center gap-1">
                     <span>+</span> Add Course
                 </a>
             </div>
-            <select name="course_id" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none text-slate-800 dark:text-slate-200">
+            <select name="course_id" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-200">
                 <option value="">🎯 General Study (No specific course)</option>
                 {% for c in courses %}
                 <option value="{{ c.id }}">📖 {{ c.name }}{% if c.code %} ({{ c.code }}){% endif %}</option>
                 {% endfor %}
             </select>
             {% if not courses %}
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 bg-brand-50/50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-brand-100 dark:border-slate-700/60">
+            <p class="text-xs text-slate-400 mt-2 bg-slate-800 p-2.5 rounded-xl border border-slate-700">
               💡 <strong>Only General Study is shown</strong> because you haven't added any courses yet.
-              <a href="{% url 'course_create' %}" class="text-brand-600 dark:text-brand-400 font-semibold hover:underline">Add your courses here</a> to track study hours per course.
             </p>
             {% endif %}
         </div>
-        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-emerald-500/25 flex items-center justify-center gap-2 hover:scale-[1.01]" id="log-btn">
+        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2" id="log-btn">
             <span>💾</span> <span>Save Session (25m)</span>
         </button>
     </form>
@@ -238,10 +225,10 @@
 
         // Update active chip styling
         document.querySelectorAll('.spotify-preset-btn').forEach(b => {
-            b.className = 'spotify-preset-btn px-3 py-2 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-brand-50 dark:hover:bg-slate-700';
+            b.className = 'spotify-preset-btn bg-slate-900 border-slate-800 text-slate-300 border hover:bg-slate-800 rounded-xl py-2 px-3 text-sm font-medium transition';
         });
         if (btn) {
-            btn.className = 'spotify-preset-btn active-spotify px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-brand-600 text-white shadow-sm';
+            btn.className = 'spotify-preset-btn bg-slate-800 border-slate-700 text-white border hover:bg-slate-700 rounded-xl py-2 px-3 text-sm font-medium transition';
         }
     }
 
@@ -292,8 +279,8 @@
         document.querySelectorAll('.duration-preset-btn').forEach(btn => {
             const isMatch = parseInt(btn.dataset.mins) === mins;
             btn.className = isMatch
-                ? 'duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-600 text-white shadow-md shadow-brand-500/25 transition'
-                : 'duration-preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-slate-700 transition';
+                ? 'duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition'
+                : 'duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition';
         });
         updateDisplay();
     }
@@ -303,8 +290,8 @@
             isRunning = true;
             timerBtnIcon.textContent = '⏸';
             timerBtnText.textContent = 'Pause Focus';
-            startBtn.classList.replace('bg-brand-600', 'bg-amber-500');
-            startBtn.classList.replace('hover:bg-brand-700', 'hover:bg-amber-600');
+            startBtn.classList.replace('bg-blue-600', 'bg-amber-600');
+            startBtn.classList.replace('hover:bg-blue-500', 'hover:bg-amber-500');
             resetBtn.classList.remove('hidden');
             
             timerId = setInterval(() => {
@@ -324,8 +311,8 @@
             clearInterval(timerId);
             timerBtnIcon.textContent = '▶';
             timerBtnText.textContent = 'Resume Focus';
-            startBtn.classList.replace('bg-amber-500', 'bg-brand-600');
-            startBtn.classList.replace('hover:bg-amber-600', 'hover:bg-brand-700');
+            startBtn.classList.replace('bg-amber-600', 'bg-blue-600');
+            startBtn.classList.replace('hover:bg-amber-500', 'hover:bg-blue-500');
         }
     });
 
@@ -336,8 +323,8 @@
         updateDisplay();
         timerBtnIcon.textContent = '▶';
         timerBtnText.textContent = 'Start Focus';
-        startBtn.classList.replace('bg-amber-500', 'bg-brand-600');
-        startBtn.classList.replace('hover:bg-amber-600', 'hover:bg-brand-700');
+        startBtn.classList.replace('bg-amber-600', 'bg-blue-600');
+        startBtn.classList.replace('hover:bg-amber-500', 'hover:bg-blue-500');
         resetBtn.classList.add('hidden');
     });
 </script>

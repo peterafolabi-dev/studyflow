@@ -12,11 +12,16 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 
 import os
 import sys
+import mimetypes
 from dotenv import load_dotenv
 load_dotenv()
 from pathlib import Path
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+
+# Ensure CSS and JS are correctly served even if OS mime.types is missing
+mimetypes.add_type("text/css", ".css", True)
+mimetypes.add_type("text/javascript", ".js", True)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
