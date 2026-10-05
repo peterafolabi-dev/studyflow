@@ -51,6 +51,15 @@ def dashboard(request):
     onboarding_percentage = int((onboarding_completed / 3) * 100)
     show_onboarding = onboarding_completed < 3
 
+    campus_light_spots = []
+    latest_notice = None
+    try:
+        from campus.models import StudySpot, CourseNotice
+        campus_light_spots = StudySpot.objects.filter(current_status__in=['gen_on', 'grid_on'])[:3]
+        latest_notice = CourseNotice.objects.first()
+    except Exception:
+        pass
+
     context = {
         'overdue': open_tasks.filter(due_date__lt=today),
         'due_soon': open_tasks.filter(due_date__gte=today, due_date__lte=week_end),
@@ -64,24 +73,28 @@ def dashboard(request):
         'onboarding_completed': onboarding_completed,
         'onboarding_percentage': onboarding_percentage,
         'show_onboarding': show_onboarding,
+        'campus_light_spots': campus_light_spots,
+        'latest_notice': latest_notice,
         'trending_resources': Resource.objects.filter(
             last_downloaded_at__gte=timezone.now() - timedelta(days=7)
         ).order_by('-download_count')[:5],
         'quick_links': [
-            ('Break Room', '🎮', 'break_room'),
+            ('Campus Hub', '🏛️', 'campus_hub'),
+            ('Where is Light?', '⚡', 'power_tracker'),
+            ('Notice Board', '📢', 'notice_board'),
             ('CBT Practice', '🎯', 'cbt_home'),
+            ('My Progress', '📈', 'progress'),
+            ('Break Room', '🎮', 'break_room'),
             ('Catalogue', '📚', 'catalogue'),
             ('My Library', '🔖', 'my_library'),
             ('Past Questions', '📝', 'past_questions'),
             ('Notes', '🗒️', 'notes_list'),
-            ('Theses & Papers', '🎓', 'theses_papers'),
-            ('Lecture Slides', '📊', 'lecture_slides'),
-            ('IBB Library', '🏛️', 'ibb_library'),
-            ('Postgraduate', '🧑\u200d🎓', 'postgraduate'),
+            ('Lodges & Buddies', '🏠', 'lodge_roommate_hub'),
+            ('SIWES Hub', '💼', 'siwes_hub'),
+            ('Marketplace', '🛍️', 'marketplace'),
             ('Timetable', '🗓️', 'timetable'),
             ('GPA Calculator', '🧮', 'gpa_calculator'),
             ('Study Groups', '💬', 'thread_list'),
-            ('Research', '🔬', 'research'),
         ],
     }
     return render(request, 'planner/dashboard.html', context)

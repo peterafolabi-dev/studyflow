@@ -39,6 +39,47 @@
     </div>
   {% endif %}
 
+  {% if campus_light_spots or latest_notice %}
+    <div class="mb-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm fade-in-up">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xl shrink-0">
+          🏛️
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-800 dark:text-white">Campus Live Updates</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {% if campus_light_spots %}
+              <span class="flex items-center gap-1">
+                <span>⚡ Power Active:</span>
+                {% for spot in campus_light_spots %}
+                  <strong class="text-amber-600 dark:text-amber-400">{{ spot.name }}</strong>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+              </span>
+            {% endif %}
+            {% if latest_notice %}
+              <span class="hidden sm:inline text-slate-300 dark:text-slate-700">&bull;</span>
+              <span class="truncate max-w-xs">
+                📢 <strong class="text-slate-700 dark:text-slate-300">{{ latest_notice.title }}</strong>
+              </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="{% url 'power_tracker' %}" class="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs transition">
+          Where is Light? ⚡
+        </a>
+        <a href="{% url 'campus_hub' %}" class="px-3.5 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs transition shadow-sm">
+          Campus Hub &rarr;
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
   <!-- BENTO BOX GRID LAYOUT -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
