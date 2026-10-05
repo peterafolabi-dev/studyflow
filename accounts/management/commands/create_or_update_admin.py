@@ -32,3 +32,16 @@ class Command(BaseCommand):
 
         action = 'created' if created else 'updated'
         self.stdout.write(self.style.SUCCESS(f'Admin user "{username}" {action}.'))
+
+        # Ensure Site domain is set correctly for OAuth callbacks
+        try:
+            from django.contrib.sites.models import Site
+            site = Site.objects.filter(id=1).first()
+            if site:
+                site.domain = 'studyflow-xt1x.onrender.com'
+                site.name = 'StudyFlow'
+                site.save()
+                self.stdout.write(self.style.SUCCESS(f'Site domain updated to: {site.domain}'))
+        except Exception as e:
+            self.stdout.write(self.style.WARNING(f'Could not update site domain: {e}'))
+

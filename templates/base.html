@@ -242,34 +242,72 @@
   </main>
 
   {% block footer %}
-  <footer class="mt-auto border-t border-slate-800 bg-slate-900 text-slate-400">
-    <div class="mx-auto max-w-6xl px-4 py-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm">
-      <div class="md:col-span-2">
-        <span class="font-display font-bold text-xl text-brand-300">StudyFlow</span>
-        <p class="mt-2 text-slate-500 max-w-sm">The ultimate student planner and resource library, built exclusively for FUT Minna students.</p>
+  <footer class="mt-auto border-t border-slate-800 bg-slate-900/90 text-slate-400">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
+      <div>
+        <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'login' %}{% endif %}" class="flex items-center gap-2">
+          <span class="text-xl">📚</span>
+          <span class="font-display font-bold text-xl text-white">StudyFlow</span>
+        </a>
+        <p class="mt-3 text-slate-400 text-xs leading-relaxed">
+          The ultimate student planner and resource library, built exclusively for FUT Minna students.
+        </p>
+        <div class="mt-4 flex items-center gap-2 text-xs text-emerald-400 font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Campus Hub Active</span>
+        </div>
       </div>
 
-      {% if user.is_authenticated %}
-        <nav class="flex flex-col gap-3" aria-label="Footer Library">
-          <h4 class="font-semibold text-slate-200 uppercase tracking-wider text-xs">Library</h4>
-          <a href="{% url 'catalogue' %}" class="hover:text-brand-400 transition-colors">Catalogue</a>
-          <a href="{% url 'ibb_library' %}" class="hover:text-brand-400 transition-colors">IBB Library</a>
-          <a href="{% url 'my_library' %}" class="hover:text-brand-400 transition-colors">My Library</a>
-        </nav>
-        <nav class="flex flex-col gap-3" aria-label="Footer Tools">
-          <h4 class="font-semibold text-slate-200 uppercase tracking-wider text-xs">Tools</h4>
-          <a href="{% url 'thread_list' %}" class="hover:text-brand-400 transition-colors">Study Groups</a>
-          <a href="{% url 'resource_upload' %}" class="hover:text-brand-400 transition-colors">Upload a resource</a>
-          <a href="{% url 'gpa_calculator' %}" class="hover:text-brand-400 transition-colors">GPA Calculator</a>
-        </nav>
-      {% endif %}
+      <nav class="flex flex-col gap-2.5" aria-label="Footer Library">
+        <h4 class="font-semibold text-slate-200 uppercase tracking-wider text-xs mb-1">Library & Resources</h4>
+        <a href="{% url 'catalogue' %}" class="hover:text-white transition-colors">Catalogue</a>
+        <a href="{% url 'ibb_library' %}" class="hover:text-white transition-colors">IBB Library</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'my_library' %}" class="hover:text-white transition-colors">My Library</a>
+          <a href="{% url 'resource_upload' %}" class="hover:text-white transition-colors">Upload Resource</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">Past Questions</a>
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">Upload Notes</a>
+        {% endif %}
+      </nav>
+
+      <nav class="flex flex-col gap-2.5" aria-label="Footer Tools">
+        <h4 class="font-semibold text-slate-200 uppercase tracking-wider text-xs mb-1">Academic Tools</h4>
+        {% if user.is_authenticated %}
+          <a href="{% url 'study_room' %}" class="hover:text-white transition-colors">Lo-Fi Study Room</a>
+          <a href="{% url 'gpa_calculator' %}" class="hover:text-white transition-colors">GPA Calculator</a>
+          <a href="{% url 'timetable' %}" class="hover:text-white transition-colors">Timetable</a>
+          <a href="{% url 'flashcards' %}" class="hover:text-white transition-colors">Flashcards</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">Lo-Fi Study Room</a>
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">GPA Calculator</a>
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">Timetable Planner</a>
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">Spaced Repetition</a>
+        {% endif %}
+      </nav>
+
+      <nav class="flex flex-col gap-2.5" aria-label="Footer Community">
+        <h4 class="font-semibold text-slate-200 uppercase tracking-wider text-xs mb-1">Community & Support</h4>
+        {% if user.is_authenticated %}
+          <a href="{% url 'thread_list' %}" class="hover:text-white transition-colors">Study Groups</a>
+          <a href="{% url 'find_buddies' %}" class="hover:text-white transition-colors">Find Study Buddies</a>
+          <a href="{% url 'profile' %}" class="hover:text-white transition-colors">My Profile</a>
+          <a href="{% url 'edit_profile' %}" class="hover:text-white transition-colors">Edit Profile</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">Sign In</a>
+          <a href="{% url 'signup' %}" class="hover:text-white transition-colors">Create Free Account</a>
+          <a href="{% url 'login' %}" class="hover:text-white transition-colors">Study Groups</a>
+        {% endif %}
+      </nav>
     </div>
-    <div class="border-t border-slate-800 bg-slate-950/50">
-      <div class="mx-auto max-w-6xl px-4 py-4 flex flex-col sm:flex-row justify-between items-center text-xs">
-        <span>&copy; {% now "Y" %} StudyFlow. All rights reserved.</span>
-        <div class="flex gap-4 mt-2 sm:mt-0">
-          <a href="#" class="hover:text-slate-200">Privacy Policy</a>
-          <a href="#" class="hover:text-slate-200">Terms of Service</a>
+
+    <div class="border-t border-slate-800 bg-slate-950/80">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500">
+        <span>&copy; {% now "Y" %} StudyFlow. Built for FUT Minna students.</span>
+        <div class="flex gap-6 mt-3 sm:mt-0">
+          <a href="#" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+          <a href="#" class="hover:text-slate-300 transition-colors">Terms of Service</a>
+          <a href="#" class="hover:text-slate-300 transition-colors">Campus Support</a>
         </div>
       </div>
     </div>

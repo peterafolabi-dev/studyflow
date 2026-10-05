@@ -226,7 +226,12 @@ ACCOUNT_LOGOUT_REDIRECT_URL = 'login'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 
+# Automatically sign up and link Google OAuth accounts with matching verified emails
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 # Fix for Render HTTPS proxy (prevents OAuth callback 500 errors)
@@ -255,6 +260,5 @@ LOGGING = {
     },
 }
 
-ACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.StudyFlowSocialAccountAdapter'
 
-SOCIALACCOUNT_ADAPTER = 'accounts.adapters.DebugSocialAccountAdapter'
