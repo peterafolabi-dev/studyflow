@@ -156,7 +156,7 @@
               </div>
               <div class="px-1.5 py-1 space-y-0.5">
                 <a href="{% url 'profile' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200">My Profile</a>
-                <a href="{% url 'settings' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200">Settings</a>
+                <a href="{% url 'edit_profile' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200">Settings</a>
                 <form method="post" action="{% url 'logout' %}">
                   {% csrf_token %}
                   <button type="submit" class="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 mt-1">Log out</button>
