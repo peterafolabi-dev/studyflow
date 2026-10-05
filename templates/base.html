@@ -303,33 +303,36 @@
   </main>
 
   {% block footer %}
-  <footer class="mt-12 bg-brand-50 dark:bg-slate-900/50 border-t border-brand-100 dark:border-slate-800">
-    <div class="mx-auto max-w-6xl px-4 py-8 flex flex-col md:flex-row justify-between gap-8 text-sm text-slate-500 dark:text-slate-400">
-      <div class="max-w-xs">
-        <span class="font-display font-bold text-xl text-brand-700 dark:text-brand-300">StudyFlow</span>
-        <p class="mt-2">The ultimate student planner and resource library, built exclusively for FUT Minna students.</p>
+  <footer class="mt-auto border-t border-slate-800 bg-slate-900 text-slate-400">
+    <div class="mx-auto max-w-6xl px-4 py-8 grid grid-cols-1 md:grid-cols-4 gap-8 text-sm">
+      <div class="md:col-span-2">
+        <span class="font-display font-bold text-xl text-brand-300">StudyFlow</span>
+        <p class="mt-2 text-slate-500 max-w-sm">The ultimate student planner and resource library, built exclusively for FUT Minna students.</p>
       </div>
 
       {% if user.is_authenticated %}
-        <div class="flex gap-12">
-          <nav class="flex flex-col gap-2" aria-label="Footer Library">
-            <h4 class="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-xs">Library</h4>
-            <a href="{% url 'catalogue' %}" class="hover:text-brand-600 dark:hover:text-brand-300">Catalogue</a>
-            <a href="{% url 'ibb_library' %}" class="hover:text-brand-600 dark:hover:text-brand-300">IBB Library</a>
-            <a href="{% url 'my_library' %}" class="hover:text-brand-600 dark:hover:text-brand-300">My Library</a>
-          </nav>
-          <nav class="flex flex-col gap-2" aria-label="Footer Tools">
-            <h4 class="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-xs">Tools</h4>
-            <a href="{% url 'thread_list' %}" class="hover:text-brand-600 dark:hover:text-brand-300">Study Groups</a>
-            <a href="{% url 'resource_upload' %}" class="hover:text-brand-600 dark:hover:text-brand-300">Upload a resource</a>
-            <a href="{% url 'gpa_calculator' %}" class="hover:text-brand-600 dark:hover:text-brand-300">GPA Calculator</a>
-          </nav>
-        </div>
+        <nav class="flex flex-col gap-3" aria-label="Footer Library">
+          <h4 class="font-semibold text-slate-200 uppercase tracking-wider text-xs">Library</h4>
+          <a href="{% url 'catalogue' %}" class="hover:text-brand-400 transition-colors">Catalogue</a>
+          <a href="{% url 'ibb_library' %}" class="hover:text-brand-400 transition-colors">IBB Library</a>
+          <a href="{% url 'my_library' %}" class="hover:text-brand-400 transition-colors">My Library</a>
+        </nav>
+        <nav class="flex flex-col gap-3" aria-label="Footer Tools">
+          <h4 class="font-semibold text-slate-200 uppercase tracking-wider text-xs">Tools</h4>
+          <a href="{% url 'thread_list' %}" class="hover:text-brand-400 transition-colors">Study Groups</a>
+          <a href="{% url 'resource_upload' %}" class="hover:text-brand-400 transition-colors">Upload a resource</a>
+          <a href="{% url 'gpa_calculator' %}" class="hover:text-brand-400 transition-colors">GPA Calculator</a>
+        </nav>
       {% endif %}
     </div>
-    <div class="border-t border-brand-100 dark:border-slate-800 mx-auto max-w-6xl px-4 py-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400">
-      <span>&copy; {% now "Y" %} StudyFlow. All rights reserved.</span>
-      <span class="mt-2 sm:mt-0">Designed for excellence.</span>
+    <div class="border-t border-slate-800 bg-slate-950/50">
+      <div class="mx-auto max-w-6xl px-4 py-4 flex flex-col sm:flex-row justify-between items-center text-xs">
+        <span>&copy; {% now "Y" %} StudyFlow. All rights reserved.</span>
+        <div class="flex gap-4 mt-2 sm:mt-0">
+          <a href="#" class="hover:text-slate-200">Privacy Policy</a>
+          <a href="#" class="hover:text-slate-200">Terms of Service</a>
+        </div>
+      </div>
     </div>
   </footer>
   {% endblock %}
