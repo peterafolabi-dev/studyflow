@@ -31,8 +31,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-insecure-key-change-me')
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()] or (['*'] if DEBUG else [])
-CSRF_TRUSTED_ORIGINS = [f'https://{h.strip()}' for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
-CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if h != '*']
+_csrf_hosts = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
+if not _csrf_hosts:
+    _csrf_hosts = ['studyflow-xt1x.onrender.com'] # Fallback for Render
+CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in _csrf_hosts if h != '*']
 
 
 # Application definition
