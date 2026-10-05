@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% block title %}Off-Campus Lodges & Roommates · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-8 fade-in-up">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 mb-3">
+        <span>🏠</span>
+        <span>FUT Minna Off-Campus Directory</span>
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+        Lodges & Roommate Finder
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1 max-w-2xl text-sm sm:text-base">
+        Authentic student reviews on water, light, landlord attitude, and security around GK Gate, Bosso, and F-Layout, plus verified roommate matching.
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-wrap items-center gap-2">
+      {% if user.is_authenticated %}
+        <button onclick="document.getElementById('review-modal').classList.remove('hidden')"
+                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs sm:text-sm transition-all shadow-sm">
+          <span>✍️</span> Review a Lodge
+        </button>
+        <button onclick="document.getElementById('roommate-modal').classList.remove('hidden')"
+                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm transition-all shadow-md shadow-brand-500/20">
+          <span>🤝</span> {% if user_roommate_profile %}Edit My Profile{% else %}Find a Roommate{% endif %}
+        </button>
+      {% else %}
+        <a href="{% url 'login' %}?next={% url 'lodge_roommate_hub' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs sm:text-sm">
+          Log in to Post & Match
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Tabs Switcher -->
+<div class="flex border-b border-slate-200 dark:border-slate-800 mb-8 fade-in-up">
+  <button id="tab-btn-lodges" onclick="switchTab('lodges')"
+          class="px-6 py-3 font-bold text-sm border-b-2 border-brand-600 text-brand-600 dark:text-brand-400 flex items-center gap-2 transition-all">
+    <span>🏠</span> Lodge Directory & Reviews ({{ lodges|length }})
+  </button>
+  <button id="tab-btn-roommates" onclick="switchTab('roommates')"
+          class="px-6 py-3 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all">
+    <span>🤝</span> Roommate Seekers ({{ roommates|length }})
+  </button>
+</div>
+
+<!-- TAB 1: LODGES -->
+<div id="tab-content-lodges">
+  <!-- Area Filter Pills -->
+  <div class="flex flex-wrap items-center gap-2 mb-6">
+    <a href="{% url 'lodge_roommate_hub' %}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if not selected_area %}bg-brand-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      All Areas
+    </a>
+    <a href="{% url 'lodge_roommate_hub' %}?area=GK+Gate" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_area == 'GK Gate' %}bg-brand-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      GK Gate Area
+    </a>
+    <a href="{% url 'lodge_roommate_hub' %}?area=Bosso" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_area == 'Bosso' %}bg-brand-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      Bosso / Low-Cost
+    </a>
+    <a href="{% url 'lodge_roommate_hub' %}?area=F-Layout" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_area == 'F-Layout' %}bg-brand-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      F-Layout / Mobil
+    </a>
+    <a href="{% url 'lodge_roommate_hub' %}?area=Barkin+Sale" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_area == 'Barkin Sale' %}bg-brand-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      Barkin Sale
+    </a>
+    <a href="{% url 'lodge_roommate_hub' %}?area=Tunga" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_area == 'Tunga' %}bg-brand-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      Tunga
+    </a>
+  </div>
+
+  <!-- Lodge Reviews Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    {% for lodge in lodges %}
+    <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all">
+      <div>
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <div>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+              {{ lodge.get_area_display }}
+            </span>
+            <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mt-1">
+              {{ lodge.lodge_name }}
+            </h2>
+          </div>
+          <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold text-sm shrink-0">
+            ★ {{ lodge.average_rating }}
+          </div>
+        </div>
+
+        {% if lodge.rent_estimate %}
+          <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-4 flex items-center gap-1">
+            <span>🏷️ Rent:</span> {{ lodge.rent_estimate }}
+          </div>
+        {% endif %}
+
+        <!-- Metric breakdown bars -->
+        <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl">
+          <div>💧 Water: <strong class="text-slate-900 dark:text-white">{{ lodge.water_rating }}/5</strong></div>
+          <div>⚡ Power: <strong class="text-slate-900 dark:text-white">{{ lodge.power_rating }}/5</strong></div>
+          <div>🛡️ Security: <strong class="text-slate-900 dark:text-white">{{ lodge.security_rating }}/5</strong></div>
+          <div>🔑 Landlord: <strong class="text-slate-900 dark:text-white">{{ lodge.landlord_rating }}/5</strong></div>
+        </div>
+
+        <!-- Review Text -->
+        <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed italic mb-4">
+          "{{ lodge.review_text }}"
+        </p>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+        <span>Reviewed by <strong>{{ lodge.reviewer.username }}</strong></span>
+        <span>{{ lodge.created_at|date:"M Y" }}</span>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full py-12 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+      <span class="text-4xl block mb-2">🏠</span>
+      <h3 class="font-bold text-slate-800 dark:text-white">No Lodge Reviews Yet</h3>
+      <p class="text-xs text-slate-500 mt-1">Be the first to share your experience living off-campus!</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- TAB 2: ROOMMATES -->
+<div id="tab-content-roommates" class="hidden">
+  {% if user_roommate_profile %}
+    <div class="mb-6 p-4 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🤝</span>
+        <div>
+          <h4 class="font-bold text-sm text-slate-900 dark:text-white">Your Roommate Search is Active</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Other students can view your budget, habits, and contact you via WhatsApp.</p>
+        </div>
+      </div>
+      <button onclick="document.getElementById('roommate-modal').classList.remove('hidden')"
+              class="px-3.5 py-1.5 rounded-xl bg-brand-600 text-white font-bold text-xs hover:bg-brand-700 transition">
+        Edit Profile
+      </button>
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    {% for r in roommates %}
+    <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all">
+      <div>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+            {{ r.user.username|slice:":1"|upper }}
+          </div>
+          <div>
+            <h2 class="font-display font-bold text-base text-slate-900 dark:text-white">{{ r.user.username }}</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ r.department }} &middot; {{ r.level }} Level</p>
+          </div>
+        </div>
+
+        <div class="space-y-2 mb-4 text-xs">
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <span class="text-slate-500">💰 Budget Target:</span>
+            <strong class="text-brand-600 dark:text-brand-400 font-bold">{{ r.budget_range }}</strong>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <span class="text-slate-500">📍 Preferred Area:</span>
+            <span class="font-semibold text-slate-800 dark:text-slate-200">{{ r.preferred_area }}</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <span class="text-slate-500">🧹 Cleanliness:</span>
+            <span class="font-semibold text-slate-800 dark:text-slate-200">{{ r.cleanliness }}</span>
+          </div>
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+            <span class="text-slate-500">🌙 Sleep / Study:</span>
+            <span class="font-semibold text-slate-800 dark:text-slate-200">{{ r.sleep_habit }}</span>
+          </div>
+        </div>
+
+        {% if r.bio %}
+          <p class="text-xs text-slate-600 dark:text-slate-400 italic mb-4 leading-relaxed">
+            "{{ r.bio }}"
+          </p>
+        {% endif %}
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+        <a href="https://wa.me/{{ r.whatsapp_number }}?text=Hi%20{{ r.user.username }},%20I%20saw%20your%20roommate%20profile%20on%20StudyFlow!%20Are%20you%20still%20looking%20for%20a%20lodge%20partner?"
+           target="_blank" rel="noopener noreferrer"
+           class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors">
+          <span>💬</span> Connect on WhatsApp
+        </a>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full py-12 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+      <span class="text-4xl block mb-2">🤝</span>
+      <h3 class="font-bold text-slate-800 dark:text-white">No Roommate Profiles Yet</h3>
+      <p class="text-xs text-slate-500 mt-1">Looking for someone to split rent with? Create your roommate profile now!</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal 1: Write Lodge Review -->
+<div id="review-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white">Review an Off-Campus Lodge</h2>
+      <button onclick="document.getElementById('review-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">✕</button>
+    </div>
+
+    <form method="post" action="{% url 'add_lodge_review' %}" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Lodge / Hostel Name *</label>
+        <input type="text" name="lodge_name" required placeholder="e.g. Royal Villa Lodge or Peace Haven" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Area Location *</label>
+          <select name="area" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+            <option value="GK Gate">Gidan Kwano Gate Area</option>
+            <option value="Bosso">Bosso / Low-Cost</option>
+            <option value="F-Layout">F-Layout / Mobil</option>
+            <option value="Barkin Sale">Barkin Sale</option>
+            <option value="Tunga">Tunga / Minna Town</option>
+            <option value="Other">Other Area</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Estimated Rent *</label>
+          <input type="text" name="rent_estimate" required placeholder="e.g. ₦120,000 - ₦160,000 / yr" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">💧 Water</label>
+          <select name="water_rating" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2">
+            <option value="5">5 ★</option><option value="4" selected>4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">⚡ Power</label>
+          <select name="power_rating" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2">
+            <option value="5">5 ★</option><option value="4">4 ★</option><option value="3" selected>3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">🛡️ Security</label>
+          <select name="security_rating" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2">
+            <option value="5">5 ★</option><option value="4" selected>4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">🔑 Landlord</label>
+          <select name="landlord_rating" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-2">
+            <option value="5">5 ★</option><option value="4" selected>4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Review & Experience *</label>
+        <textarea name="review_text" required rows="3" placeholder="How is the security gate? Does the well or borehole dry up during dry season? Landlord friendliness?" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('review-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md">Submit Review</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal 2: Roommate Profile Form -->
+<div id="roommate-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white">Roommate Search Profile</h2>
+      <button onclick="document.getElementById('roommate-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">✕</button>
+    </div>
+
+    <form method="post" action="{% url 'update_roommate_profile' %}" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Department *</label>
+          <input type="text" name="department" value="{{ user_roommate_profile.department|default:'' }}" required placeholder="e.g. Mechanical Eng." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Level *</label>
+          <select name="level" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+            <option value="100" {% if user_roommate_profile.level == 100 %}selected{% endif %}>100 Level</option>
+            <option value="200" {% if user_roommate_profile.level == 200 or not user_roommate_profile %}selected{% endif %}>200 Level</option>
+            <option value="300" {% if user_roommate_profile.level == 300 %}selected{% endif %}>300 Level</option>
+            <option value="400" {% if user_roommate_profile.level == 400 %}selected{% endif %}>400 Level</option>
+            <option value="500" {% if user_roommate_profile.level == 500 %}selected{% endif %}>500 Level</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Rent Budget Share *</label>
+          <input type="text" name="budget_range" value="{{ user_roommate_profile.budget_range|default:'' }}" required placeholder="e.g. ₦60k - ₦80k share" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Preferred Location</label>
+          <input type="text" name="preferred_area" value="{{ user_roommate_profile.preferred_area|default:'GK Gate' }}" placeholder="e.g. GK Gate or Bosso" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Cleanliness</label>
+          <input type="text" name="cleanliness" value="{{ user_roommate_profile.cleanliness|default:'Very Neat' }}" placeholder="Very Neat" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Sleep Habit</label>
+          <input type="text" name="sleep_habit" value="{{ user_roommate_profile.sleep_habit|default:'Night Owl' }}" placeholder="Night Owl" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Study Habit</label>
+          <input type="text" name="study_habit" value="{{ user_roommate_profile.study_habit|default:'Quiet / Serious' }}" placeholder="Quiet / Serious" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">WhatsApp Number with Country Code *</label>
+        <input type="text" name="whatsapp_number" value="{{ user_roommate_profile.whatsapp_number|default:'' }}" required placeholder="e.g. 2348012345678" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Short Bio</label>
+        <textarea name="bio" rows="2" placeholder="Tell potential roommates about your cooking habits, religious preferences, or personality..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-500">{{ user_roommate_profile.bio|default:'' }}</textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('roommate-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-md">Save Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function switchTab(tab) {
+  const lodgesContent = document.getElementById('tab-content-lodges');
+  const roommatesContent = document.getElementById('tab-content-roommates');
+  const lodgesBtn = document.getElementById('tab-btn-lodges');
+  const roommatesBtn = document.getElementById('tab-btn-roommates');
+
+  if (tab === 'lodges') {
+    lodgesContent.classList.remove('hidden');
+    roommatesContent.classList.add('hidden');
+    lodgesBtn.classList.add('border-brand-600', 'text-brand-600', 'dark:text-brand-400');
+    lodgesBtn.classList.remove('border-transparent', 'text-slate-500');
+    roommatesBtn.classList.add('border-transparent', 'text-slate-500');
+    roommatesBtn.classList.remove('border-brand-600', 'text-brand-600', 'dark:text-brand-400');
+  } else {
+    lodgesContent.classList.add('hidden');
+    roommatesContent.classList.remove('hidden');
+    roommatesBtn.classList.add('border-brand-600', 'text-brand-600', 'dark:text-brand-400');
+    roommatesBtn.classList.remove('border-transparent', 'text-slate-500');
+    lodgesBtn.classList.add('border-transparent', 'text-slate-500');
+    lodgesBtn.classList.remove('border-brand-600', 'text-brand-600', 'dark:text-brand-400');
+  }
+}
+</script>
+{% endblock %}

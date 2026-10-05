@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% block title %}Campus Marketplace · Buy, Sell & Student Essentials · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-8 fade-in-up">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 mb-3">
+        <span>🛍️</span>
+        <span>Peer-to-Peer Student Exchange</span>
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+        Campus Marketplace
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1 max-w-2xl text-sm sm:text-base">
+        Buy or sell engineering drawing boards, T-squares, lab coats, scientific calculators, textbooks, and hostel fans safely with fellow FUT Minna students.
+      </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      {% if user.is_authenticated %}
+        <a href="{% url 'marketplace' %}?mine=1" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs sm:text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+          My Listings ({{ my_items_count }})
+        </a>
+        <button onclick="document.getElementById('listing-modal').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-purple-500/20 transition-all hover:scale-105">
+          <span>+</span> Post an Item
+        </button>
+      {% else %}
+        <a href="{% url 'login' %}?next={% url 'marketplace' %}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all">
+          Log in to Post
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Category Filter Pills & Search -->
+<div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 mb-8 shadow-sm fade-in-up">
+  <!-- Search -->
+  <form method="get" action="{% url 'marketplace' %}" class="flex flex-col sm:flex-row gap-3 mb-4">
+    {% if selected_category %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Search drawing boards, Casio calculators, textbooks, lab coats..."
+           class="flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none">
+    <button type="submit" class="px-6 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white font-bold text-sm transition-colors">
+      Search
+    </button>
+  </form>
+
+  <!-- Categories -->
+  <div class="flex flex-wrap items-center gap-2">
+    <a href="{% url 'marketplace' %}" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if not selected_category and not show_mine %}bg-purple-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      All Items
+    </a>
+    <a href="{% url 'marketplace' %}?category=textbook" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_category == 'textbook' %}bg-purple-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      📚 Textbooks
+    </a>
+    <a href="{% url 'marketplace' %}?category=drawing_board" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_category == 'drawing_board' %}bg-purple-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      📐 Drawing Boards
+    </a>
+    <a href="{% url 'marketplace' %}?category=lab_coat" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_category == 'lab_coat' %}bg-purple-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      🥼 Lab Coats
+    </a>
+    <a href="{% url 'marketplace' %}?category=calculator" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_category == 'calculator' %}bg-purple-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      🧮 Calculators
+    </a>
+    <a href="{% url 'marketplace' %}?category=gadget" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_category == 'gadget' %}bg-purple-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      ⚡ Fans & Lamps
+    </a>
+    <a href="{% url 'marketplace' %}?category=other" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all {% if selected_category == 'other' %}bg-purple-600 text-white shadow-sm{% else %}bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700{% endif %}">
+      📦 Other
+    </a>
+  </div>
+</div>
+
+<!-- Marketplace Items Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+  {% for item in items %}
+  <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+    
+    {% if item.is_sold %}
+      <div class="absolute top-4 right-4 z-10 px-3 py-1 rounded-full bg-rose-500 text-white font-extrabold text-xs shadow-md uppercase">
+        SOLD
+      </div>
+    {% endif %}
+
+    <div>
+      <div class="flex items-center justify-between gap-2 mb-3">
+        <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+          {{ item.get_category_display }}
+        </span>
+        <span class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+          {{ item.get_condition_display }}
+        </span>
+      </div>
+
+      <!-- Price -->
+      <div class="mb-2">
+        {% if item.is_free %}
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+            🎁 FREE / JUNIOR GIVEAWAY
+          </span>
+        {% else %}
+          <div class="font-display font-extrabold text-2xl text-slate-900 dark:text-white">
+            ₦{{ item.price|floatformat:0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Title & Description -->
+      <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mb-2 leading-snug">
+        {{ item.title }}
+      </h2>
+      <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-3 mb-6">
+        {{ item.description|default:"No extra description provided." }}
+      </p>
+    </div>
+
+    <div>
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-400 mb-3">
+        <span>Seller: <strong>{{ item.seller.username }}</strong></span>
+        <span>{{ item.created_at|timesince }} ago</span>
+      </div>
+
+      {% if user == item.seller %}
+        <!-- Seller management -->
+        <form method="post" action="{% url 'toggle_item_sold' item.id %}" class="w-full">
+          {% csrf_token %}
+          <button type="submit" class="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold transition">
+            {% if item.is_sold %}Relist as Available 🔄{% else %}Mark as Sold ✓{% endif %}
+          </button>
+        </form>
+      {% else %}
+        {% if not item.is_sold %}
+          <a href="https://wa.me/{{ item.whatsapp_number }}?text=Hi%20{{ item.seller.username }},%20I'm%20interested%20in%20your%20listing%20for%20'{{ item.title|urlencode }}'%20on%20StudyFlow%20(₦{{ item.price|floatformat:0 }}).%20Is%20it%20still%20available?"
+             target="_blank" rel="noopener noreferrer"
+             class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors">
+            <span>💬</span> Buy via WhatsApp
+          </a>
+        {% else %}
+          <div class="py-2 text-center text-xs text-slate-400 font-medium">This item has been purchased</div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-span-full py-12 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+    <span class="text-5xl block mb-3">🛍️</span>
+    <h3 class="font-display font-bold text-lg text-slate-800 dark:text-white mb-1">No Marketplace Listings Found</h3>
+    <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">
+      Have an old engineering drawing board, lab coat, or textbooks you no longer need? Turn them into cash or give them to a junior!
+    </p>
+    {% if user.is_authenticated %}
+      <button onclick="document.getElementById('listing-modal').classList.remove('hidden')"
+              class="px-5 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition">
+        + Post First Listing
+      </button>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Modal: Post Item Listing -->
+<div id="listing-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white">List an Item on Campus Marketplace</h2>
+      <button onclick="document.getElementById('listing-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">✕</button>
+    </div>
+
+    <form method="post" action="{% url 'create_listing' %}" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Item Title *</label>
+        <input type="text" name="title" required placeholder="e.g. A1 Wooden Engineering Drawing Board with T-Square" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500">
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Category *</label>
+          <select name="category" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500">
+            <option value="drawing_board">Engineering Drawing Board / T-Square 📐</option>
+            <option value="textbook">Textbook / Course Material 📚</option>
+            <option value="lab_coat">Lab Coat / Dissection Kit 🥼</option>
+            <option value="calculator">Scientific Calculator 🧮</option>
+            <option value="gadget">Hostel Fan / Lamp ⚡</option>
+            <option value="other">Other Item 📦</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Condition *</label>
+          <select name="condition" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500">
+            <option value="good" selected>Good Condition</option>
+            <option value="like_new">Like New</option>
+            <option value="new">Brand New</option>
+            <option value="fair">Fair / Functional</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Price (₦)</label>
+          <input type="number" step="100" name="price" placeholder="4500" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500">
+        </div>
+        <div class="pt-5">
+          <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-emerald-600 dark:text-emerald-400">
+            <input type="checkbox" name="is_free" class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500">
+            <span>🎁 Give away for FREE</span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">WhatsApp Number with Country Code *</label>
+        <input type="text" name="whatsapp_number" required placeholder="e.g. 2348012345678" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Description & Pickup Location</label>
+        <textarea name="description" rows="3" placeholder="Explain the condition, brand, included accessories, and preferred meetup spot (e.g. ETF 2 or Bosso Campus Gate)..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('listing-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow-md">Publish Listing</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

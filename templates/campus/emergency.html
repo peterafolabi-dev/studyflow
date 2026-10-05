@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Emergency & Helplines · FUT Minna Campus Safety · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-8 fade-in-up">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 mb-3">
+        <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+        <span>24/7 Rapid Response & Health Directory</span>
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+        <span>🚨</span> Campus Emergency Directory
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1 max-w-2xl text-sm sm:text-base">
+        Direct tap-to-call numbers for FUT Minna University Clinics, Main Gate & Bosso security patrol, Student Union (SUG) Welfare, and Minna Fire Response.
+      </p>
+    </div>
+    <a href="{% url 'campus_hub' %}" class="text-xs sm:text-sm font-semibold text-brand-600 dark:text-brand-400 hover:underline">
+      &larr; Back to Campus Hub
+    </a>
+  </div>
+</div>
+
+<!-- Emergency Speed-Dial Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 fade-in-up">
+  {% for contact in emergencies %}
+  <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all">
+    <div>
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <span class="text-3xl">
+          {% if contact.category == 'clinic' %}🚑
+          {% elif contact.category == 'security' %}🛡️
+          {% elif contact.category == 'sug' %}🎓
+          {% elif contact.category == 'fire' %}🚒
+          {% else %}🧠{% endif %}
+        </span>
+        <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+          {{ contact.campus }}
+        </span>
+      </div>
+
+      <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mb-1">
+        {{ contact.title }}
+      </h2>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+        {{ contact.description }}
+      </p>
+
+      <div class="font-mono font-extrabold text-xl text-slate-900 dark:text-white tracking-wider mb-6">
+        {{ contact.phone_number }}
+      </div>
+    </div>
+
+    <div>
+      <a href="tel:{{ contact.phone_number }}"
+         class="w-full py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-rose-600/25 transition-all">
+        <span>📞</span> Tap to Call Now
+      </a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Safety Protocol Advice -->
+<div class="rounded-3xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-6 sm:p-8 fade-in-up">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="text-2xl">⚠️</span>
+    <h2 class="font-display font-bold text-lg text-amber-900 dark:text-amber-300">Campus Safety Protocols</h2>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+    <div class="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/60 border border-amber-200/50 dark:border-slate-800">
+      <h3 class="font-bold text-slate-900 dark:text-white mb-1">🏥 Medical Emergency</h3>
+      <p>For urgent clinic ambulance dispatch, call the GK Clinic line first. State your exact hall, block, or lecture theatre clearly.</p>
+    </div>
+    <div class="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/60 border border-amber-200/50 dark:border-slate-800">
+      <h3 class="font-bold text-slate-900 dark:text-white mb-1">🛡️ Night Travel & Security</h3>
+      <p>Avoid walking alone from GK Gate to off-campus lodges past 10:00 PM. If you suspect suspicious activity, notify the Main Gate Security immediately.</p>
+    </div>
+    <div class="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/60 border border-amber-200/50 dark:border-slate-800">
+      <h3 class="font-bold text-slate-900 dark:text-white mb-1">🎓 Student Welfare Escalation</h3>
+      <p>For student rights disputes or hostel harassment, contact the SUG Welfare Director or the Dean of Student Affairs unit.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

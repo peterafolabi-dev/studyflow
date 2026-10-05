@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% block title %}SIWES & IT Placement Hub · StudyFlow{% endblock %}
+{% block content %}
+<div class="mb-8 fade-in-up">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-3">
+        <span>💼</span>
+        <span>Industrial Training & Career Readiness</span>
+      </div>
+      <h1 class="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+        SIWES & IT Placement Hub
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-1 max-w-2xl text-sm sm:text-base">
+        Browse top verified companies taking 300L/400L FUT Minna students for SIWES across Nigeria, and maintain your official daily logbook journal.
+      </p>
+    </div>
+
+    {% if user.is_authenticated %}
+      <button onclick="document.getElementById('log-modal').classList.remove('hidden')"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/20 transition-all hover:scale-105">
+        <span>✍️</span> Record Logbook Entry
+      </button>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Switcher Tabs -->
+<div class="flex border-b border-slate-200 dark:border-slate-800 mb-8 fade-in-up">
+  <button id="siwes-tab-companies" onclick="switchSiwesTab('companies')"
+          class="px-6 py-3 font-bold text-sm border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 flex items-center gap-2 transition-all">
+    <span>🏢</span> Placement Directory ({{ companies|length }})
+  </button>
+  <button id="siwes-tab-logbook" onclick="switchSiwesTab('logbook')"
+          class="px-6 py-3 font-bold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center gap-2 transition-all">
+    <span>📓</span> My Digital Logbook ({% if user.is_authenticated %}{{ user_logs|length }}{% else %}0{% endif %})
+  </button>
+</div>
+
+<!-- TAB 1: COMPANIES DIRECTORY -->
+<div id="siwes-content-companies">
+  <!-- Search & Filter Controls -->
+  <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 mb-8 shadow-sm">
+    <form method="get" action="{% url 'siwes_hub' %}" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Filter by State</label>
+        <select name="state" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm">
+          <option value="">All States</option>
+          <option value="FCT" {% if selected_state == 'FCT' %}selected{% endif %}>Abuja / FCT</option>
+          <option value="Lagos" {% if selected_state == 'Lagos' %}selected{% endif %}>Lagos State</option>
+          <option value="Niger" {% if selected_state == 'Niger' %}selected{% endif %}>Niger / Minna</option>
+          <option value="Rivers" {% if selected_state == 'Rivers' %}selected{% endif %}>Rivers State</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Filter by Industry</label>
+        <input type="text" name="industry" value="{{ selected_industry }}" placeholder="e.g. Software, Cloud, Engineering, Telecomms"
+               class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm">
+      </div>
+
+      <div class="flex items-end">
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-sm transition-colors">
+          Filter Companies
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Companies Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    {% for company in companies %}
+    <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between shadow-sm hover:shadow-lg transition-all">
+      <div>
+        <div class="flex items-start justify-between gap-3 mb-2">
+          <div>
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 mb-1.5">
+              {{ company.industry }}
+            </span>
+            <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white leading-tight">
+              {{ company.name }}
+            </h2>
+          </div>
+          {% if company.takes_it_students %}
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 shrink-0">
+              ✓ Verified Hiring
+            </span>
+          {% endif %}
+        </div>
+
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">
+          📍 {{ company.city }}, {{ company.state }}
+        </p>
+
+        <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 text-xs space-y-1.5 mb-4">
+          <div class="flex justify-between">
+            <span class="text-slate-500">Stipend / Allowance:</span>
+            <strong class="text-emerald-600 dark:text-emerald-400 font-bold">{{ company.stipend_info }}</strong>
+          </div>
+        </div>
+
+        {% if company.notes %}
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+            💡 {{ company.notes }}
+          </p>
+        {% endif %}
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        {% if company.website %}
+          <a href="{{ company.website }}" target="_blank" rel="noopener noreferrer"
+             class="w-full text-center py-2 px-3 rounded-xl bg-brand-50 dark:bg-slate-800 hover:bg-brand-100 dark:hover:bg-slate-700 text-brand-700 dark:text-brand-300 font-bold text-xs transition-colors flex items-center justify-center gap-1.5">
+            <span>🌐</span> Visit Company Portal
+          </a>
+        {% else %}
+          <span class="text-xs text-slate-400 italic">Apply via physical letter to HR</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- TAB 2: DIGITAL LOGBOOK -->
+<div id="siwes-content-logbook" class="hidden">
+  {% if user.is_authenticated %}
+    <div class="space-y-4 mb-12">
+      {% for log in user_logs %}
+      <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-600 text-white">
+              Week {{ log.week_number }}
+            </span>
+            <h3 class="font-bold text-base text-slate-900 dark:text-white">
+              Unit: {{ log.department_unit|default:"Department Unit" }}
+            </h3>
+          </div>
+          <span class="text-xs text-slate-400 dark:text-slate-500">{{ log.date|date:"l, F j, Y" }}</span>
+        </div>
+
+        <div class="mb-3 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+          {{ log.work_done }}
+        </div>
+
+        {% if log.skills_acquired %}
+          <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs">
+            <span class="text-slate-500 font-semibold">Skills Mastered:</span>
+            <span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-medium">
+              {{ log.skills_acquired }}
+            </span>
+          </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="py-12 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+        <span class="text-5xl block mb-3">📓</span>
+        <h3 class="font-display font-bold text-lg text-slate-800 dark:text-white mb-1">No Log Entries Yet</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">
+          Keep your ITF SIWES supervisor report up-to-date by logging your technical tasks each week.
+        </p>
+        <button onclick="document.getElementById('log-modal').classList.remove('hidden')"
+                class="px-5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition">
+          + Add Week 1 Log Entry
+        </button>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="p-8 text-center rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <span class="text-4xl block mb-2">🔒</span>
+      <h3 class="font-bold text-base text-slate-900 dark:text-white">Sign In to Track Your Logbook</h3>
+      <p class="text-xs text-slate-500 mt-1 mb-4">Your daily entries and acquired technical skills will be stored securely on your account.</p>
+      <a href="{% url 'login' %}?next={% url 'siwes_hub' %}" class="inline-block px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs">
+        Log In
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Modal: Add SIWES Log Entry -->
+<div id="log-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-display font-bold text-xl text-slate-900 dark:text-white">Add SIWES Logbook Entry</h2>
+      <button onclick="document.getElementById('log-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">✕</button>
+    </div>
+
+    <form method="post" action="{% url 'add_siwes_log' %}" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Week Number *</label>
+          <input type="number" name="week_number" min="1" max="24" value="1" required class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Department / Unit *</label>
+          <input type="text" name="department_unit" required placeholder="e.g. NOC / Testing Lab / Site Operations" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Technical Work Completed *</label>
+        <textarea name="work_done" required rows="4" placeholder="Detail the equipment used, tasks performed, code written, or laboratory assays conducted..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Skills & Tools Acquired</label>
+        <input type="text" name="skills_acquired" placeholder="e.g. Fiber splicing, Cisco CLI, Oscilloscope calibration" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500">
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('log-modal').classList.add('hidden')" class="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-sm font-semibold">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md">Save Log Entry</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function switchSiwesTab(tab) {
+  const companiesContent = document.getElementById('siwes-content-companies');
+  const logbookContent = document.getElementById('siwes-content-logbook');
+  const companiesBtn = document.getElementById('siwes-tab-companies');
+  const logbookBtn = document.getElementById('siwes-tab-logbook');
+
+  if (tab === 'companies') {
+    companiesContent.classList.remove('hidden');
+    logbookContent.classList.add('hidden');
+    companiesBtn.classList.add('border-emerald-600', 'text-emerald-600', 'dark:text-emerald-400');
+    companiesBtn.classList.remove('border-transparent', 'text-slate-500');
+    logbookBtn.classList.add('border-transparent', 'text-slate-500');
+    logbookBtn.classList.remove('border-emerald-600', 'text-emerald-600', 'dark:text-emerald-400');
+  } else {
+    companiesContent.classList.add('hidden');
+    logbookContent.classList.remove('hidden');
+    logbookBtn.classList.add('border-emerald-600', 'text-emerald-600', 'dark:text-emerald-400');
+    logbookBtn.classList.remove('border-transparent', 'text-slate-500');
+    companiesBtn.classList.add('border-transparent', 'text-slate-500');
+    companiesBtn.classList.remove('border-emerald-600', 'text-emerald-600', 'dark:text-emerald-400');
+  }
+}
+</script>
+{% endblock %}
