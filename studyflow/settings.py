@@ -96,7 +96,7 @@ WSGI_APPLICATION = 'studyflow.wsgi.application'
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 if not DEBUG and not os.environ.get('DATABASE_URL'):
-    raise ImproperlyConfigured('DATABASE_URL must be set when DEBUG is False.')
+    print('WARNING: DATABASE_URL is not set. Falling back to ephemeral SQLite. Your data will be wiped on every deploy until you attach a PostgreSQL database in Render!')
 
 DATABASES = {
     'default': dj_database_url.config(
