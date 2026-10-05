@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from pathlib import Path
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -93,6 +94,9 @@ WSGI_APPLICATION = 'studyflow.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
+
+if not DEBUG and not os.environ.get('DATABASE_URL'):
+    raise ImproperlyConfigured('DATABASE_URL must be set when DEBUG is False.')
 
 DATABASES = {
     'default': dj_database_url.config(

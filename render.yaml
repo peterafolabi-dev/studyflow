@@ -3,7 +3,7 @@ services:
     name: studyflow
     runtime: python
     buildCommand: "./build.sh"
-    startCommand: python manage.py ensure_superuser && gunicorn studyflow.wsgi --workers 2 --timeout 120
+    startCommand: python manage.py create_or_update_admin && gunicorn studyflow.wsgi --workers 2 --timeout 120
     plan: free
     envVars:
       - key: PYTHON_VERSION
