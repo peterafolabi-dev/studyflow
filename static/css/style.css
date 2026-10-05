@@ -1,32 +1,7 @@
 
 /* 2026 Ultra-Modern Base Styles */
-body {
-  background: radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.08), transparent 25%),
-              radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
-  background-attachment: fixed;
-}
-.dark body {
-  background: radial-gradient(circle at 15% 50%, rgba(124, 58, 237, 0.15), transparent 25%),
-              radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%),
-              #020617; /* slate-950 */
-  background-attachment: fixed;
-}
-
-/* Make cards glassmorphic, excluding dropdown menus and modals */
-div.rounded-xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
-div.rounded-2xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
-div.rounded-3xl, section.section-block {
-  backdrop-filter: blur(12px);
-  background-color: rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.05);
-}
-.dark div.rounded-xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
-.dark div.rounded-2xl:not(#profile-menu):not(#resources-menu):not(#ai-chat-modal):not(.dropdown-menu),
-.dark div.rounded-3xl, .dark section.section-block {
-  background-color: rgba(15, 23, 42, 0.6) !important;
-  border-color: rgba(255,255,255,0.08) !important;
-  box-shadow: 0 4px 24px -8px rgba(0, 0, 0, 0.5);
-}
+/* NOTE: Background is handled by Tailwind (bg-slate-950 on body via class).
+   Only add targeted overrides here for components that need it. */
 
 /* Dropdown menus & dialog panels must be completely solid & high z-index */
 #profile-menu, #resources-menu, #ai-chat-modal, .dropdown-menu {
@@ -153,8 +128,6 @@ html.dark {
 
 body {
   margin: 0;
-  background: var(--page);
-  color: var(--ink);
   font-family: var(--font-body);
   font-size: 1rem;
   line-height: 1.55;
@@ -416,15 +389,6 @@ h2 { font-size: 1.2rem; }
   .grid > *, .tasks > *, .flex.gap-3 > * { animation: none; }
 }
 \n
-/* Fix dropdown menus being too transparent */
-#profile-menu, #resources-menu {
-    background-color: rgba(255, 255, 255, 0.95) !important;
-    backdrop-filter: blur(16px) !important;
-    z-index: 9999 !important;
-}
-.dark #profile-menu, .dark #resources-menu {
-    background-color: rgba(15, 23, 42, 0.95) !important;
-}
 
 /* ---------- Shared chat content ---------- */
 .chat-bubble-content {

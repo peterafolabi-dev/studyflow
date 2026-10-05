@@ -27,8 +27,7 @@
     })();
   </script>
 
-  {% if 'localhost' in request.get_host or '127.0.0.1' in request.get_host %}
-  <!-- Tailwind CSS (CDN for local development) -->
+  <!-- Tailwind CSS via CDN (works on all environments) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -50,10 +49,6 @@
       },
     };
   </script>
-  {% else %}
-  <!-- Compiled Tailwind CSS (for lightning fast production) -->
-  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
-  {% endif %}
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <!-- Markdown parser and sanitizer for AI chat -->
