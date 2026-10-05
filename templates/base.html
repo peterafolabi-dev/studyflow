@@ -164,262 +164,85 @@
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col bg-brand-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans transition-colors">
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased flex flex-col font-sans transition-colors">
 
-  <header class="sticky top-0 z-30 border-b border-brand-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur">
-    <div class="mx-auto max-w-6xl flex items-center gap-4 px-4 py-3">
-      <a href="{% url 'dashboard' %}" class="font-display font-bold text-lg text-brand-700 dark:text-brand-300 shrink-0">StudyFlow</a>
+  <header class="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/80 backdrop-blur">
+    <div class="mx-auto max-w-6xl flex items-center justify-between px-4 py-3">
+      <a href="{% url 'dashboard' %}" class="font-display font-bold text-lg text-brand-300 shrink-0">StudyFlow</a>
 
       {% if user.is_authenticated %}
-        <nav class="hidden sm:flex items-center gap-1 text-sm font-medium ml-2" aria-label="Main">
-          <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'dashboard' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">This week</a>
-          <a href="{% url 'course_list' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if 'course' in request.resolver_match.url_name %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">Courses</a>
-          <a href="{% url 'catalogue' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'catalogue' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">Catalogue</a>
-
-          <div class="relative" id="resources-menu-wrapper">
-            <button id="resources-menu-btn" type="button"
-                    class="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800"
-                    aria-haspopup="true" aria-expanded="false">
-              Resources
+        <nav class="hidden md:flex items-center gap-1 text-sm font-medium ml-6 flex-1" aria-label="Main">
+          <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'dashboard' %}text-brand-300 bg-slate-800{% endif %}">Dashboard</a>
+          <a href="{% url 'course_list' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if 'course' in request.resolver_match.url_name %}text-brand-300 bg-slate-800{% endif %}">Courses</a>
+          
+          <!-- Library Dropdown -->
+          <div class="relative group">
+            <button class="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-slate-800">
+              Library
               <svg class="h-3.5 w-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
             </button>
-            <div id="resources-menu" role="menu"
-                 class="hidden absolute left-0 mt-2 w-48 rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg py-2 text-sm z-40">
-              <a href="{% url 'past_questions' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Past Questions</a>
-              <a href="{% url 'notes_list' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Notes</a>
-              <a href="{% url 'theses_papers' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Theses &amp; Papers</a>
-              <a href="{% url 'lecture_slides' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Lecture Slides</a>
-              <a href="{% url 'research' %}" class="block px-4 py-2 hover:bg-brand-50 dark:hover:bg-slate-800">Research</a>
+            <div class="hidden group-hover:block absolute left-0 mt-2 w-48 rounded-xl border border-slate-700 bg-slate-900 shadow-lg py-2 text-sm z-40">
+              <a href="{% url 'catalogue' %}" class="block px-4 py-2 hover:bg-slate-800">Catalogue</a>
+              <a href="{% url 'ibb_library' %}" class="block px-4 py-2 hover:bg-slate-800">IBB Library</a>
+              <a href="{% url 'past_questions' %}" class="block px-4 py-2 hover:bg-slate-800">Past Questions</a>
+              <a href="{% url 'notes_list' %}" class="block px-4 py-2 hover:bg-slate-800">Notes</a>
             </div>
           </div>
-
-          <a href="{% url 'ibb_library' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'ibb_library' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">IBB Library</a>
-          <a href="{% url 'postgraduate' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 {% if request.resolver_match.url_name == 'postgraduate' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">Postgraduate</a>
-          <a href="{% url 'global_chat' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 flex items-center gap-1.5 {% if request.resolver_match.url_name == 'global_chat' %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">
-            <span>💬</span> Campus Chat
-          </a>
-          <a href="{% url 'cbt_home' %}" class="px-3 py-2 rounded-lg hover:bg-brand-100 dark:hover:bg-slate-800 flex items-center gap-1.5 {% if 'cbt' in request.resolver_match.url_name %}text-brand-700 dark:text-brand-300 bg-brand-100 dark:bg-slate-800{% endif %}">
-            <span>🎯</span> CBT Practice
-          </a>
+          
+          <a href="{% url 'study_room' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'study_room' %}text-brand-300 bg-slate-800{% endif %}">Study Room</a>
+          <a href="{% url 'global_chat' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800">Community</a>
         </nav>
 
-        <form method="get" action="{% url 'global_search' %}" class="hidden lg:block ml-auto w-56 shrink-0">
-          <input type="text" name="q" placeholder="Search StudyFlow&hellip;"
-                 class="w-full rounded-full border border-brand-200 dark:border-slate-700 bg-brand-50 dark:bg-slate-800 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 dark:text-slate-100 placeholder-slate-400">
-        </form>
+        <div class="flex items-center gap-3">
+          <form method="get" action="{% url 'global_search' %}" class="hidden lg:block w-48">
+            <input type="text" name="q" placeholder="Search..." class="w-full rounded-full border border-slate-700 bg-slate-800 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-100 placeholder-slate-400">
+          </form>
 
-        <button type="button" class="theme-toggle-btn p-2 rounded-full border border-brand-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition shadow-sm shrink-0" aria-label="Toggle theme" title="Toggle Light/Dark Theme">
-          <span class="dark:hidden text-sm">🌙</span>
-          <span class="hidden dark:inline text-sm">☀️</span>
-        </button>
-
-        <div class="relative" id="profile-menu-wrapper">
-          <button id="profile-menu-btn" type="button"
-                  class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-brand-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 hover:bg-brand-50 dark:hover:bg-slate-800 transition shadow-sm"
-                  aria-haspopup="true" aria-expanded="false">
-            <span class="h-7 w-7 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-bold shadow-sm shadow-brand-500/20">
-              {{ user.username|slice:":1"|upper }}
-            </span>
-            <span class="hidden md:inline text-sm font-semibold text-slate-800 dark:text-slate-200">{{ user.username }}</span>
-            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-700">
-              Free
-            </span>
-            <svg class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+          <!-- Mobile Hamburger -->
+          <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-200 hover:bg-slate-800 rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
           </button>
 
-          <div id="profile-menu" role="menu"
-               class="hidden absolute right-0 mt-2 w-64 rounded-2xl border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl py-2 text-sm max-h-[80vh] overflow-y-auto z-50 custom-scrollbar origin-top-right">
-            
-            <!-- User Info Card with Free badge -->
-            <div class="px-4 py-3 border-b border-brand-100 dark:border-slate-800 bg-brand-50/60 dark:bg-slate-800/60 mb-1">
-              <div class="flex items-center gap-3">
-                <span class="h-9 w-9 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-bold shadow-md shadow-brand-500/20 shrink-0">
-                  {{ user.username|slice:":1"|upper }}
-                </span>
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center justify-between gap-1">
-                    <p class="font-bold text-sm text-slate-800 dark:text-white truncate">{{ user.username }}</p>
-                    <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 rounded-full border border-emerald-300 dark:border-emerald-800 shrink-0">
-                      Free
-                    </span>
-                  </div>
-                  <p class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ user.email|default:"FUT Minna Student" }}</p>
-                </div>
+          <!-- Profile Menu -->
+          <div class="relative" id="profile-menu-wrapper">
+            <button id="profile-menu-btn" type="button" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-slate-700 bg-slate-900/80 hover:bg-slate-800 transition shadow-sm" aria-haspopup="true" aria-expanded="false">
+              <span class="h-7 w-7 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-bold shadow-sm shadow-brand-500/20">{{ user.username|slice:":1"|upper }}</span>
+              <span class="hidden md:inline text-sm font-semibold text-slate-200">{{ user.username }}</span>
+              <svg class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+            </button>
+            <div id="profile-menu" role="menu" class="hidden absolute right-0 mt-2 w-64 rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl py-2 text-sm z-50">
+              <div class="px-4 py-3 border-b border-slate-800 bg-slate-800/60 mb-1">
+                <p class="font-bold text-sm text-white truncate">{{ user.username }}</p>
+                <p class="text-xs text-slate-400 truncate">{{ user.email }}</p>
+              </div>
+              <div class="px-1.5 py-1 space-y-0.5">
+                <a href="{% url 'profile' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200">My Profile</a>
+                <a href="{% url 'settings' %}" class="block px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200">Settings</a>
+                <form method="post" action="{% url 'logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/40 mt-1">Log out</button>
+                </form>
               </div>
             </div>
-
-            <div class="px-1.5 py-1 space-y-0.5">
-              <a href="{% url 'profile' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">👤</span> <span>My Profile</span>
-              </a>
-              <a href="{% url 'edit_profile' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">✏️</span> <span>Edit Profile</span>
-              </a>
-              <a href="{% url 'notifications' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">🔔</span> <span>Notifications</span>
-              </a>
-            </div>
-
-            <div class="my-1 border-t border-brand-100 dark:border-slate-800"></div>
-
-            <div class="px-1.5 py-1 space-y-0.5">
-              <a href="{% url 'break_room' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🎮</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Break Room</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Play games to unwind</span>
-                </div>
-              </a>
-              <a href="{% url 'study_room' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">⏱️</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Pomodoro Timer</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Deep focus with Lofi & Spotify</span>
-                </div>
-              </a>
-              <a href="{% url 'flashcards' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🃏</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Flashcards</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Spaced repetition training</span>
-                </div>
-              </a>
-              <a href="{% url 'cbt_home' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🎯</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">CBT Practice</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Simulate past exams</span>
-                </div>
-              </a>
-              <a href="{% url 'find_buddies' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">👥</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Find Buddies</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Match with study partners</span>
-                </div>
-              </a>
-              <a href="{% url 'my_library' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">📖</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">My Library</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Saved books & resources</span>
-                </div>
-              </a>
-              <a href="{% url 'my_loans' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition relative">
-                <div class="relative text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">
-                    🏛️
-                    {% if overdue_loan_count %}
-                      <span class="absolute -top-1 -right-1 block h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
-                    {% endif %}
-                </div>
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">My Loans</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Track borrowed books</span>
-                </div>
-              </a>
-              <a href="{% url 'timetable' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🗓️</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Timetable</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Weekly class schedule</span>
-                </div>
-              </a>
-              <a href="{% url 'gpa_calculator' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">📊</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">GPA Calculator</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Forecast your final grades</span>
-                </div>
-              </a>
-              <a href="{% url 'progress' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">📈</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">My Progress</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Gamified learning stats</span>
-                </div>
-              </a>
-              <a href="{% url 'thread_list' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">💬</span> 
-                <div>
-                    <span class="block font-bold text-slate-900 dark:text-white leading-none mb-1">Study Groups</span>
-                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Collaborate with peers</span>
-                </div>
-              </a>
-              {% if user.is_staff %}
-              <a href="{% url 'admin_dashboard' %}" class="group flex items-start gap-3 px-3 py-2.5 rounded-xl text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition">
-                <span class="text-xl shrink-0 mt-0.5 group-hover:scale-110 transition-transform">🔧</span> 
-                <div>
-                    <span class="block font-bold text-rose-700 dark:text-rose-300 leading-none mb-1">Analytics</span>
-                    <span class="block text-[11px] text-rose-500 dark:text-rose-400 leading-tight">Admin oversight</span>
-                </div>
-              </a>
-              {% endif %}
-
-              <a href="{% url 'global_chat' %}" class="flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="flex items-center gap-2.5">
-                  <span class="text-base">💬</span> <span>Campus Chat</span>
-                </span>
-                <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              </a>
-              <a href="{% url 'export_calendar' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">📅</span> <span>Export calendar (.ics)</span>
-              </a>
-              <a href="{% url 'postgraduate' %}" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-800 hover:text-brand-600 dark:hover:text-brand-300 transition font-medium">
-                <span class="text-base">🎓</span> <span>Postgraduate</span>
-              </a>
-            </div>
-
-            <div class="my-1 border-t border-brand-100 dark:border-slate-800"></div>
-
-            <div class="px-1.5 py-1">
-              <div class="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-brand-50 dark:hover:bg-slate-800 transition font-medium">
-                <span class="flex items-center gap-2.5 text-slate-700 dark:text-slate-200">
-                  <span class="text-base">🌙</span> <span>Dark mode</span>
-                </span>
-                <button type="button" id="theme-toggle" aria-pressed="false"
-                        class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-300 dark:bg-brand-600 transition-colors focus:outline-none">
-                  <span id="theme-toggle-dot" class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-1 dark:translate-x-6"></span>
-                </button>
-              </div>
-
-              <form method="post" action="{% url 'logout' %}" class="mt-1">
-                {% csrf_token %}
-                <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition text-left font-medium">
-                  <span class="text-base">🚪</span> <span>Log out</span>
-                </button>
-              </form>
-            </div>
-
           </div>
         </div>
       {% else %}
-        <div class="ml-auto flex items-center gap-3">
-          <button type="button" class="theme-toggle-btn p-2 rounded-xl border border-brand-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-brand-50 dark:hover:bg-slate-700 transition shadow-sm" aria-label="Toggle theme" title="Toggle Light/Dark Theme">
-            <span class="dark:hidden text-sm">🌙</span>
-            <span class="hidden dark:inline text-sm">☀️</span>
-          </button>
-          <a href="{% url 'login' %}" class="px-4 py-2 rounded-xl text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-slate-800 transition">Log in</a>
-          <a href="{% url 'signup' %}" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 transition">Sign up free</a>
+        <div class="flex items-center gap-3">
+          <a href="{% url 'login' %}" class="px-4 py-2 rounded-xl text-sm font-semibold text-brand-300 hover:bg-slate-800 transition">Log in</a>
+          <a href="{% url 'signup' %}" class="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-md transition">Sign up free</a>
         </div>
       {% endif %}
     </div>
 
+    <!-- Mobile Menu -->
     {% if user.is_authenticated %}
-      <nav class="flex sm:hidden overflow-x-auto gap-1 px-4 pb-2 text-sm font-medium" aria-label="Main mobile">
-        <a href="{% url 'global_search' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">🔍 Search</a>
-        <a href="{% url 'global_chat' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 font-bold border border-brand-200 dark:border-slate-700 hover:bg-brand-100 flex items-center gap-1">💬 Chat</a>
-        <a href="{% url 'dashboard' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">This week</a>
-        <a href="{% url 'course_list' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Courses</a>
-        <a href="{% url 'catalogue' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Catalogue</a>
-        <a href="{% url 'my_library' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">My Library</a>
-        <a href="{% url 'past_questions' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Past Questions</a>
-        <a href="{% url 'notes_list' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Notes</a>
-        <a href="{% url 'theses_papers' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Theses &amp; Papers</a>
-        <a href="{% url 'lecture_slides' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Lecture Slides</a>
-        <a href="{% url 'research' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Research</a>
-        <a href="{% url 'ibb_library' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">IBB Library</a>
-        <a href="{% url 'postgraduate' %}" class="px-3 py-1.5 rounded-lg whitespace-nowrap hover:bg-brand-100 dark:hover:bg-slate-800">Postgraduate</a>
-      </nav>
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900 px-4 py-4 space-y-2">
+      <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Dashboard</a>
+      <a href="{% url 'course_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Courses</a>
+      <a href="{% url 'catalogue' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Library</a>
+      <a href="{% url 'study_room' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Study Room</a>
+      <a href="{% url 'global_chat' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Community</a>
+    </div>
     {% endif %}
   </header>
 
@@ -456,21 +279,26 @@
     document.addEventListener('DOMContentLoaded', () => {
       const toasts = document.querySelectorAll('.toast-message');
       toasts.forEach((toast, index) => {
-        // Slide in animation
         setTimeout(() => {
           toast.classList.remove('translate-x-full', 'opacity-0');
         }, 100 + (index * 150));
-        
-        // Auto dismiss after 5 seconds
         setTimeout(() => {
           toast.classList.add('opacity-0', 'translate-x-4');
           setTimeout(() => toast.remove(), 500);
         }, 5000 + (index * 1000));
       });
+
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if(mobileBtn && mobileMenu) {
+        mobileBtn.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
     });
   </script>
 
-  <main class="mx-auto max-w-6xl px-4 py-6 flex-1 w-full">
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
     {% block content %}{% endblock %}
   </main>
 
