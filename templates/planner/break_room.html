@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}The Break Room · StudyFlow{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto pb-12">
+<div class="break-room-page max-w-6xl mx-auto pb-12">
   <div class="mb-8 fade-in-up">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
@@ -127,73 +127,6 @@
 
   </div>
 </div>
-
-<style>
-/* Neon 2048 Styles */
-.tile-2048 {
-  display: flex; justify-content: center; align-items: center;
-  font-family: ui-sans-serif, system-ui, sans-serif;
-  font-size: 1.75rem; font-weight: 900;
-  border-radius: 1rem;
-  transition: all 0.15s ease-in-out;
-  user-select: none;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: transparent;
-  box-shadow: inset 0 0 10px rgba(255,255,255,0.05);
-}
-.tile-val-2 { background: rgba(255,255,255,0.9); color: #0f172a; }
-.tile-val-4 { background: #e2e8f0; color: #0f172a; }
-.tile-val-8 { background: #f59e0b; color: white; box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
-.tile-val-16 { background: #f97316; color: white; box-shadow: 0 0 15px rgba(249, 115, 22, 0.5); }
-.tile-val-32 { background: #ef4444; color: white; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
-.tile-val-64 { background: #dc2626; color: white; box-shadow: 0 0 20px rgba(220, 38, 38, 0.6); }
-.tile-val-128 { background: #eab308; color: white; box-shadow: 0 0 25px rgba(234, 179, 8, 0.6); font-size: 1.5rem;}
-.tile-val-256 { background: #ca8a04; color: white; box-shadow: 0 0 30px rgba(202, 138, 4, 0.7); font-size: 1.5rem;}
-.tile-val-512 { background: #10b981; color: white; box-shadow: 0 0 30px rgba(16, 185, 129, 0.8); font-size: 1.5rem;}
-.tile-val-1024 { background: #06b6d4; color: white; box-shadow: 0 0 35px rgba(6, 182, 212, 0.9); font-size: 1.25rem;}
-.tile-val-2048 { background: #8b5cf6; color: white; box-shadow: 0 0 40px rgba(139, 92, 246, 1); font-size: 1.25rem;}
-.tile-val-super { background: #d946ef; color: white; box-shadow: 0 0 50px rgba(217, 70, 239, 1); font-size: 1.1rem;}
-
-/* Memory Matrix Styles */
-.memory-card {
-  perspective: 1000px;
-  cursor: pointer;
-}
-.memory-card-inner {
-  position: relative;
-  width: 100%; height: 100%;
-  text-align: center;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-style: preserve-3d;
-  border-radius: 1rem;
-}
-.memory-card.flipped .memory-card-inner {
-  transform: rotateY(180deg);
-}
-.memory-card-front, .memory-card-back {
-  position: absolute;
-  width: 100%; height: 100%;
-  backface-visibility: hidden;
-  border-radius: 1rem;
-  display: flex; justify-content: center; align-items: center;
-  font-size: 2rem;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-}
-.memory-card-front {
-  background: rgba(255,255,255,0.1);
-  border: 2px solid rgba(255,255,255,0.2);
-  background-image: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.2)"/></svg>');
-}
-.memory-card-back {
-  background: linear-gradient(135deg, #10b981, #059669);
-  transform: rotateY(180deg);
-  border: 2px solid rgba(255,255,255,0.3);
-}
-.memory-card.matched .memory-card-back {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  animation: pulse 1s infinite;
-}
-</style>
 
 <script>
 // --- UI TABS ---
