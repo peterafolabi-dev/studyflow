@@ -17,3 +17,4 @@ urlpatterns = [
     path('marketplace/<int:item_id>/sold/', views.toggle_item_sold, name='toggle_item_sold'),
     path('emergency/', views.emergency_directory, name='emergency_directory'),
 ]
+
