@@ -657,7 +657,7 @@
     </div>
 
     <!-- Chat Modal -->
-    <div id="ai-chat-modal" class="hidden absolute bottom-20 right-0 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-brand-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="height: 450px;">
+    <div id="ai-chat-modal" class="hidden absolute bottom-20 right-0 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-brand-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex-col" style="height: 450px;">
         <div class="bg-brand-600 text-white p-4 flex justify-between items-center">
             <div>
                 <h3 class="font-bold text-lg flex items-center gap-2">🤖 StudyFlow AI</h3>
@@ -675,7 +675,7 @@
         </div>
 
         <form id="ai-chat-form" class="p-3 bg-white dark:bg-slate-900 border-t border-brand-100 dark:border-slate-800 flex flex-col gap-2">
-            <div id="ai-chat-file-preview" class="hidden text-xs bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 p-2 rounded-lg flex justify-between items-center border border-brand-100 dark:border-slate-700">
+            <div id="ai-chat-file-preview" class="hidden text-xs bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 p-2 rounded-lg justify-between items-center border border-brand-100 dark:border-slate-700">
                 <span class="truncate max-w-[200px] font-medium flex items-center gap-1">📎 <span id="ai-chat-file-name">file.pdf</span></span>
                 <button type="button" id="ai-chat-file-remove" class="text-brand-500 hover:text-rose-500 font-bold transition">✕</button>
             </div>
@@ -805,6 +805,7 @@
     if(chatBtn && chatModal) {
         chatBtn.addEventListener('click', () => {
             chatModal.classList.remove('hidden');
+          chatModal.classList.add('flex');
             chatBtn.classList.add('hidden');
             const feedbackWidget = document.getElementById('feedback-widget');
             if (feedbackWidget) feedbackWidget.classList.add('hidden');
@@ -813,6 +814,7 @@
 
         chatClose.addEventListener('click', () => {
             chatModal.classList.add('hidden');
+          chatModal.classList.remove('flex');
             chatBtn.classList.remove('hidden');
             const feedbackWidget = document.getElementById('feedback-widget');
             if (feedbackWidget) feedbackWidget.classList.remove('hidden');
@@ -833,6 +835,7 @@
                 
                 aiChatFileName.textContent = file.name;
                 aiChatFilePreview.classList.remove('hidden');
+                aiChatFilePreview.classList.add('flex');
                 chatInput.placeholder = "Ask about this file...";
                 chatInput.required = false;
                 
@@ -870,6 +873,7 @@
                 aiChatFileInput.value = '';
                 attachedFileContent = "";
                 aiChatFilePreview.classList.add('hidden');
+                aiChatFilePreview.classList.remove('flex');
                 chatInput.placeholder = "Ask StudyFlow AI...";
                 chatInput.required = true;
             });
@@ -893,7 +897,10 @@
                 chatInput.value = '';
                 if(aiChatFileInput) aiChatFileInput.value = '';
                 attachedFileContent = '';
-                if(aiChatFilePreview) aiChatFilePreview.classList.add('hidden');
+                if(aiChatFilePreview) {
+                  aiChatFilePreview.classList.add('hidden');
+                  aiChatFilePreview.classList.remove('flex');
+                }
                 chatInput.placeholder = "Ask StudyFlow AI...";
                 chatInput.required = true;
 
@@ -1014,6 +1021,7 @@
       const chatBtn = document.getElementById('ai-chat-btn');
       if (chatModal && !chatModal.classList.contains('hidden')) {
         chatModal.classList.add('hidden');
+        chatModal.classList.remove('flex');
         if (chatBtn) chatBtn.classList.remove('hidden');
       }
     }
