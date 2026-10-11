@@ -297,24 +297,23 @@
 
 <!-- ─── Quiz Modal (Legendary Game Mode) ─── -->
 <div id="quiz-modal" style="display:none;"
-     class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-  <div class="bg-white/10 dark:bg-slate-900/40 border border-white/20 dark:border-white/10 rounded-3xl p-6 sm:p-10 w-full max-w-2xl shadow-2xl backdrop-blur-2xl relative text-center">
-    
-    <button onclick="closeQuiz()"
-            class="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center text-lg transition-all hover:rotate-90">
-      ✕
-    </button>
+     class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/80 px-4 pb-4 pt-[max(1.5rem,env(safe-area-inset-top))] backdrop-blur-xl">
+  <div class="my-auto max-h-[calc(100dvh-max(1.5rem,env(safe-area-inset-top))-1rem)] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/20 bg-white/10 p-6 text-center shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-slate-900/40 sm:p-10">
     
     <!-- Active Quiz View -->
     <div id="quiz-active-view">
-      <div class="flex items-center justify-between mb-6 px-2">
-        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/20 border border-brand-400/30 text-brand-100 text-xs font-black uppercase tracking-widest shadow-inner">
+      <div class="mb-6 flex items-center justify-between gap-2 px-0 sm:px-2">
+        <div class="inline-flex min-w-0 items-center gap-2 rounded-full border border-brand-400/30 bg-brand-500/20 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-brand-100 shadow-inner sm:px-4">
           <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse"></span>
-          <span id="quiz-progress">Card 1 of 1</span>
+          <span id="quiz-progress" class="whitespace-nowrap">Card 1 of 1</span>
         </div>
-        <div class="text-xs font-bold uppercase tracking-widest text-slate-300 bg-white/10 px-3 py-1.5 rounded-full border border-white/10" id="quiz-interval-tag">
+        <div class="whitespace-nowrap rounded-full border border-white/10 bg-white/10 px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-300 sm:px-3 sm:text-xs sm:tracking-widest" id="quiz-interval-tag">
           Interval: 1d
         </div>
+        <button type="button" onclick="closeQuiz()" aria-label="Close flashcard review"
+                class="flex h-10 w-10 min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg text-white transition hover:bg-white/30 hover:rotate-90">
+          ✕
+        </button>
       </div>
 
       <!-- Interactive Flip Card (Game Style) -->
