@@ -142,6 +142,7 @@
             </button>
             <div class="hidden group-hover:block absolute left-0 mt-2 w-56 rounded-xl border border-slate-700 bg-slate-900 shadow-xl py-2 text-sm z-40">
               <a href="{% url 'campus_hub' %}" class="block px-4 py-2 hover:bg-slate-800 font-semibold text-brand-300">Campus Hub 🏛️</a>
+              <a href="{% url 'campus_life_home' %}" class="block px-4 py-2 hover:bg-slate-800">Study Campus Life</a>
               <div class="border-t border-slate-800 my-1"></div>
               <a href="{% url 'power_tracker' %}" class="block px-4 py-2 hover:bg-slate-800">Where is Light? ⚡</a>
               <a href="{% url 'notice_board' %}" class="block px-4 py-2 hover:bg-slate-800">Notice Board 📢</a>
@@ -219,6 +220,7 @@
       <!-- Mobile Campus Life Header & Sublinks -->
       <div class="pt-2 border-t border-slate-800/80">
         <a href="{% url 'campus_hub' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-brand-300 font-semibold">Campus Life 🏛️</a>
+        <a href="{% url 'campus_life_home' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Study Campus Life</a>
         <div class="pl-4 space-y-1 mt-1">
           <a href="{% url 'power_tracker' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-300">Where is Light? ⚡</a>
           <a href="{% url 'notice_board' %}" class="block px-3 py-1.5 rounded-lg hover:bg-slate-800 text-xs text-slate-300">Notice Board 📢</a>
@@ -287,6 +289,82 @@
       }
     });
   </script>
+
+  {% if user.is_authenticated %}
+  <button id="command-palette-trigger" type="button" class="fixed bottom-4 right-4 z-40 rounded-xl border border-slate-600 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 shadow-lg hover:bg-slate-800" aria-label="Open page navigator">
+    Search pages <kbd class="ml-2 rounded border border-slate-600 px-1 py-0.5">Ctrl K</kbd>
+  </button>
+  <div id="command-palette" class="fixed inset-0 z-[90] hidden items-start justify-center bg-black/60 px-4 pt-[12vh] opacity-0 transition-opacity" aria-hidden="true">
+    <section class="w-full max-w-xl overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl transition-transform scale-95" role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
+      <h2 id="command-palette-title" class="sr-only">Search pages and courses</h2>
+      <input id="command-palette-input" type="search" autocomplete="off" placeholder="Search pages or your courses..." class="w-full border-0 border-b border-slate-700 bg-transparent px-5 py-4 text-base text-white outline-none placeholder:text-slate-500">
+      <nav id="command-palette-results" class="max-h-[55vh] overflow-y-auto p-2" aria-label="Page results">
+        <a data-command-item data-search="dashboard home" href="{% url 'dashboard' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Dashboard</a>
+        <a data-command-item data-search="courses course list" href="{% url 'course_list' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Courses</a>
+        {% for course in user.courses.all %}
+          <a data-command-item data-search="{{ course.name }} {{ course.code }} course" href="{% url 'course_detail' course.pk %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">{{ course.code|default:'Course' }} · {{ course.name }}</a>
+        {% endfor %}
+        <a data-command-item data-search="study room pomodoro focus" href="{% url 'study_room' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Study Room</a>
+        <a data-command-item data-search="flashcards review" href="{% url 'flashcards' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Flashcards</a>
+        <a data-command-item data-search="progress stats achievements" href="{% url 'progress' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">My Progress</a>
+        <a data-command-item data-search="timetable schedule" href="{% url 'timetable' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Timetable</a>
+        <a data-command-item data-search="profile settings" href="{% url 'profile' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">My Profile</a>
+      </nav>
+      <p id="command-palette-empty" class="hidden px-5 pb-4 text-sm text-slate-400">No matching pages or courses.</p>
+    </section>
+  </div>
+  <script>
+    (function () {
+      const palette = document.getElementById('command-palette');
+      const panel = palette.querySelector('[role="dialog"]');
+      const input = document.getElementById('command-palette-input');
+      const items = Array.from(document.querySelectorAll('[data-command-item]'));
+      const empty = document.getElementById('command-palette-empty');
+      function closePalette() {
+        palette.classList.add('opacity-0');
+        panel.classList.add('scale-95');
+        window.setTimeout(() => {
+          palette.classList.add('hidden');
+          palette.classList.remove('flex');
+          palette.setAttribute('aria-hidden', 'true');
+        }, 150);
+      }
+      function openPalette() {
+        palette.classList.remove('hidden');
+        palette.classList.add('flex');
+        palette.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(() => {
+          palette.classList.remove('opacity-0');
+          panel.classList.remove('scale-95');
+          input.focus();
+          input.select();
+        });
+      }
+      function filterItems() {
+        const query = input.value.trim().toLowerCase();
+        let visible = 0;
+        items.forEach((item) => {
+          const text = `${item.dataset.search} ${item.textContent}`.toLowerCase();
+          const matches = !query || query.split(/\s+/).every((part) => text.includes(part));
+          item.classList.toggle('hidden', !matches);
+          if (matches) visible++;
+        });
+        empty.classList.toggle('hidden', visible !== 0);
+      }
+      document.getElementById('command-palette-trigger').addEventListener('click', openPalette);
+      input.addEventListener('input', filterItems);
+      palette.addEventListener('click', (event) => { if (event.target === palette) closePalette(); });
+      document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+          event.preventDefault();
+          palette.classList.contains('hidden') ? openPalette() : closePalette();
+        } else if (event.key === 'Escape' && !palette.classList.contains('hidden')) {
+          closePalette();
+        }
+      });
+    })();
+  </script>
+  {% endif %}
 
   <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
     {% block content %}{% endblock %}

@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.db.models import Q
+from django.db.models import Sum
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
@@ -221,6 +222,9 @@ def task_toggle(request, pk):
     # Award XP when task is completed
     if task.is_done:
         _award_xp(request.user, 'task_done', points=15)
+        if task.due_date >= timezone.localdate():
+            from campus_life.services import earn_credits
+            earn_credits(request.user, f'task:{task.pk}', 'on_time_task', 5)
 
     # Go back to the page the click came from, but only if it's a safe local URL.
     next_url = request.POST.get('next', '')
@@ -330,8 +334,10 @@ from .models import StudySession, FlashcardDeck, Flashcard
 @login_required
 def study_room(request):
     from accounts.models import Profile
+    from .models import StudyStreak
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
+    streak, _ = StudyStreak.objects.get_or_create(user=request.user)
     spotify_error = ''
     if request.method == 'POST' and request.POST.get('action') == 'save_spotify_url':
         submitted_url = request.POST.get('spotify_url', '').strip()
@@ -358,6 +364,7 @@ def study_room(request):
         'spotify_error': spotify_error,
         'spotify_playlist_url': profile.spotify_playlist_url,
         'spotify_embed_url': spotify_embed_url,
+        'current_streak': streak.current_streak,
     })
 
 @login_required
@@ -367,7 +374,9 @@ def log_study(request):
     course_id = request.POST.get('course_id')
     if duration > 0:
         course = Course.objects.filter(id=course_id, user=request.user).first() if course_id else None
-        StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
+        session = StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
+        from campus_life.services import earn_credits
+        earn_credits(request.user, f'study-session:{session.pk}', 'focused_minutes', duration // 10)
         _award_xp(request.user, 'pomodoro', points=20)
     return redirect('study_room')
 
@@ -459,6 +468,13 @@ def flashcard_rate_review(request, pk):
 
     next_date = card.process_review(rating)
     _award_xp(request.user, 'flashcard', points=5)
+    from campus_life.services import earn_credits
+    earn_credits(
+        request.user,
+        f'flashcard:{card.pk}:{timezone.localdate().isoformat()}',
+        'flashcard_review',
+        1,
+    )
     return JsonResponse({
         'success': True,
         'card_id': card.id,
@@ -603,7 +619,11 @@ def _award_xp(user, reason, points=10):
     from .models import XPLog, StudyStreak
     XPLog.objects.create(user=user, reason=reason, points=points)
     streak, _ = StudyStreak.objects.get_or_create(user=user)
+    is_new_day = streak.last_activity_date != timezone.localdate()
     streak.record_activity()
+    if is_new_day:
+        from campus_life.services import earn_credits
+        earn_credits(user, f'daily-study:{timezone.localdate().isoformat()}', 'daily_study', 1)
     _check_badges(user, streak)
 
 

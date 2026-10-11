@@ -218,6 +218,7 @@ class UserBadge(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='badges')
     badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
     awarded_at = models.DateTimeField(auto_now_add=True)
+    celebration_seen = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'badge')

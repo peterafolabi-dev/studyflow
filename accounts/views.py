@@ -59,6 +59,35 @@ def login_view(request):
 
 @login_required
 def profile(request):
+    from django.db.models import Sum
+    from planner.models import Badge, StudySession, StudyStreak, UserBadge, XPLog
+
+    streak, _ = StudyStreak.objects.get_or_create(user=request.user)
+    total_minutes = StudySession.objects.filter(user=request.user).aggregate(
+        total=Sum('duration_minutes')
+    )['total'] or 0
+    flashcard_reviews = XPLog.objects.filter(user=request.user, reason='flashcard').count()
+    achievement_definitions = [
+        ('achievement-first-session', 'First Session', 'Complete a tracked study session', '⏱️', StudySession.objects.filter(user=request.user).exists()),
+        ('achievement-week-streak', '7-Day Streak', 'Reach a seven-day study streak', '🔥', streak.longest_streak >= 7),
+        ('achievement-ten-hours', '10 Hours Logged', 'Log ten hours of focused study', '📚', total_minutes >= 600),
+        ('achievement-fifty-cards', '50 Flashcards Reviewed', 'Review fifty flashcards', '🃏', flashcard_reviews >= 50),
+    ]
+    for slug, name, description, icon, earned in achievement_definitions:
+        badge, _ = Badge.objects.get_or_create(
+            slug=slug,
+            defaults={'name': name, 'description': description, 'icon': icon, 'xp_reward': 0},
+        )
+        if earned:
+            UserBadge.objects.get_or_create(user=request.user, badge=badge)
+
+    unseen = list(UserBadge.objects.filter(
+        user=request.user, celebration_seen=False,
+        badge__slug__startswith='achievement-'
+    ).select_related('badge'))
+    if unseen:
+        UserBadge.objects.filter(pk__in=[entry.pk for entry in unseen]).update(celebration_seen=True)
+
     finished_count = SavedBook.objects.filter(user=request.user, status='finished').count()
     reading_count = SavedBook.objects.filter(user=request.user, status='reading').count()
 
@@ -85,6 +114,10 @@ def profile(request):
         'reading_count': reading_count,
         'rank': rank,
         'rank_emoji': rank_emoji,
+        'achievements': UserBadge.objects.filter(
+            user=request.user, badge__slug__startswith='achievement-'
+        ).select_related('badge').order_by('awarded_at'),
+        'new_achievements': [entry.badge.name for entry in unseen],
     }
     return render(request, 'accounts/profile.html', context)
 

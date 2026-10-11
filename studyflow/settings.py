@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'resources',
     'community',
     'campus',
+    'campus_life',
 ]
 
 MIDDLEWARE = [

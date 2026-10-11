@@ -218,6 +218,18 @@
             <span>💾</span> <span>Save Session (25m)</span>
         </button>
     </form>
+
+    <section class="mt-6 border-t border-slate-800 pt-5" aria-labelledby="recap-heading" data-streak="{{ current_streak }}">
+      <h3 id="recap-heading" class="text-sm font-bold text-white">Session recap card</h3>
+      <p class="mt-1 text-xs text-slate-400">Optional and private. Generate or share it only when you choose.</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="make-recap" type="button" class="rounded-lg bg-slate-700 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-600">Generate card</button>
+        <button id="download-recap" type="button" disabled class="rounded-lg border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-300 disabled:opacity-40">Download</button>
+        <button id="copy-recap" type="button" disabled class="rounded-lg border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-300 disabled:opacity-40">Copy image</button>
+      </div>
+      <p id="recap-status" class="mt-2 text-xs text-slate-400" role="status" aria-live="polite"></p>
+      <canvas id="session-recap" width="1200" height="630" class="mt-3 hidden w-full rounded-lg border border-slate-700" aria-label="Study session recap card"></canvas>
+    </section>
   </div>
 </div>
 
@@ -292,6 +304,63 @@
     const durationInput = document.getElementById('duration-input');
     const logBtn = document.getElementById('log-btn');
 
+    const recapCanvas = document.getElementById('session-recap');
+    const recapStatus = document.getElementById('recap-status');
+    const recapDownload = document.getElementById('download-recap');
+    const recapCopy = document.getElementById('copy-recap');
+
+    function generateSessionRecap() {
+      const context = recapCanvas.getContext('2d');
+      const gradient = context.createLinearGradient(0, 0, 1200, 630);
+      gradient.addColorStop(0, '#122b39');
+      gradient.addColorStop(1, '#183e35');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 1200, 630);
+      context.fillStyle = '#82e5ae';
+      context.font = '600 28px sans-serif';
+      context.fillText('STUDYFLOW  /  FOCUS SESSION', 76, 92);
+      context.fillStyle = '#ffffff';
+      context.font = '700 76px sans-serif';
+      context.fillText(`${selectedDuration} minutes focused`, 76, 250);
+      context.font = '400 34px sans-serif';
+      context.fillStyle = '#d8e8e0';
+      context.fillText(`${document.querySelector('[data-streak]').dataset.streak}-day study streak`, 78, 320);
+      context.font = '500 26px sans-serif';
+      context.fillStyle = '#9fb9ae';
+      context.fillText(new Date().toLocaleDateString(), 78, 520);
+      recapCanvas.classList.remove('hidden');
+      recapDownload.disabled = false;
+      recapCopy.disabled = false;
+      recapStatus.textContent = 'Card generated on this device. Nothing was shared.';
+    }
+
+    document.getElementById('make-recap').addEventListener('click', generateSessionRecap);
+    recapDownload.addEventListener('click', () => {
+      recapCanvas.toBlob((blob) => {
+        if (!blob) return;
+        const link = document.createElement('a');
+        link.download = 'studyflow-session-recap.png';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }, 'image/png');
+    });
+    recapCopy.addEventListener('click', async () => {
+      if (!navigator.clipboard?.write || !window.ClipboardItem) {
+        recapStatus.textContent = 'Copying images is not supported here. Use Download instead.';
+        return;
+      }
+      recapCanvas.toBlob(async (blob) => {
+        if (!blob) return;
+        try {
+          await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+          recapStatus.textContent = 'Recap image copied.';
+        } catch (error) {
+          recapStatus.textContent = 'Clipboard permission was not available. Use Download instead.';
+        }
+      }, 'image/png');
+    });
+
     function updateDisplay() {
         const m = Math.floor(timeLeft / 60);
         const s = timeLeft % 60;
@@ -331,6 +400,7 @@
                     isRunning = false;
                     timerBtnIcon.textContent = '🎉';
                     timerBtnText.textContent = 'Done!';
+                    recapStatus.textContent = 'Session complete. Generate a recap card if you want one.';
                     alert('Focus session complete! Great job logging your progress.');
                 }
             }, 1000);

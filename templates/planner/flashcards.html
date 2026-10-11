@@ -533,6 +533,11 @@ function quizNav(dir) {
   renderQuizCard();
 }
 
+window.studyflowFlashcardSwipe = (direction) => {
+  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) return;
+  quizNav(direction);
+};
+
 async function rateCard(rating) {
   const card = quizCards[quizIdx];
   if (card && card.id) {
