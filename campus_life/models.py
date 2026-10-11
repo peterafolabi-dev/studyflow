@@ -27,6 +27,8 @@ class CampusProfile(models.Model):
     hairstyle = models.CharField(max_length=12, choices=HAIR_CHOICES, default='crop')
     outfit_color = models.CharField(max_length=12, choices=OUTFIT_CHOICES, default='#2f855a')
     accessory = models.CharField(max_length=12, choices=ACCESSORY_CHOICES, default='none')
+    career_title = models.CharField(max_length=40, default='Fresher')
+    career_celebration_pending = models.BooleanField(default=False)
 
 
 class SavingsGoal(models.Model):

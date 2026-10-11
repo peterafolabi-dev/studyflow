@@ -25,6 +25,15 @@ def home(request):
         title = "Dean's List Contender"
     elif hours >= 10:
         title = 'Sophomore Hustler'
+    career_levels = ['Fresher', 'Sophomore Hustler', "Dean's List Contender", 'Final Year Finisher']
+    if career_levels.index(title) > career_levels.index(profile.career_title):
+        profile.career_title = title
+        profile.career_celebration_pending = True
+        profile.save(update_fields=['career_title', 'career_celebration_pending'])
+    show_career_celebration = profile.career_celebration_pending
+    if show_career_celebration:
+        profile.career_celebration_pending = False
+        profile.save(update_fields=['career_celebration_pending'])
 
     furniture = [
         {'name': 'Study desk', 'icon': '🪑', 'threshold': 0},
@@ -86,6 +95,7 @@ def home(request):
         'profile': profile,
         'credits': credits,
         'career_title': title,
+        'show_career_celebration': show_career_celebration,
         'study_hours': round(hours, 1),
         'furniture': [item for item in furniture if credits >= item['threshold']],
         'goal': goal,

@@ -325,6 +325,11 @@
         <p id="quiz-text" class="text-2xl sm:text-3xl font-display font-bold leading-snug max-w-lg m-0 text-balance"></p>
       </div>
 
+      <div class="mb-5 flex items-center justify-center gap-3">
+        <button type="button" onclick="quizNav(-1)" class="rounded-lg border border-slate-500 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10" aria-label="Previous flashcard">← Previous</button>
+        <button type="button" onclick="quizNav(1)" class="rounded-lg border border-slate-500 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10" aria-label="Next flashcard">Next →</button>
+      </div>
+
       <!-- Interaction Area (Fixed height to prevent layout shift jumping) -->
       <div class="relative h-[140px] w-full">
         <!-- Hint (Shown when on front) -->

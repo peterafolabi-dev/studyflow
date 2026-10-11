@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from resources.models import Resource
 from community.models import Thread
 from library.models import Book
+from campus_life.models import CreditEvent
 
 from .forms import CourseForm, TaskForm, TimetableEntryForm
 from .models import Course, Task, TimetableEntry, FlashcardDeck, Flashcard
@@ -376,7 +377,18 @@ def log_study(request):
         course = Course.objects.filter(id=course_id, user=request.user).first() if course_id else None
         session = StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
         from campus_life.services import earn_credits
-        earn_credits(request.user, f'study-session:{session.pk}', 'focused_minutes', duration // 10)
+        focused_minutes = StudySession.objects.filter(user=request.user).aggregate(
+            total=Sum('duration_minutes')
+        )['total'] or 0
+        already_earned = CreditEvent.objects.filter(
+            user=request.user, reason='focused_minutes'
+        ).aggregate(total=Sum('credits'))['total'] or 0
+        earn_credits(
+            request.user,
+            f'study-session:{session.pk}',
+            'focused_minutes',
+            max(0, focused_minutes // 10 - already_earned),
+        )
         _award_xp(request.user, 'pomodoro', points=20)
     return redirect('study_room')
 
