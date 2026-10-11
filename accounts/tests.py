@@ -32,8 +32,14 @@ class AuthTests(TestCase):
         User.objects.create_user('sam', password='S7rong-pass-99')
         response = self.client.post(reverse('login'), {'username': 'sam', 'password': 'S7rong-pass-99'})
         self.assertRedirects(response, reverse('dashboard'))
-        self.client.post(reverse('logout'))
+        logout_response = self.client.post(reverse('logout'), follow=True)
+        self.assertContains(logout_response, "You've been logged out. See you soon!")
         self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
+
+    def test_logout_rejects_get(self):
+        User.objects.create_user('sam', password='S7rong-pass-99')
+        self.client.login(username='sam', password='S7rong-pass-99')
+        self.assertEqual(self.client.get(reverse('logout')).status_code, 405)
 
     def test_login_with_wrong_password_fails(self):
         User.objects.create_user('sam', password='S7rong-pass-99')
