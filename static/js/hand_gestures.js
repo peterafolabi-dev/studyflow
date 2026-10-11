@@ -1,21 +1,34 @@
 (function () {
+  const DEBUG = true;
   const enableButton = document.getElementById('gesture-toggle');
   const stopButton = document.getElementById('gesture-stop');
   const status = document.getElementById('gesture-status');
   const video = document.getElementById('gesture-video');
   if (!enableButton || !stopButton || !status || !video) return;
 
+  function debug(...values) {
+    if (DEBUG) console.log('[hand-gesture]', ...values);
+  }
+
+  const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const coarseTouchDevice = navigator.maxTouchPoints > 0 &&
+    window.matchMedia('(pointer: coarse)').matches;
+  if (mobileUserAgent || coarseTouchDevice) {
+    enableButton.classList.add('hidden');
+    stopButton.classList.add('hidden');
+    status.textContent = 'Gesture control is available on desktop only.';
+    video.classList.add('hidden');
+    return;
+  }
+
   let stream = null;
   let tracker = null;
   let frameId = null;
   let active = false;
   let heldGesture = '';
-  let heldSince = 0;
-  let poseActionTriggered = false;
-  let lastActionAt = 0;
   let handXHistory = [];
-  let lastSwipeAt = 0;
-  let suppressPoseUntil = 0;
+  let heldFrames = 0;
+  let gestureCooldownUntil = 0;
   let trackingState = '';
 
   function report(message) {
