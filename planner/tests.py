@@ -250,6 +250,17 @@ class FlashcardSpacedRepetitionTests(BaseCase):
         self.assertContains(response, 'pt-[max(1.5rem,env(safe-area-inset-top))]')
         self.assertContains(response, 'overflow-y-auto')
 
+    def test_camera_assets_are_only_loaded_on_flashcards(self):
+        flashcards = self.client.get(reverse('flashcards'))
+        self.assertContains(flashcards, '@mediapipe/hands/hands.js')
+        self.assertContains(flashcards, 'static/js/hand_gestures.js')
+
+        for page_name in ('study_room', 'dashboard', 'catalogue'):
+            response = self.client.get(reverse(page_name))
+            self.assertNotContains(response, '@mediapipe/hands/hands.js', msg_prefix=page_name)
+            self.assertNotContains(response, 'static/js/hand_gestures.js', msg_prefix=page_name)
+            self.assertNotContains(response, 'getUserMedia', msg_prefix=page_name)
+
     def test_rate_review_rejects_invalid_rating(self):
         url = reverse('flashcard_rate_review', args=[self.card.pk])
         response = self.client.post(
