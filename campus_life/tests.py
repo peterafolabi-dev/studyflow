@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from campus_life.models import CampusProfile, CreditEvent
 from campus_life.services import credit_balance, earn_credits
-from planner.models import Course, Task
+from planner.models import Course, StudySession, Task
 
 
 class CampusLifeTests(TestCase):
@@ -51,3 +51,14 @@ class CampusLifeTests(TestCase):
         response = self.client.post(reverse('log_study'), {'duration': '25', 'course_id': ''})
         self.assertEqual(response.status_code, 302)
         self.assertEqual(credit_balance(self.user), 3)
+
+    def test_profile_milestones_are_private_and_celebrate_once(self):
+        StudySession.objects.create(user=self.user, duration_minutes=600)
+        first_response = self.client.get(reverse('profile'))
+        self.assertEqual(first_response.status_code, 200)
+        self.assertContains(first_response, 'First Session')
+        self.assertContains(first_response, '10 Hours Logged')
+        self.assertTrue(first_response.context['new_achievements'])
+
+        second_response = self.client.get(reverse('profile'))
+        self.assertEqual(second_response.context['new_achievements'], [])
