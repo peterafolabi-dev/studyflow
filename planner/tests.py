@@ -243,6 +243,9 @@ class FlashcardSpacedRepetitionTests(BaseCase):
         self.assertContains(response, 'window.studyflowGestureOpenPalm')
         self.assertContains(response, 'window.studyflowGestureThumbsUp')
         self.assertContains(response, 'function navigateGridFlashcard')
+        self.assertContains(response, 'aria-label="Close flashcard review"')
+        self.assertContains(response, 'pt-[max(1.5rem,env(safe-area-inset-top))]')
+        self.assertContains(response, 'overflow-y-auto')
 
     def test_rate_review_rejects_invalid_rating(self):
         url = reverse('flashcard_rate_review', args=[self.card.pk])
