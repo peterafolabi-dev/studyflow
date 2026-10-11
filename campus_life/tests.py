@@ -52,6 +52,12 @@ class CampusLifeTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(credit_balance(self.user), 3)
 
+    def test_partial_sessions_accumulate_at_ten_minutes_per_credit(self):
+        self.client.post(reverse('log_study'), {'duration': '5', 'course_id': ''})
+        self.assertEqual(credit_balance(self.user), 1)
+        self.client.post(reverse('log_study'), {'duration': '5', 'course_id': ''})
+        self.assertEqual(credit_balance(self.user), 2)
+
     def test_profile_milestones_are_private_and_celebrate_once(self):
         StudySession.objects.create(user=self.user, duration_minutes=600)
         first_response = self.client.get(reverse('profile'))
