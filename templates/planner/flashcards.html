@@ -27,7 +27,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <p class="text-sm font-semibold text-white">Hand gesture controls <span aria-hidden="true">✋</span></p>
-        <p class="text-xs text-slate-300">Optional. Camera video never leaves this device.</p>
+        <p class="text-xs text-slate-300">Optional; video stays on this device. Palm flips the focused card, swipe changes focus, and pinch/thumbs-up rate a revealed card.</p>
         <p id="gesture-status" class="text-xs text-emerald-300" role="status" aria-live="polite">Off</p>
       </div>
       <div class="flex items-center gap-2">
@@ -174,7 +174,7 @@
       {% if deck.cards.all %}
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {% for card in deck.cards.all %}
-        <div class="sf-flashcard group" onclick="flipCard('{{ card.pk }}')">
+        <div class="sf-flashcard group" data-card-id="{{ card.pk }}" onclick="flipCard('{{ card.pk }}')">
           <div class="sf-flashcard-inner" id="inner-{{ card.pk }}">
             <!-- Front -->
             <div class="sf-flashcard-front">
@@ -413,12 +413,67 @@ function toggleAddCard(deckId) {
 function flipCard(cardId) {
   const card = document.getElementById('inner-' + cardId);
   if (!card) return;
+  setFocusedFlashcard(cardId);
   const scrollX = window.scrollX;
   const scrollY = window.scrollY;
   card.classList.toggle('flipped');
   requestAnimationFrame(() => {
     if (Math.abs(window.scrollY - scrollY) > 2) window.scrollTo(scrollX, scrollY);
   });
+}
+
+let focusedFlashcardId = null;
+
+function setFocusedFlashcard(cardId) {
+  document.querySelectorAll('.sf-flashcard.gesture-current').forEach(card => {
+    card.classList.remove('gesture-current');
+  });
+  const wrapper = document.querySelector(`.sf-flashcard[data-card-id="${cardId}"]`);
+  if (!wrapper) return null;
+  wrapper.classList.add('gesture-current');
+  focusedFlashcardId = String(cardId);
+  return wrapper;
+}
+
+function getFocusedFlashcard() {
+  const cards = Array.from(document.querySelectorAll('.sf-flashcard[data-card-id]'));
+  return cards.find(card => card.dataset.cardId === focusedFlashcardId) || cards[0] || null;
+}
+
+function navigateGridFlashcard(direction) {
+  const cards = Array.from(document.querySelectorAll('.sf-flashcard[data-card-id]'));
+  if (!cards.length) return 'No flashcards are available in this view.';
+  const currentIndex = cards.findIndex(card => card.dataset.cardId === focusedFlashcardId);
+  const nextIndex = currentIndex < 0
+    ? (direction > 0 ? 0 : cards.length - 1)
+    : (currentIndex + direction + cards.length) % cards.length;
+  setFocusedFlashcard(cards[nextIndex].dataset.cardId);
+  return direction > 0 ? 'Swipe left: next card focused.' : 'Swipe right: previous card focused.';
+}
+
+async function reviewFocusedFlashcard(rating) {
+  const wrapper = getFocusedFlashcard();
+  if (!wrapper) return 'No flashcard is available to review.';
+  const inner = wrapper.querySelector('.sf-flashcard-inner');
+  if (!inner.classList.contains('flipped')) return 'Flip the focused card first, then use pinch or thumbs-up to rate it.';
+
+  try {
+    const response = await fetch(`/flashcards/${wrapper.dataset.cardId}/review/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken') || ''
+      },
+      body: JSON.stringify({ rating })
+    });
+    if (!response.ok) throw new Error(`Review save failed: ${response.status}`);
+    wrapper.classList.add('gesture-reviewed');
+    navigateGridFlashcard(1);
+    return rating === 'easy' ? 'Card marked easy; next card focused.' : 'Card marked good; next card focused.';
+  } catch (error) {
+    console.error('Failed to save gesture review:', error);
+    return 'Could not save the review. Check your connection and try again.';
+  }
 }
 
 function openNewDeckModal() {
@@ -546,33 +601,38 @@ function quizNav(dir) {
 }
 
 window.studyflowFlashcardSwipe = (direction) => {
-  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) return false;
-  quizNav(direction);
-  return direction > 0 ? 'Swipe left: next flashcard.' : 'Swipe right: previous flashcard.';
+  if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
+    quizNav(direction);
+    return direction > 0 ? 'Swipe left: next flashcard.' : 'Swipe right: previous flashcard.';
+  }
+  return navigateGridFlashcard(direction);
 };
 
 window.studyflowGestureOpenPalm = () => {
-  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
-    return 'Open a flashcard review first; gestures are ready.';
+  if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
+    quizFlip();
+    return quizShowingBack ? 'Open palm: answer revealed.' : 'Open palm: question shown.';
   }
-  quizFlip();
-  return quizShowingBack ? 'Open palm: answer revealed.' : 'Open palm: question shown.';
+  const card = getFocusedFlashcard();
+  if (!card) return 'No flashcards are available to flip.';
+  flipCard(card.dataset.cardId);
+  return 'Open palm: focused card flipped.';
 };
 
 window.studyflowGestureThumbsUp = async () => {
-  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
-    return 'Open a flashcard review first; gestures are ready.';
+  if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
+    const saved = await rateCard('easy');
+    return saved ? 'Thumbs up: card marked easy.' : 'Could not save the review. Check your connection.';
   }
-  const saved = await rateCard('easy');
-  return saved ? 'Thumbs up: card marked easy.' : 'Could not save the review. Check your connection.';
+  return await reviewFocusedFlashcard('easy');
 };
 
 window.studyflowGesturePinch = async () => {
-  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
-    return 'Open a flashcard review first; gestures are ready.';
+  if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
+    const saved = await rateCard('medium');
+    return saved ? 'Pinch: card marked good.' : 'Could not save the review. Check your connection.';
   }
-  const saved = await rateCard('medium');
-  return saved ? 'Pinch: card marked good.' : 'Could not save the review. Check your connection.';
+  return await reviewFocusedFlashcard('medium');
 };
 
 async function rateCard(rating) {

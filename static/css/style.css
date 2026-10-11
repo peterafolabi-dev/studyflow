@@ -520,6 +520,8 @@ h2 { font-size: 1.2rem; }
   border-radius: 1.5rem;
 }
 .flashcards-page .sf-flashcard-inner.flipped { transform: rotateY(180deg); }
+.flashcards-page .sf-flashcard.gesture-current { outline: 3px solid #22d3ee; outline-offset: 3px; }
+.flashcards-page .sf-flashcard.gesture-reviewed { outline-color: #34d399; }
 .flashcards-page .sf-flashcard-front, .flashcards-page .sf-flashcard-back {
   position: absolute;
   inset: 0;

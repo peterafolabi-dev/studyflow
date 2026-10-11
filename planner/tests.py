@@ -236,6 +236,14 @@ class FlashcardSpacedRepetitionTests(BaseCase):
         self.assertEqual(data['rating'], 'easy')
         self.assertEqual(data['interval_days'], 2)
 
+    def test_flashcard_page_includes_grid_gesture_actions(self):
+        response = self.client.get(reverse('flashcards'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'data-card-id="{self.card.pk}"')
+        self.assertContains(response, 'window.studyflowGestureOpenPalm')
+        self.assertContains(response, 'window.studyflowGestureThumbsUp')
+        self.assertContains(response, 'function navigateGridFlashcard')
+
     def test_rate_review_rejects_invalid_rating(self):
         url = reverse('flashcard_rate_review', args=[self.card.pk])
         response = self.client.post(
