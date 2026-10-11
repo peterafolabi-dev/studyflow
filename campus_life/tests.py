@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from campus_life.models import CampusProfile, CreditEvent
 from campus_life.services import credit_balance, earn_credits
-from planner.models import Course, StudySession, Task
+from planner.models import Course, Flashcard, FlashcardDeck, StudySession, Task
 
 
 class CampusLifeTests(TestCase):
@@ -28,7 +28,7 @@ class CampusLifeTests(TestCase):
         self.assertNotContains(response, '{{')
         self.assertNotContains(response, '{%')
         self.assertContains(response, '<option value="crop"')
-        self.assertContains(response, 'pb-48 sm:pb-40')
+        self.assertContains(response, 'pb-72 sm:pb-80')
         self.assertContains(response, 'grid-cols-1 gap-4 sm:grid-cols-2')
         self.assertContains(response, 'fixed bottom-4 left-4 right-auto')
         self.assertContains(response, 'sm:left-auto sm:right-24')
@@ -47,6 +47,16 @@ class CampusLifeTests(TestCase):
     def test_existing_study_pages_still_render(self):
         self.assertEqual(self.client.get(reverse('study_room')).status_code, 200)
         self.assertEqual(self.client.get(reverse('flashcards')).status_code, 200)
+
+    def test_flashcard_data_attributes_keep_hyphens_readable(self):
+        course = Course.objects.create(user=self.user, name='Algorithms')
+        deck = FlashcardDeck.objects.create(course=course, title='SM-2 Review')
+        Flashcard.objects.create(deck=deck, front='Explain SM-2', back='Spaced-repetition algorithm')
+
+        response = self.client.get(reverse('flashcards'))
+        self.assertContains(response, 'data-title="SM-2 Review"')
+        self.assertContains(response, 'data-front="Explain SM-2"')
+        self.assertNotContains(response, r'SM\u002D2')
 
     def test_on_time_task_awards_credits_only_once(self):
         course = Course.objects.create(user=self.user, name='Calculus')

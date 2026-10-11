@@ -222,9 +222,9 @@
     </div>
 
     <!-- Hidden data store for Quiz Mode -->
-    <div id="deck-data-{{ deck.pk }}" style="display:none;" data-count="{{ deck.cards.count }}" data-title="{{ deck.title|escapejs }}" data-course="{{ deck.course.code|default:deck.course.name|escapejs }}">
+    <div id="deck-data-{{ deck.pk }}" style="display:none;" data-count="{{ deck.cards.count }}" data-title="{{ deck.title }}" data-course="{{ deck.course.code|default:deck.course.name }}">
       {% for c in deck.cards.all %}
-      <span data-id="{{ c.pk }}" data-front="{{ c.front|escapejs }}" data-back="{{ c.back|escapejs }}" data-interval="{{ c.interval_days }}" data-repetitions="{{ c.repetitions }}" data-due="{{ c.is_due|yesno:'1,0' }}"></span>
+      <span data-id="{{ c.pk }}" data-front="{{ c.front }}" data-back="{{ c.back }}" data-interval="{{ c.interval_days }}" data-repetitions="{{ c.repetitions }}" data-due="{{ c.is_due|yesno:'1,0' }}"></span>
       {% endfor %}
     </div>
 
