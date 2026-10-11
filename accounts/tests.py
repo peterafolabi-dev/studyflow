@@ -33,7 +33,11 @@ class AuthTests(TestCase):
         response = self.client.post(reverse('login'), {'username': 'sam', 'password': 'S7rong-pass-99'})
         self.assertRedirects(response, reverse('dashboard'))
         logout_response = self.client.post(reverse('logout'), follow=True)
-        self.assertContains(logout_response, "You've been logged out. See you soon!")
+        self.assertEqual(
+            [str(message) for message in logout_response.context['messages']],
+            ["You've been logged out. See you soon!"],
+        )
+        self.assertContains(logout_response, 'You&#x27;ve been logged out. See you soon!')
         self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
 
     def test_logout_rejects_get(self):
