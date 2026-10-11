@@ -36,6 +36,10 @@ class CampusLifeTests(TestCase):
         profile = CampusProfile.objects.get(user=self.user)
         self.assertEqual(profile.hairstyle, 'crop')
 
+    def test_existing_study_pages_still_render(self):
+        self.assertEqual(self.client.get(reverse('study_room')).status_code, 200)
+        self.assertEqual(self.client.get(reverse('flashcards')).status_code, 200)
+
     def test_on_time_task_awards_credits_only_once(self):
         course = Course.objects.create(user=self.user, name='Calculus')
         task = Task.objects.create(course=course, title='Submit worksheet', due_date=date.today())

@@ -30,6 +30,7 @@ def home(request):
         profile.career_title = title
         profile.career_celebration_pending = True
         profile.save(update_fields=['career_title', 'career_celebration_pending'])
+    title = profile.career_title
     show_career_celebration = profile.career_celebration_pending
     if show_career_celebration:
         profile.career_celebration_pending = False
