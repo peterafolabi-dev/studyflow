@@ -793,6 +793,141 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 });
 </script>
+<script>
+(function () {
+  const review = document.getElementById('quiz-modal');
+  const enableButton = document.getElementById('gesture-toggle');
+  const guideLink = document.getElementById('gesture-guide-link');
+  const guide = document.getElementById('gesture-guide');
+  const closeButton = document.getElementById('gesture-guide-close');
+  const startButton = document.getElementById('gesture-guide-start');
+  const stopButton = document.getElementById('gesture-stop');
+  const activeHint = document.getElementById('gesture-active-hint');
+  const status = document.getElementById('gesture-status');
+  if (!review || !enableButton || !guideLink || !guide || !closeButton || !startButton) return;
+
+  const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const coarseTouchDevice = navigator.maxTouchPoints > 0 &&
+    window.matchMedia('(pointer: coarse)').matches;
+  if (mobileUserAgent || coarseTouchDevice) {
+    guideLink.classList.add('hidden');
+    if (activeHint) activeHint.classList.add('hidden');
+    return;
+  }
+
+  const seenKey = 'studyflow-flashcard-gesture-guide-seen';
+  let guideSeen = false;
+  try {
+    guideSeen = window.localStorage.getItem(seenKey) === 'true';
+  } catch (error) {
+    guideSeen = false;
+  }
+
+  let opener = null;
+  function markGuideSeen() {
+    guideSeen = true;
+    try {
+      window.localStorage.setItem(seenKey, 'true');
+    } catch (error) {
+      guideSeen = true;
+    }
+  }
+
+  function focusableElements() {
+    return Array.from(guide.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+  }
+
+  function closeGuide(startCamera) {
+    guide.classList.add('hidden');
+    guide.classList.remove('flex');
+    guide.setAttribute('aria-hidden', 'true');
+    document.removeEventListener('keydown', onGuideKeydown);
+    if (startCamera) {
+      enableButton.click();
+    } else if (opener && opener.isConnected) {
+      opener.focus();
+    }
+  }
+
+  function onGuideKeydown(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeGuide(false);
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const items = focusableElements();
+    if (!items.length) {
+      event.preventDefault();
+      return;
+    }
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  function openGuide() {
+    opener = document.activeElement;
+    markGuideSeen();
+    guide.classList.remove('hidden');
+    guide.classList.add('flex');
+    guide.setAttribute('aria-hidden', 'false');
+    document.addEventListener('keydown', onGuideKeydown);
+    closeButton.focus();
+  }
+
+  guideLink.addEventListener('click', openGuide);
+  enableButton.addEventListener('click', (event) => {
+    if (guideSeen) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openGuide();
+  }, true);
+  closeButton.addEventListener('click', () => closeGuide(false));
+  startButton.addEventListener('click', () => closeGuide(true));
+  guide.addEventListener('click', (event) => {
+    if (event.target === guide) closeGuide(false);
+  });
+
+  if (stopButton && activeHint) {
+    const cameraStateObserver = new MutationObserver(() => {
+      activeHint.classList.toggle('hidden', stopButton.classList.contains('hidden'));
+    });
+    cameraStateObserver.observe(stopButton, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  if (status) {
+    const rows = Array.from(guide.querySelectorAll('[data-gesture-guide]'));
+    const updateGuideHighlight = () => {
+      const message = status.textContent.toLowerCase();
+      const gesture = message.includes('swipe right') ? 'swipe-right'
+        : message.includes('swipe left') ? 'swipe-left'
+          : message.includes('thumbs up') ? 'thumbs-up'
+            : message.includes('thumbs down') ? 'thumbs-down'
+              : message.includes('closed fist') ? 'fist'
+                : message.includes('open palm') ? 'palm' : '';
+      rows.forEach((row) => {
+        const active = Boolean(gesture) && row.dataset.gestureGuide === gesture;
+        row.classList.toggle('border-brand-400', active);
+        row.classList.toggle('bg-brand-500/20', active);
+        row.classList.toggle('ring-1', active);
+        row.classList.toggle('ring-brand-400', active);
+      });
+    };
+    new MutationObserver(updateGuideHighlight).observe(status, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+  }
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 <script src="{% static 'js/hand_gestures.js' %}" defer></script>
 {% endblock %}
