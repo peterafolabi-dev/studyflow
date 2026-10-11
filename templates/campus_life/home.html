@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Study Campus Life · StudyFlow{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-8 pb-48 sm:pb-40">
+<div class="max-w-5xl mx-auto space-y-8 pb-72 sm:pb-80">
   <header class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-700 pb-5">
     <div>
       <p class="text-xs font-semibold uppercase text-emerald-300">FUT Minna · personal progress</p>
@@ -48,6 +48,7 @@
       <div class="relative mt-5 grid min-h-48 grid-cols-3 items-end justify-items-center gap-3 overflow-hidden rounded-lg border border-slate-700 bg-[#dce7dc] p-4 pb-12 sm:grid-cols-4 sm:gap-4 sm:p-6 sm:pb-14" aria-label="Your decorated dorm room">
         <div class="absolute inset-x-0 bottom-0 h-8 border-t border-slate-500/40 bg-[#bdc9bb] sm:h-10" aria-hidden="true"></div>
         {% for item in furniture %}<span class="relative z-10 flex h-14 w-14 items-center justify-center rounded-md border border-slate-300 bg-white/80 text-2xl shadow-sm sm:h-16 sm:w-16" title="{{ item.name }}" aria-label="{{ item.name }}">{{ item.icon }}</span>{% endfor %}
+        {% if furniture|length <= 1 %}<p class="relative z-10 col-span-full mt-2 text-center text-xs italic text-slate-600">Your dorm is waiting for its first decorations. Earn Credits by studying to unlock furniture!</p>{% endif %}
       </div>
       <p class="mt-2 text-xs text-slate-400">Decorations unlock permanently as your lifetime Credits grow; none are charged.</p>
     </div>
@@ -71,7 +72,7 @@
     <div class="min-w-0 border-b border-slate-700 pb-8">
       <h2 class="font-display text-xl font-bold text-white">FUT Minna landmarks</h2>
       {% for badge in landmarks %}<article class="mt-4 border-l-2 {% if badge.earned %}border-emerald-400{% else %}border-slate-600{% endif %} pl-3"><p class="font-semibold text-white">{% if badge.earned %}✓{% else %}○{% endif %} {{ badge.name }}</p><p class="text-sm text-slate-400">{{ badge.description }}</p></article>{% endfor %}
-      <p class="mt-3 text-xs text-slate-500">Early-bird badge is not available yet because existing study sessions store dates, not start times.</p>
+      <p class="mt-3 text-xs text-slate-500">Early-bird badge is coming soon. It will unlock once StudyFlow starts tracking when your study sessions begin.</p>
     </div>
   </section>
 </div>
