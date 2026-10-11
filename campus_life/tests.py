@@ -25,6 +25,11 @@ class CampusLifeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'No cash value')
         self.assertContains(response, 'Your campus avatar')
+        self.assertNotContains(response, '{{')
+        self.assertNotContains(response, '{%')
+        self.assertContains(response, '<option value="crop"')
+        self.assertContains(response, 'pb-48 sm:pb-40')
+        self.assertContains(response, 'grid-cols-1 gap-4 sm:grid-cols-2')
 
         self.client.post(reverse('campus_life_home'), {
             'action': 'save_avatar',

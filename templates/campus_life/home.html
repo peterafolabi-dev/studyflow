@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Study Campus Life · StudyFlow{% endblock %}
 {% block content %}
-<div class="max-w-5xl mx-auto space-y-8">
+<div class="max-w-5xl mx-auto space-y-8 pb-48 sm:pb-40">
   <header class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-700 pb-5">
     <div>
       <p class="text-xs font-semibold uppercase text-emerald-300">FUT Minna · personal progress</p>
@@ -18,7 +18,7 @@
   <section class="grid gap-6 md:grid-cols-2">
     <div class="border-b border-slate-700 pb-6">
       <h2 class="font-display text-xl font-bold text-white">Your campus avatar</h2>
-      <div class="my-4 flex items-center gap-5">
+      <div class="my-4 flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-5">
         <svg viewBox="0 0 160 190" class="h-40 w-36" role="img" aria-label="Flat illustration of your campus avatar">
           <path d="M28 180c3-39 22-61 52-61s49 22 52 61" fill="{{ profile.outfit_color }}"/>
           <path d="M48 69c0-25 13-42 32-42s32 17 32 42v22c0 24-14 39-32 39S48 115 48 91z" fill="{{ profile.skin_tone }}"/>
@@ -32,13 +32,13 @@
           <p class="mt-2">10 focused minutes = 1 Credit. On-time task = 5 Credits. Flashcard review = 1 Credit per card per day. Daily study activity = 1 Credit.</p>
         </div>
       </div>
-      <form method="post" class="grid grid-cols-2 gap-3">
+      <form method="post" class="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
         {% csrf_token %}<input type="hidden" name="action" value="save_avatar">
-        <label class="text-xs text-slate-300">Skin tone<select name="skin_tone" class="mt-1 w-full rounded border border-slate-700 bg-slate-900 p-2">{% for value,label in skin_choices %}<option value="{{ value }}" {% if profile.skin_tone == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <label class="text-xs text-slate-300">Hair<select name="hairstyle" class="mt-1 w-full rounded border border-slate-700 bg-slate-900 p-2">{% for value,label in hair_choices %}<option value="{{ value }}" {% if profile.hairstyle == value %}selected{% endif %} {% if value == 'coils' and credits < 10 or value == 'locs' and credits < 25 %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <label class="text-xs text-slate-300">Outfit<select name="outfit_color" class="mt-1 w-full rounded border border-slate-700 bg-slate-900 p-2">{% for value,label in outfit_choices %}<option value="{{ value }}" {% if profile.outfit_color == value %}selected{% endif %} {% if value == '#2563eb' and credits < 10 or value == '#c2410c' and credits < 25 %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <label class="text-xs text-slate-300">Accessory<select name="accessory" class="mt-1 w-full rounded border border-slate-700 bg-slate-900 p-2">{% for value,label in accessory_choices %}<option value="{{ value }}" {% if profile.accessory == value %}selected{% endif %} {% if value == 'book' and credits < 5 or value == 'glasses' and credits < 20 %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-        <button class="col-span-2 w-fit rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600">Save avatar</button>
+        <label class="block min-w-0 text-xs text-slate-300">Skin tone<select name="skin_tone" class="mt-1 block w-full min-w-0 rounded border border-slate-700 bg-slate-900 p-2 text-sm">{% for value,label in skin_choices %}<option value="{{ value }}" {% if profile.skin_tone == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label class="block min-w-0 text-xs text-slate-300">Hair<select name="hairstyle" class="mt-1 block w-full min-w-0 rounded border border-slate-700 bg-slate-900 p-2 text-sm">{% for value,label in hair_choices %}<option value="{{ value }}" {% if profile.hairstyle == value %}selected{% endif %} {% if value == 'coils' and credits < 10 or value == 'locs' and credits < 25 %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label class="block min-w-0 text-xs text-slate-300">Outfit<select name="outfit_color" class="mt-1 block w-full min-w-0 rounded border border-slate-700 bg-slate-900 p-2 text-sm">{% for value,label in outfit_choices %}<option value="{{ value }}" {% if profile.outfit_color == value %}selected{% endif %} {% if value == '#2563eb' and credits < 10 or value == '#c2410c' and credits < 25 %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label class="block min-w-0 text-xs text-slate-300">Accessory<select name="accessory" class="mt-1 block w-full min-w-0 rounded border border-slate-700 bg-slate-900 p-2 text-sm">{% for value,label in accessory_choices %}<option value="{{ value }}" {% if profile.accessory == value %}selected{% endif %} {% if value == 'book' and credits < 5 or value == 'glasses' and credits < 20 %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <button class="w-full rounded bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600 sm:col-span-2 sm:w-fit">Save avatar</button>
       </form>
     </div>
 
@@ -60,11 +60,11 @@
       <p class="mt-4 font-semibold text-white">{{ goal.title }} · {{ goal_credits }} / {{ goal.target_credits }} Credits</p>
       <div class="mt-2 h-3 overflow-hidden rounded bg-slate-700"><div class="h-full bg-emerald-400" style="width: {{ goal_progress }}%"></div></div>
       {% endif %}
-      <form method="post" class="mt-4 grid gap-2 sm:grid-cols-[1fr_8rem_auto]">
+      <form method="post" class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_8rem_auto] sm:items-end">
         {% csrf_token %}<input type="hidden" name="action" value="save_goal">
-        <label class="sr-only" for="goal-title">Goal name</label><input id="goal-title" name="title" maxlength="80" value="{{ goal.title }}" placeholder="New outfit" required class="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white">
-        <label class="sr-only" for="goal-target">Target Credits</label><input id="goal-target" name="target_credits" type="number" min="1" value="{{ goal.target_credits|default:'' }}" placeholder="500" required class="rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white">
-        <button class="rounded bg-slate-700 px-3 py-2 text-sm font-semibold text-white">Save goal</button>
+        <label class="block min-w-0 text-xs text-slate-300" for="goal-title">Goal name<input id="goal-title" name="title" maxlength="80" value="{{ goal.title }}" placeholder="New outfit" required class="mt-1 block w-full min-w-0 rounded border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white"></label>
+        <label class="block min-w-0 text-xs text-slate-300" for="goal-target">Target Credits<input id="goal-target" name="target_credits" type="number" min="1" value="{{ goal.target_credits|default:'' }}" placeholder="500" required class="mt-1 block w-full min-w-0 rounded border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white"></label>
+        <button class="w-full rounded bg-slate-700 px-3 py-2.5 text-sm font-semibold text-white hover:bg-slate-600 sm:w-auto">Save goal</button>
       </form>
     </div>
     <div class="border-b border-slate-700 pb-6">
