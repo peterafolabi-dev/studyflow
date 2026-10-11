@@ -30,6 +30,9 @@ class CampusLifeTests(TestCase):
         self.assertContains(response, '<option value="crop"')
         self.assertContains(response, 'pb-48 sm:pb-40')
         self.assertContains(response, 'grid-cols-1 gap-4 sm:grid-cols-2')
+        self.assertContains(response, 'fixed bottom-4 left-4 right-auto')
+        self.assertContains(response, 'sm:left-auto sm:right-24')
+        self.assertContains(response, 'grid min-h-48 grid-cols-3')
 
         self.client.post(reverse('campus_life_home'), {
             'action': 'save_avatar',
