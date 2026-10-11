@@ -16,12 +16,12 @@ class AuthTests(TestCase):
     def test_signup_creates_user_redirects_to_login_without_logging_in(self):
         response = self.client.post(reverse('signup'), {
             'username': 'newstudent', 'password1': 'S7rong-pass-99', 'password2': 'S7rong-pass-99',
-        })
-        self.assertRedirects(response, reverse('login'))
+        }, follow=True)
+        self.assertEqual(response.redirect_chain, [(reverse('login'), 302)])
         self.assertTrue(User.objects.filter(username='newstudent').exists())
         self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertContains(response, 'You&#x27;ve signed up successfully! Please log in.')
         self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
-        self.assertContains(self.client.get(reverse('login')), 'You&#x27;ve signed up successfully! Please log in.')
 
     def test_signup_rejects_mismatched_passwords(self):
         response = self.client.post(reverse('signup'), {

@@ -89,7 +89,7 @@ def record_user_login(sender, request, user, **kwargs):
         user_agent=user_agent,
         login_method=login_method
     )
-    if request:
+    if request and hasattr(request, '_messages'):
         welcome = (
             f"Welcome to StudyFlow, {user.username}! Let's get started."
             if is_first_login else f'Welcome back, {user.username}!'
