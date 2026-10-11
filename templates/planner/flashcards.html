@@ -890,7 +890,10 @@ document.addEventListener('DOMContentLoaded', () => {
     openGuide();
   }, true);
   closeButton.addEventListener('click', () => closeGuide(false));
-  startButton.addEventListener('click', () => closeGuide(true));
+  startButton.addEventListener('click', () => {
+    const cameraAlreadyActive = stopButton && !stopButton.classList.contains('hidden');
+    closeGuide(!cameraAlreadyActive);
+  });
   guide.addEventListener('click', (event) => {
     if (event.target === guide) closeGuide(false);
   });
