@@ -411,7 +411,14 @@ function toggleAddCard(deckId) {
 }
 
 function flipCard(cardId) {
-  document.getElementById('inner-' + cardId).classList.toggle('flipped');
+  const card = document.getElementById('inner-' + cardId);
+  if (!card) return;
+  const scrollX = window.scrollX;
+  const scrollY = window.scrollY;
+  card.classList.toggle('flipped');
+  requestAnimationFrame(() => {
+    if (Math.abs(window.scrollY - scrollY) > 2) window.scrollTo(scrollX, scrollY);
+  });
 }
 
 function openNewDeckModal() {

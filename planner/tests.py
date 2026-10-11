@@ -167,6 +167,18 @@ class DashboardTests(BaseCase):
         self.assertContains(response, 'Add your first course')
 
 
+class BreakRoomTests(BaseCase):
+    def test_academic_speed_typer_renders_controls_and_game_logic(self):
+        response = self.client.get(reverse('break_room'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Academic Speed Typer')
+        self.assertContains(response, 'id="score-typer"')
+        self.assertContains(response, 'id="timer-typer"')
+        self.assertContains(response, 'id="input-typer"')
+        self.assertContains(response, 'setInterval')
+        self.assertContains(response, 'sf_academic_typer_best')
+
+
 class FlashcardSpacedRepetitionTests(BaseCase):
     def setUp(self):
         super().setUp()
