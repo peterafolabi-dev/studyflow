@@ -28,6 +28,7 @@
   let heldGesture = '';
   let handXHistory = [];
   let heldFrames = 0;
+  let gestureHandled = false;
   let gestureCooldownUntil = 0;
   let trackingState = '';
 
@@ -52,17 +53,14 @@
     return [8, 12, 16, 20].filter((tip) => landmarks[tip].y < landmarks[tip - 2].y).length;
   }
 
-  function distanceBetween(first, second) {
-    return Math.hypot(first.x - second.x, first.y - second.y);
-  }
-
   function detectPose(landmarks) {
     const extended = countExtendedFingers(landmarks);
-    const otherFingersCurled = extended === 0;
+    const otherFingersCurled = extended <= 1;
     const thumbUp = landmarks[4].y < landmarks[3].y - 0.05;
+    const thumbDown = landmarks[4].y > landmarks[3].y + 0.05;
 
-    if (distanceBetween(landmarks[4], landmarks[8]) < 0.055) return 'pinch';
     if (thumbUp && otherFingersCurled) return 'thumbs-up';
+    if (thumbDown && otherFingersCurled) return 'thumbs-down';
     if (extended >= 4) return 'palm';
     if (extended <= 1) return 'fist';
     return '';
@@ -79,18 +77,23 @@
       return;
     }
 
-    if (pose === 'fist' && typeof window.studyflowGestureResume === 'function') {
-      window.studyflowGestureResume();
-      report('Closed fist held: timer resumed.');
+    if (pose === 'fist') {
+      if (typeof window.studyflowGestureClosePalm === 'function') {
+        reportActionResult(window.studyflowGestureClosePalm(), 'Closed fist: answer hidden.');
+      } else if (typeof window.studyflowGestureResume === 'function') {
+        window.studyflowGestureResume();
+        report('Closed fist held: timer resumed.');
+      }
       return;
     }
 
     const actions = {
-      'thumbs-up': ['studyflowGestureThumbsUp', 'Thumbs up detected.'],
-      pinch: ['studyflowGesturePinch', 'Pinch detected.'],
+      'thumbs-up': ['studyflowGestureThumbsUp', 'Thumbs up: I knew it.'],
+      'thumbs-down': ['studyflowGestureThumbsDown', 'Thumbs down: I forgot.'],
     };
     const action = actions[pose];
     if (action && typeof window[action[0]] === 'function') {
+      debug('action ran:', pose);
       reportActionResult(window[action[0]](), action[1]);
     }
   }
@@ -98,7 +101,8 @@
   function onResults(results) {
     if (!active || !results.multiHandLandmarks || !results.multiHandLandmarks.length) {
       heldGesture = '';
-      poseActionTriggered = false;
+      heldFrames = 0;
+      gestureHandled = false;
       handXHistory = [];
       if (active && trackingState !== 'no-hand') {
         trackingState = 'no-hand';
@@ -115,60 +119,67 @@
     const landmarks = results.multiHandLandmarks[0];
     const now = performance.now();
     const handX = landmarks[0].x;
-    handXHistory.push({ x: handX, time: now });
-    while (handXHistory.length > 1 && now - handXHistory[0].time > 400) {
+    handXHistory.push({ x: handX, time: now, open: countExtendedFingers(landmarks) >= 3 });
+    while (handXHistory.length > 10 ||
+           (handXHistory.length > 1 && now - handXHistory[0].time > 400)) {
       handXHistory.shift();
     }
 
     if (handXHistory.length > 1) {
       const deltaX = handX - handXHistory[0].x;
-      if (Math.abs(deltaX) >= 0.05) {
-        console.log('[hand-gesture] current hand x:', handX, 'x delta over window:', deltaX);
-      }
-      if (Math.abs(deltaX) >= 0.15 && now - handXHistory[0].time <= 400 && now - lastSwipeAt >= 700) {
+      if (handXHistory.length % 3 === 0) debug('current hand x:', handX, 'x delta:', deltaX);
+      const openFrames = handXHistory.filter(frame => frame.open).length;
+      const mostlyOpen = openFrames >= Math.ceil(handXHistory.length * 0.6);
+      if (mostlyOpen && handXHistory.length >= 3 && Math.abs(deltaX) >= 0.15 &&
+          now - handXHistory[0].time <= 400 && now >= gestureCooldownUntil) {
         const direction = deltaX > 0 ? 1 : -1;
-        console.log('[hand-gesture] swipe direction detected:', direction > 0 ? 'right / next' : 'left / previous');
-        lastSwipeAt = now;
-        lastActionAt = now;
+        const label = direction > 0 ? 'Swipe right ->' : 'Swipe left ->';
+        debug('detected gesture:', label, 'x delta:', deltaX);
+        gestureCooldownUntil = now + 700;
         handXHistory = [];
-        heldGesture = '';
-        poseActionTriggered = false;
-        suppressPoseUntil = now + 700;
+        heldGesture = 'palm';
+        heldFrames = 3;
+        gestureHandled = true;
         if (typeof window.studyflowFlashcardSwipe === 'function') {
           const outcome = window.studyflowFlashcardSwipe(direction);
-          report(outcome || 'Swipe detected.');
+          report(`${label} ${outcome || (direction > 0 ? 'next card' : 'previous card')}`);
         } else {
-          report('Swipe detected, but flashcard navigation is unavailable.');
+          report(`${label} flashcard navigation is unavailable.`);
         }
         return;
       }
     }
 
-    if (now < suppressPoseUntil) return;
+    if (now < gestureCooldownUntil) return;
     const pose = detectPose(landmarks);
 
     if (pose) {
       if (pose !== heldGesture) {
         heldGesture = pose;
-        heldSince = now;
-        poseActionTriggered = false;
+        heldFrames = 1;
+        gestureHandled = false;
         const prompts = {
-          palm: 'Open palm detected; hold to flip the card.',
-          fist: 'Closed fist detected.',
-          'thumbs-up': 'Thumbs up detected; hold to mark this card easy.',
-          pinch: 'Pinch detected; hold to mark this card reviewed.',
+          palm: 'Open palm -> show answer',
+          fist: 'Closed fist -> hide answer',
+          'thumbs-up': 'Thumbs up -> I knew it',
+          'thumbs-down': 'Thumbs down -> I forgot',
         };
         report(prompts[pose] || 'Gesture detected.');
-      } else if (!poseActionTriggered && now - heldSince >= 850 && now - lastActionAt >= 900) {
-        lastActionAt = now;
-        poseActionTriggered = true;
+      } else {
+        heldFrames += 1;
+      }
+      if (heldFrames >= 3 && !gestureHandled) {
+        gestureHandled = true;
+        gestureCooldownUntil = now + 700;
+        debug('detected gesture:', pose);
         performHeldGesture(pose);
       }
       return;
     }
 
     heldGesture = '';
-    poseActionTriggered = false;
+    heldFrames = 0;
+    gestureHandled = false;
   }
 
   async function processFrames() {
