@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Flashcards · StudyFlow{% endblock %}
 {% block content %}
 <div class="flashcards-page max-w-5xl mx-auto">
@@ -21,6 +22,21 @@
       <span>New Deck</span>
     </button>
   </div>
+
+  <section class="sticky top-0 z-20 mb-5 border border-slate-700 bg-slate-900/95 p-3 shadow-lg backdrop-blur" aria-label="Optional hand gesture controls">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <p class="text-sm font-semibold text-white">Hand gesture controls <span aria-hidden="true">✋</span></p>
+        <p class="text-xs text-slate-300">Optional. Camera video never leaves this device.</p>
+        <p id="gesture-status" class="text-xs text-emerald-300" role="status" aria-live="polite">Off</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="gesture-toggle" type="button" aria-pressed="false" class="rounded-lg border border-slate-600 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800">Enable camera gestures</button>
+        <button id="gesture-stop" type="button" class="hidden rounded-lg bg-rose-700 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-600">Turn off now</button>
+      </div>
+    </div>
+    <video id="gesture-video" class="mt-3 hidden h-24 w-40 rounded border border-slate-600 object-cover" autoplay muted playsinline aria-label="Local camera preview"></video>
+  </section>
 
   <!-- Due Today Spaced Repetition Queue Banner -->
   {% if due_count > 0 %}
@@ -621,4 +637,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="{% static 'js/hand_gestures.js' %}" defer></script>
 {% endblock %}

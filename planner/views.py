@@ -1,4 +1,5 @@
 from datetime import timedelta
+from urllib.parse import urlsplit
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -328,8 +329,36 @@ from .models import StudySession, FlashcardDeck, Flashcard
 
 @login_required
 def study_room(request):
+    from accounts.models import Profile
+
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    spotify_error = ''
+    if request.method == 'POST' and request.POST.get('action') == 'save_spotify_url':
+        submitted_url = request.POST.get('spotify_url', '').strip()
+        parts = urlsplit(submitted_url)
+        path_parts = parts.path.strip('/').split('/')
+        valid_types = {'playlist', 'album', 'track'}
+        valid_id = len(path_parts) == 2 and path_parts[1].isalnum() and len(path_parts[1]) == 22
+        if (parts.scheme in {'http', 'https'} and parts.hostname in {'open.spotify.com', 'www.open.spotify.com'}
+                and len(path_parts) == 2 and path_parts[0] in valid_types and valid_id):
+            profile.spotify_playlist_url = submitted_url
+            profile.save(update_fields=['spotify_playlist_url'])
+            return redirect('study_room')
+        spotify_error = 'That does not look like a public Spotify playlist, album, or track link.'
+
+    spotify_embed_url = ''
+    if profile.spotify_playlist_url:
+        saved_parts = urlsplit(profile.spotify_playlist_url)
+        saved_path = saved_parts.path.strip('/').split('/')
+        if len(saved_path) == 2 and saved_path[0] in {'playlist', 'album', 'track'}:
+            spotify_embed_url = f'https://open.spotify.com/embed/{saved_path[0]}/{saved_path[1]}'
     courses = Course.objects.filter(user=request.user)
-    return render(request, 'planner/study_room.html', {'courses': courses})
+    return render(request, 'planner/study_room.html', {
+        'courses': courses,
+        'spotify_error': spotify_error,
+        'spotify_playlist_url': profile.spotify_playlist_url,
+        'spotify_embed_url': spotify_embed_url,
+    })
 
 @login_required
 @require_POST

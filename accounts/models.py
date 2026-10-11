@@ -28,6 +28,7 @@ class Profile(models.Model):
     reading_goal = models.PositiveIntegerField(default=12)
     avatar_color = models.PositiveSmallIntegerField(default=0)
     university = models.CharField(max_length=60, choices=UNIVERSITY_CHOICES, default='FUT Minna')
+    spotify_playlist_url = models.URLField(max_length=300, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
