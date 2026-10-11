@@ -1,8 +1,10 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from library.models import BookRating, SavedBook
 from planner.models import Course, Task, TimetableEntry
@@ -10,8 +12,6 @@ from resources.models import Loan, Resource, ResourceRating
 
 from .forms import LoginForm, SignUpForm
 
-
-from django.contrib import messages
 
 def signup(request):
     if request.user.is_authenticated:
@@ -55,6 +55,13 @@ def login_view(request):
         form = LoginForm()
 
     return render(request, 'accounts/login.html', {'form': form, 'error': error})
+
+
+@require_POST
+def logout_view(request):
+    logout(request)
+    messages.success(request, "You've been logged out. See you soon!")
+    return redirect('login')
 
 
 @login_required
