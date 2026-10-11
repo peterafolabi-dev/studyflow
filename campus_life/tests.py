@@ -30,7 +30,7 @@ class CampusLifeTests(TestCase):
         self.assertContains(response, '<option value="crop"')
         self.assertContains(response, 'pb-72 sm:pb-80')
         self.assertContains(response, 'grid-cols-1 gap-4 sm:grid-cols-2')
-        self.assertContains(response, 'fixed bottom-4 left-4 right-auto')
+        self.assertContains(response, 'fixed bottom-6 left-4')
         self.assertContains(response, 'sm:left-auto sm:right-24')
         self.assertContains(response, 'grid min-h-48 grid-cols-3')
 
