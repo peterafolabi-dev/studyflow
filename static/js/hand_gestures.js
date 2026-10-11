@@ -14,6 +14,7 @@
   let poseActionTriggered = false;
   let lastActionAt = 0;
   let swipeOrigin = null;
+  let trackingState = '';
 
   function report(message) {
     status.textContent = message;
@@ -84,7 +85,16 @@
       heldGesture = '';
       poseActionTriggered = false;
       swipeOrigin = null;
+      if (active && trackingState !== 'no-hand') {
+        trackingState = 'no-hand';
+        report('Camera active; no hand detected. Move your hand into the preview.');
+      }
       return;
+    }
+
+    if (trackingState !== 'hand') {
+      trackingState = 'hand';
+      report('Hand detected. Try an open palm, swipe, thumbs-up, or pinch.');
     }
 
     const landmarks = results.multiHandLandmarks[0];
@@ -179,6 +189,7 @@
       tracker.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.65, minTrackingConfidence: 0.65 });
       tracker.onResults(onResults);
       active = true;
+      trackingState = '';
       enableButton.classList.add('hidden');
       enableButton.setAttribute('aria-pressed', 'true');
       stopButton.classList.remove('hidden');
