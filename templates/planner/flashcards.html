@@ -27,7 +27,7 @@
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <p class="text-sm font-semibold text-white">Hand gesture controls <span aria-hidden="true">✋</span></p>
-        <p class="text-xs text-slate-300">Optional; video stays on this device. Palm flips the focused card, swipe changes focus, and pinch/thumbs-up rate a revealed card.</p>
+        <p class="text-xs text-slate-300">Desktop only. Palm shows the answer, fist hides it, swipe changes cards, thumbs-up marks Easy, and thumbs-down marks Hard. Video stays on this device.</p>
         <p id="gesture-status" class="text-xs text-emerald-300" role="status" aria-live="polite">Off</p>
       </div>
       <div class="flex items-center gap-2">
@@ -601,11 +601,11 @@ function quizNav(dir) {
 
 window.studyflowFlashcardSwipe = (direction) => {
   if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
-    if (direction > 0) console.log('[hand-gesture] next-card function called (quiz)');
+    if (direction > 0) window.studyflowGestureDebug?.('next-card function called (quiz)');
     quizNav(direction);
     return direction > 0 ? 'Swipe right: next flashcard.' : 'Swipe left: previous flashcard.';
   }
-  if (direction > 0) console.log('[hand-gesture] next-card function called (grid)');
+  if (direction > 0) window.studyflowGestureDebug?.('next-card function called (grid)');
   return navigateGridFlashcard(direction);
 };
 
@@ -620,6 +620,19 @@ window.studyflowGestureOpenPalm = () => {
   return 'Open palm: focused card flipped.';
 };
 
+window.studyflowGestureClosePalm = () => {
+  if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
+    if (quizShowingBack) quizFlip();
+    return 'Closed fist: answer hidden.';
+  }
+  const card = getFocusedFlashcard();
+  if (!card) return 'No flashcards are available to hide.';
+  if (card.querySelector('.sf-flashcard-inner').classList.contains('flipped')) {
+    flipCard(card.dataset.cardId);
+  }
+  return 'Closed fist: answer hidden.';
+};
+
 window.studyflowGestureThumbsUp = async () => {
   if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
     const saved = await rateCard('easy');
@@ -628,12 +641,12 @@ window.studyflowGestureThumbsUp = async () => {
   return await reviewFocusedFlashcard('easy');
 };
 
-window.studyflowGesturePinch = async () => {
+window.studyflowGestureThumbsDown = async () => {
   if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
-    const saved = await rateCard('medium');
-    return saved ? 'Pinch: card marked good.' : 'Could not save the review. Check your connection.';
+    const saved = await rateCard('hard');
+    return saved ? 'Thumbs down: card marked hard.' : 'Could not save the review. Check your connection.';
   }
-  return await reviewFocusedFlashcard('medium');
+  return await reviewFocusedFlashcard('hard');
 };
 
 async function rateCard(rating) {

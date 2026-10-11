@@ -9,6 +9,7 @@
   function debug(...values) {
     if (DEBUG) console.log('[hand-gesture]', ...values);
   }
+  window.studyflowGestureDebug = debug;
 
   const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   const coarseTouchDevice = navigator.maxTouchPoints > 0 &&
@@ -41,11 +42,13 @@
       report('Saving flashcard review...');
       result.then((message) => {
         if (active && message) report(message);
+        debug('action ran:', message || fallback);
       }).catch(() => {
         if (active) report('Could not save that review. Check your connection and try again.');
       });
       return;
     }
+    debug('action ran:', result || fallback);
     report(result || fallback);
   }
 
@@ -93,7 +96,6 @@
     };
     const action = actions[pose];
     if (action && typeof window[action[0]] === 'function') {
-      debug('action ran:', pose);
       reportActionResult(window[action[0]](), action[1]);
     }
   }
@@ -190,12 +192,11 @@
       }
       if (active) frameId = requestAnimationFrame(processFrames);
     } catch (error) {
-      report('Hand tracking stopped unexpectedly. Turn gestures off, then enable them again.');
-      await disable();
+      await disable('Hand tracking stopped unexpectedly. Turn gestures off, then enable them again.');
     }
   }
 
-  async function disable() {
+  async function disable(message = 'Off. Camera stopped.') {
     active = false;
     if (frameId) cancelAnimationFrame(frameId);
     frameId = null;
@@ -203,12 +204,18 @@
     stream = null;
     video.srcObject = null;
     video.classList.add('hidden');
-    if (tracker) await tracker.close();
+    if (tracker) {
+      try {
+        await tracker.close();
+      } catch (error) {
+        debug('tracker close failed:', error);
+      }
+    }
     tracker = null;
     stopButton.classList.add('hidden');
     enableButton.classList.remove('hidden');
     enableButton.setAttribute('aria-pressed', 'false');
-    report('Off. Camera stopped.');
+    report(message);
   }
 
   async function enable() {
@@ -225,32 +232,41 @@
       video.srcObject = stream;
       video.classList.remove('hidden');
       await video.play();
+      debug('video ready:', video.videoWidth, video.videoHeight);
       tracker = new window.Hands({
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
       });
       tracker.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.65, minTrackingConfidence: 0.65 });
       tracker.onResults(onResults);
+      debug('model loaded: MediaPipe Hands');
       active = true;
       trackingState = '';
       enableButton.classList.add('hidden');
       enableButton.setAttribute('aria-pressed', 'true');
       stopButton.classList.remove('hidden');
       enableButton.disabled = false;
-      report('Active & listening... Video stays on this device.');
+      report('Camera ready. Show your hand to begin.');
+      stream.getVideoTracks().forEach((track) => {
+        track.addEventListener('ended', async () => {
+          if (active) await disable("Your camera isn't turned on. Turn it on to use gesture control.");
+        }, { once: true });
+      });
       frameId = requestAnimationFrame(processFrames);
     } catch (error) {
-      await disable();
-      report(error.name === 'NotAllowedError'
-        ? 'Camera permission was denied. Allow camera access in browser settings, then try again.'
+      const message = error.name === 'NotAllowedError'
+        ? 'Camera access is blocked. Allow camera access in your browser settings to use gesture control.'
         : error.name === 'NotFoundError'
-          ? 'No camera was found. Flashcards still work with the on-screen controls.'
-          : 'Could not start the camera. Check browser permissions and try again.');
+          ? 'No camera found. Connect a webcam to use gesture control.'
+          : error.name === 'NotReadableError'
+            ? 'Your camera is being used by another app. Close it and try again.'
+            : 'Could not start the camera. Check browser permissions and try again.';
+      await disable(message);
     } finally {
       enableButton.disabled = false;
     }
   }
 
   enableButton.addEventListener('click', enable);
-  stopButton.addEventListener('click', disable);
-  window.addEventListener('pagehide', disable);
+  stopButton.addEventListener('click', () => disable());
+  window.addEventListener('pagehide', () => disable());
 })();
