@@ -1,10 +1,11 @@
 (function () {
   const DEBUG = true;
+  const flashcardReview = document.getElementById('quiz-modal');
   const enableButton = document.getElementById('gesture-toggle');
   const stopButton = document.getElementById('gesture-stop');
   const status = document.getElementById('gesture-status');
   const video = document.getElementById('gesture-video');
-  if (!enableButton || !stopButton || !status || !video) return;
+  if (!flashcardReview || !enableButton || !stopButton || !status || !video) return;
 
   function debug(...values) {
     if (DEBUG) console.log('[hand-gesture]', ...values);
@@ -73,9 +74,6 @@
     if (pose === 'palm') {
       if (typeof window.studyflowGestureOpenPalm === 'function') {
         reportActionResult(window.studyflowGestureOpenPalm(), 'Open palm detected.');
-      } else if (typeof window.studyflowGesturePause === 'function') {
-        window.studyflowGesturePause();
-        report('Open palm held: timer paused.');
       }
       return;
     }
@@ -83,9 +81,6 @@
     if (pose === 'fist') {
       if (typeof window.studyflowGestureClosePalm === 'function') {
         reportActionResult(window.studyflowGestureClosePalm(), 'Closed fist: answer hidden.');
-      } else if (typeof window.studyflowGestureResume === 'function') {
-        window.studyflowGestureResume();
-        report('Closed fist held: timer resumed.');
       }
       return;
     }
@@ -269,4 +264,5 @@
   enableButton.addEventListener('click', enable);
   stopButton.addEventListener('click', () => disable());
   window.addEventListener('pagehide', () => disable());
+  window.addEventListener('beforeunload', () => disable());
 })();
