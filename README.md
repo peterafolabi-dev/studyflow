@@ -170,6 +170,10 @@ Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
    - `DATABASE_URL` (Render provides this automatically for PostgreSQL)
    - `ALLOWED_TYPES`, `MAX_UPLOAD_SIZE_MB`
    - Google OAuth keys (if using)
+   - `EMAIL_HOST_USER` and `DEFAULT_FROM_EMAIL` (your Gmail address)
+   - `EMAIL_HOST_PASSWORD` (a Google App Password, not your Gmail login password)
+
+The Render blueprint sets Gmail SMTP to `smtp.gmail.com:587` with TLS. Set the three email values above in the Render Dashboard, then redeploy. Without a configured sender, Django may use its console backend: the reset form can report success while the email is only printed to the server logs.
 
 ---
 
