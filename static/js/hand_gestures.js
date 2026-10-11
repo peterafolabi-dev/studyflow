@@ -19,6 +19,19 @@
     status.textContent = message;
   }
 
+  function reportActionResult(result, fallback) {
+    if (result && typeof result.then === 'function') {
+      report('Saving flashcard review...');
+      result.then((message) => {
+        if (active && message) report(message);
+      }).catch(() => {
+        if (active) report('Could not save that review. Check your connection and try again.');
+      });
+      return;
+    }
+    report(result || fallback);
+  }
+
   function countExtendedFingers(landmarks) {
     return [8, 12, 16, 20].filter((tip) => landmarks[tip].y < landmarks[tip - 2].y).length;
   }
@@ -42,7 +55,7 @@
   function performHeldGesture(pose) {
     if (pose === 'palm') {
       if (typeof window.studyflowGestureOpenPalm === 'function') {
-        report(window.studyflowGestureOpenPalm() || 'Open palm detected.');
+        reportActionResult(window.studyflowGestureOpenPalm(), 'Open palm detected.');
       } else if (typeof window.studyflowGesturePause === 'function') {
         window.studyflowGesturePause();
         report('Open palm held: timer paused.');
@@ -62,7 +75,7 @@
     };
     const action = actions[pose];
     if (action && typeof window[action[0]] === 'function') {
-      report(window[action[0]]() || action[1]);
+      reportActionResult(window[action[0]](), action[1]);
     }
   }
 

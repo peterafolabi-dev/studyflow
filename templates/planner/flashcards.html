@@ -552,27 +552,27 @@ window.studyflowGestureOpenPalm = () => {
   return quizShowingBack ? 'Open palm: answer revealed.' : 'Open palm: question shown.';
 };
 
-window.studyflowGestureThumbsUp = () => {
+window.studyflowGestureThumbsUp = async () => {
   if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
     return 'Open a flashcard review first; gestures are ready.';
   }
-  void rateCard('easy');
-  return 'Thumbs up: card marked easy.';
+  const saved = await rateCard('easy');
+  return saved ? 'Thumbs up: card marked easy.' : 'Could not save the review. Check your connection.';
 };
 
-window.studyflowGesturePinch = () => {
+window.studyflowGesturePinch = async () => {
   if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
     return 'Open a flashcard review first; gestures are ready.';
   }
-  void rateCard('medium');
-  return 'Pinch: card marked good.';
+  const saved = await rateCard('medium');
+  return saved ? 'Pinch: card marked good.' : 'Could not save the review. Check your connection.';
 };
 
 async function rateCard(rating) {
   const card = quizCards[quizIdx];
   if (card && card.id) {
     try {
-      fetch(`/flashcards/${card.id}/review/`, {
+      const response = await fetch(`/flashcards/${card.id}/review/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -580,8 +580,10 @@ async function rateCard(rating) {
         },
         body: JSON.stringify({ rating: rating })
       });
+      if (!response.ok) throw new Error(`Review save failed: ${response.status}`);
     } catch (e) {
       console.error('Failed to rate card:', e);
+      return false;
     }
   }
 
@@ -593,6 +595,7 @@ async function rateCard(rating) {
     document.getElementById('quiz-active-view').classList.add('hidden');
     document.getElementById('quiz-completion-view').classList.remove('hidden');
   }
+  return true;
 }
 
 function closeQuiz() {
