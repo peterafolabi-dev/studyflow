@@ -20,10 +20,10 @@ def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            messages.success(request, f"Welcome to StudyFlow, {user.username}! Your academic journey starts here. 🚀")
-            return redirect('dashboard')
+            form.save()
+            messages.success(request, "You've signed up successfully! Please log in.")
+            return redirect('login')
+        messages.error(request, 'Sign-up failed. Check that the username is available and both passwords match.')
     else:
         form = SignUpForm()
 
@@ -46,11 +46,14 @@ def login_view(request):
                                 backend='django.contrib.auth.backends.ModelBackend')
             if user is not None:
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                messages.success(request, f"Welcome back, {user.username}! Let's crush those goals today. 💪")
                 next_url = request.GET.get('next', '')
                 return redirect(next_url if next_url else 'dashboard')
             else:
                 error = 'Invalid username or password. Please try again.'
+                messages.error(request, error)
+        else:
+            error = 'Please enter a valid username and password.'
+            messages.error(request, error)
     else:
         form = LoginForm()
 

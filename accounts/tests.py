@@ -13,13 +13,15 @@ class AuthTests(TestCase):
     def test_public_admin_setup_route_is_not_exposed(self):
         self.assertEqual(self.client.get('/setup-admin-777/').status_code, 404)
 
-    def test_signup_creates_user_and_logs_in(self):
+    def test_signup_creates_user_redirects_to_login_without_logging_in(self):
         response = self.client.post(reverse('signup'), {
             'username': 'newstudent', 'password1': 'S7rong-pass-99', 'password2': 'S7rong-pass-99',
         })
-        self.assertRedirects(response, reverse('dashboard'))
+        self.assertRedirects(response, reverse('login'))
         self.assertTrue(User.objects.filter(username='newstudent').exists())
-        self.assertEqual(self.client.get(reverse('dashboard')).status_code, 200)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
+        self.assertContains(self.client.get(reverse('login')), 'You&#x27;ve signed up successfully! Please log in.')
 
     def test_signup_rejects_mismatched_passwords(self):
         response = self.client.post(reverse('signup'), {
@@ -27,11 +29,14 @@ class AuthTests(TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='x').exists())
+        self.assertContains(response, 'Sign-up failed. Check that the username is available')
 
     def test_login_and_logout(self):
         User.objects.create_user('sam', password='S7rong-pass-99')
-        response = self.client.post(reverse('login'), {'username': 'sam', 'password': 'S7rong-pass-99'})
-        self.assertRedirects(response, reverse('dashboard'))
+        response = self.client.post(reverse('login'), {
+            'username': 'sam', 'password': 'S7rong-pass-99'
+        }, follow=True)
+        self.assertContains(response, 'Welcome to StudyFlow, sam! Let&#x27;s get started.')
         logout_response = self.client.post(reverse('logout'), follow=True)
         self.assertEqual(
             [str(message) for message in logout_response.context['messages']],
@@ -39,6 +44,19 @@ class AuthTests(TestCase):
         )
         self.assertContains(logout_response, 'You&#x27;ve been logged out. See you soon!')
         self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
+
+    def test_returning_login_shows_welcome_back_once(self):
+        User.objects.create_user('sam', password='S7rong-pass-99')
+        first_login = self.client.post(reverse('login'), {
+            'username': 'sam', 'password': 'S7rong-pass-99'
+        }, follow=True)
+        self.assertContains(first_login, 'Welcome to StudyFlow, sam!')
+        self.client.post(reverse('logout'))
+        returning_login = self.client.post(reverse('login'), {
+            'username': 'sam', 'password': 'S7rong-pass-99'
+        }, follow=True)
+        self.assertContains(returning_login, 'Welcome back, sam!')
+        self.assertNotContains(returning_login, "Let's get started")
 
     def test_logout_rejects_get(self):
         User.objects.create_user('sam', password='S7rong-pass-99')
@@ -49,6 +67,7 @@ class AuthTests(TestCase):
         User.objects.create_user('sam', password='S7rong-pass-99')
         response = self.client.post(reverse('login'), {'username': 'sam', 'password': 'wrong'})
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Invalid username or password. Please try again.')
 
 
 class AdminBootstrapTests(TestCase):

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.signals import user_logged_in
 from django.db import models
 from django.dispatch import receiver
@@ -67,6 +68,7 @@ class LoginRecord(models.Model):
 
 @receiver(user_logged_in)
 def record_user_login(sender, request, user, **kwargs):
+    is_first_login = not LoginRecord.objects.filter(user=user).exists()
     ip = None
     user_agent = ''
     login_method = 'password'
@@ -87,3 +89,9 @@ def record_user_login(sender, request, user, **kwargs):
         user_agent=user_agent,
         login_method=login_method
     )
+    if request:
+        welcome = (
+            f"Welcome to StudyFlow, {user.username}! Let's get started."
+            if is_first_login else f'Welcome back, {user.username}!'
+        )
+        messages.success(request, welcome)
