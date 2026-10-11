@@ -539,8 +539,33 @@ function quizNav(dir) {
 }
 
 window.studyflowFlashcardSwipe = (direction) => {
-  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) return;
+  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) return false;
   quizNav(direction);
+  return direction > 0 ? 'Swipe left: next flashcard.' : 'Swipe right: previous flashcard.';
+};
+
+window.studyflowGestureOpenPalm = () => {
+  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
+    return 'Open a flashcard review first; gestures are ready.';
+  }
+  quizFlip();
+  return quizShowingBack ? 'Open palm: answer revealed.' : 'Open palm: question shown.';
+};
+
+window.studyflowGestureThumbsUp = () => {
+  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
+    return 'Open a flashcard review first; gestures are ready.';
+  }
+  void rateCard('easy');
+  return 'Thumbs up: card marked easy.';
+};
+
+window.studyflowGesturePinch = () => {
+  if (document.getElementById('quiz-modal').style.display !== 'flex' || !quizCards.length) {
+    return 'Open a flashcard review first; gestures are ready.';
+  }
+  void rateCard('medium');
+  return 'Pinch: card marked good.';
 };
 
 async function rateCard(rating) {

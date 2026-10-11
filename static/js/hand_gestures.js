@@ -11,6 +11,7 @@
   let active = false;
   let heldGesture = '';
   let heldSince = 0;
+  let poseActionTriggered = false;
   let lastActionAt = 0;
   let swipeOrigin = null;
 
@@ -22,16 +23,59 @@
     return [8, 12, 16, 20].filter((tip) => landmarks[tip].y < landmarks[tip - 2].y).length;
   }
 
+  function distanceBetween(first, second) {
+    return Math.hypot(first.x - second.x, first.y - second.y);
+  }
+
+  function detectPose(landmarks) {
+    const extended = countExtendedFingers(landmarks);
+    const otherFingersCurled = extended === 0;
+    const thumbUp = landmarks[4].y < landmarks[3].y - 0.05;
+
+    if (distanceBetween(landmarks[4], landmarks[8]) < 0.055) return 'pinch';
+    if (thumbUp && otherFingersCurled) return 'thumbs-up';
+    if (extended >= 4) return 'palm';
+    if (extended <= 1) return 'fist';
+    return '';
+  }
+
+  function performHeldGesture(pose) {
+    if (pose === 'palm') {
+      if (typeof window.studyflowGestureOpenPalm === 'function') {
+        report(window.studyflowGestureOpenPalm() || 'Open palm detected.');
+      } else if (typeof window.studyflowGesturePause === 'function') {
+        window.studyflowGesturePause();
+        report('Open palm held: timer paused.');
+      }
+      return;
+    }
+
+    if (pose === 'fist' && typeof window.studyflowGestureResume === 'function') {
+      window.studyflowGestureResume();
+      report('Closed fist held: timer resumed.');
+      return;
+    }
+
+    const actions = {
+      'thumbs-up': ['studyflowGestureThumbsUp', 'Thumbs up detected.'],
+      pinch: ['studyflowGesturePinch', 'Pinch detected.'],
+    };
+    const action = actions[pose];
+    if (action && typeof window[action[0]] === 'function') {
+      report(window[action[0]]() || action[1]);
+    }
+  }
+
   function onResults(results) {
     if (!active || !results.multiHandLandmarks || !results.multiHandLandmarks.length) {
       heldGesture = '';
+      poseActionTriggered = false;
       swipeOrigin = null;
       return;
     }
 
     const landmarks = results.multiHandLandmarks[0];
-    const extended = countExtendedFingers(landmarks);
-    const pose = extended >= 4 ? 'palm' : extended <= 1 ? 'fist' : '';
+    const pose = detectPose(landmarks);
     const now = performance.now();
 
     if (pose) {
@@ -39,21 +83,24 @@
       if (pose !== heldGesture) {
         heldGesture = pose;
         heldSince = now;
-        report(pose === 'palm' ? 'Open palm detected; hold to pause.' : 'Closed fist detected; hold to resume.');
-      } else if (now - heldSince >= 1000 && now - lastActionAt >= 1200) {
+        poseActionTriggered = false;
+        const prompts = {
+          palm: 'Open palm detected; hold to flip the card.',
+          fist: 'Closed fist detected.',
+          'thumbs-up': 'Thumbs up detected; hold to mark this card easy.',
+          pinch: 'Pinch detected; hold to mark this card reviewed.',
+        };
+        report(prompts[pose] || 'Gesture detected.');
+      } else if (!poseActionTriggered && now - heldSince >= 850 && now - lastActionAt >= 900) {
         lastActionAt = now;
-        if (pose === 'palm') {
-          window.studyflowGesturePause?.();
-          report('Open palm held: timer paused.');
-        } else {
-          window.studyflowGestureResume?.();
-          report('Closed fist held: timer resumed.');
-        }
+        poseActionTriggered = true;
+        performHeldGesture(pose);
       }
       return;
     }
 
     heldGesture = '';
+    poseActionTriggered = false;
     const wristX = landmarks[0].x;
     if (!swipeOrigin || now - swipeOrigin.time > 650) {
       swipeOrigin = { x: wristX, time: now };
@@ -61,8 +108,8 @@
       const direction = wristX < swipeOrigin.x ? 1 : -1;
       lastActionAt = now;
       if (typeof window.studyflowFlashcardSwipe === 'function') {
-        window.studyflowFlashcardSwipe(direction);
-        report(direction > 0 ? 'Swipe left detected: next flashcard.' : 'Swipe right detected: previous flashcard.');
+        const outcome = window.studyflowFlashcardSwipe(direction);
+        report(outcome || 'Swipe detected. Start a flashcard review to navigate cards.');
       } else {
         report('Swipe detected. Open a flashcard review to navigate cards.');
       }
@@ -71,9 +118,16 @@
   }
 
   async function processFrames() {
-    if (!active || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return;
-    await tracker.send({ image: video });
-    frameId = requestAnimationFrame(processFrames);
+    if (!active) return;
+    try {
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        await tracker.send({ image: video });
+      }
+      if (active) frameId = requestAnimationFrame(processFrames);
+    } catch (error) {
+      report('Hand tracking stopped unexpectedly. Turn gestures off, then enable them again.');
+      await disable();
+    }
   }
 
   async function disable() {
@@ -94,11 +148,15 @@
 
   async function enable() {
     if (!navigator.mediaDevices?.getUserMedia || !window.Hands) {
-      report('Camera gestures are unavailable in this browser.');
+      report(!navigator.mediaDevices?.getUserMedia
+        ? 'This browser or connection does not support camera access. Try a current browser over HTTPS.'
+        : 'Hand tracking could not load. Check your connection and reload this page.');
       return;
     }
+    enableButton.disabled = true;
+    report('Requesting camera permission…');
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
       video.classList.remove('hidden');
       await video.play();
@@ -111,11 +169,18 @@
       enableButton.classList.add('hidden');
       enableButton.setAttribute('aria-pressed', 'true');
       stopButton.classList.remove('hidden');
-      report('Camera on. Video stays on this device.');
+      enableButton.disabled = false;
+      report('Active & listening... Video stays on this device.');
       frameId = requestAnimationFrame(processFrames);
     } catch (error) {
       await disable();
-      report(error.name === 'NotAllowedError' ? 'Camera permission was not granted; gestures remain off.' : 'Could not start the camera. Gestures remain off.');
+      report(error.name === 'NotAllowedError'
+        ? 'Camera permission was denied. Allow camera access in browser settings, then try again.'
+        : error.name === 'NotFoundError'
+          ? 'No camera was found. Flashcards still work with the on-screen controls.'
+          : 'Could not start the camera. Check browser permissions and try again.');
+    } finally {
+      enableButton.disabled = false;
     }
   }
 
