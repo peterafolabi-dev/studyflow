@@ -447,7 +447,7 @@ function navigateGridFlashcard(direction) {
     ? (direction > 0 ? 0 : cards.length - 1)
     : (currentIndex + direction + cards.length) % cards.length;
   setFocusedFlashcard(cards[nextIndex].dataset.cardId);
-  return direction > 0 ? 'Swipe left: next card focused.' : 'Swipe right: previous card focused.';
+  return direction > 0 ? 'Swipe right: next card focused.' : 'Swipe left: previous card focused.';
 }
 
 async function reviewFocusedFlashcard(rating) {
@@ -601,9 +601,11 @@ function quizNav(dir) {
 
 window.studyflowFlashcardSwipe = (direction) => {
   if (document.getElementById('quiz-modal').style.display === 'flex' && quizCards.length) {
+    if (direction > 0) console.log('[hand-gesture] next-card function called (quiz)');
     quizNav(direction);
-    return direction > 0 ? 'Swipe left: next flashcard.' : 'Swipe right: previous flashcard.';
+    return direction > 0 ? 'Swipe right: next flashcard.' : 'Swipe left: previous flashcard.';
   }
+  if (direction > 0) console.log('[hand-gesture] next-card function called (grid)');
   return navigateGridFlashcard(direction);
 };
 

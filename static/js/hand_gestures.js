@@ -13,7 +13,9 @@
   let heldSince = 0;
   let poseActionTriggered = false;
   let lastActionAt = 0;
-  let swipeOrigin = null;
+  let handXHistory = [];
+  let lastSwipeAt = 0;
+  let suppressPoseUntil = 0;
   let trackingState = '';
 
   function report(message) {
@@ -84,7 +86,7 @@
     if (!active || !results.multiHandLandmarks || !results.multiHandLandmarks.length) {
       heldGesture = '';
       poseActionTriggered = false;
-      swipeOrigin = null;
+      handXHistory = [];
       if (active && trackingState !== 'no-hand') {
         trackingState = 'no-hand';
         report('Camera active; no hand detected. Move your hand into the preview.');
@@ -98,11 +100,41 @@
     }
 
     const landmarks = results.multiHandLandmarks[0];
-    const pose = detectPose(landmarks);
     const now = performance.now();
+    const handX = landmarks[0].x;
+    handXHistory.push({ x: handX, time: now });
+    while (handXHistory.length > 1 && now - handXHistory[0].time > 400) {
+      handXHistory.shift();
+    }
+
+    if (handXHistory.length > 1) {
+      const deltaX = handX - handXHistory[0].x;
+      if (Math.abs(deltaX) >= 0.05) {
+        console.log('[hand-gesture] current hand x:', handX, 'x delta over window:', deltaX);
+      }
+      if (Math.abs(deltaX) >= 0.15 && now - handXHistory[0].time <= 400 && now - lastSwipeAt >= 700) {
+        const direction = deltaX > 0 ? 1 : -1;
+        console.log('[hand-gesture] swipe direction detected:', direction > 0 ? 'right / next' : 'left / previous');
+        lastSwipeAt = now;
+        lastActionAt = now;
+        handXHistory = [];
+        heldGesture = '';
+        poseActionTriggered = false;
+        suppressPoseUntil = now + 700;
+        if (typeof window.studyflowFlashcardSwipe === 'function') {
+          const outcome = window.studyflowFlashcardSwipe(direction);
+          report(outcome || 'Swipe detected.');
+        } else {
+          report('Swipe detected, but flashcard navigation is unavailable.');
+        }
+        return;
+      }
+    }
+
+    if (now < suppressPoseUntil) return;
+    const pose = detectPose(landmarks);
 
     if (pose) {
-      swipeOrigin = null;
       if (pose !== heldGesture) {
         heldGesture = pose;
         heldSince = now;
@@ -124,20 +156,6 @@
 
     heldGesture = '';
     poseActionTriggered = false;
-    const wristX = landmarks[0].x;
-    if (!swipeOrigin || now - swipeOrigin.time > 650) {
-      swipeOrigin = { x: wristX, time: now };
-    } else if (Math.abs(wristX - swipeOrigin.x) > 0.22 && now - lastActionAt >= 900) {
-      const direction = wristX < swipeOrigin.x ? 1 : -1;
-      lastActionAt = now;
-      if (typeof window.studyflowFlashcardSwipe === 'function') {
-        const outcome = window.studyflowFlashcardSwipe(direction);
-        report(outcome || 'Swipe detected. Start a flashcard review to navigate cards.');
-      } else {
-        report('Swipe detected. Open a flashcard review to navigate cards.');
-      }
-      swipeOrigin = null;
-    }
   }
 
   async function processFrames() {
