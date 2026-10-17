@@ -28,6 +28,33 @@ MISSIONS = [
     {'title': 'Show up', 'description': 'Make it to one class today.', 'action': 'lecture'},
 ]
 
+GIST_EVENTS = [
+    {
+        'title': 'The group chat is getting spicy',
+        'scene': 'A course group chat is filling up with mixed-up details about tomorrow’s lecture. Your course mate asks what to do before everyone makes plans around it.',
+        'choices': [
+            {'key': 'check_notice', 'label': 'Check the notice board, then share the facts', 'effect': 'Build trust with your course mates', 'story': 'You checked the official notice before replying. The right details reached the group, and people appreciated the calm check.', 'community': 8, 'wellbeing': 4},
+            {'key': 'ask_rep', 'label': 'Ask the class rep to confirm it', 'effect': 'Get a reliable answer together', 'story': 'You asked the class rep to confirm the details. A few people joined in, and the chat got useful again.', 'community': 5, 'wellbeing': 6},
+        ],
+    },
+    {
+        'title': 'A new face in your lecture row',
+        'scene': 'Someone sits nearby, looking a little lost while people compare notes from last week. There’s a friendly opening to make campus feel smaller.',
+        'choices': [
+            {'key': 'share_notes', 'label': 'Offer to compare notes after class', 'effect': 'Make a study connection', 'story': 'You offered to compare notes after class. You both caught a detail you had missed, and a new study connection started.', 'community': 9, 'wellbeing': 5},
+            {'key': 'say_hello', 'label': 'Say hello and point them to the course group', 'effect': 'A small welcome goes a long way', 'story': 'You introduced yourself and pointed them to the course group. They felt more settled, and you put a face to another name.', 'community': 6, 'wellbeing': 7},
+        ],
+    },
+    {
+        'title': 'Your roommate has had a long day',
+        'scene': 'Your roommate gets back from class looking worn out. You have a little time to make the evening feel easier for both of you.',
+        'choices': [
+            {'key': 'listen_roommate', 'label': 'Put the phone down and listen', 'effect': 'Strengthen your campus community', 'story': 'You gave your roommate space to talk and listened without rushing to fix everything. The evening felt lighter.', 'community': 8, 'wellbeing': 8},
+            {'key': 'offer_break', 'label': 'Suggest a short break together', 'effect': 'Share a low-pressure reset', 'story': 'You suggested a short breather together. A simple change of scene helped you both reset before the next task.', 'community': 6, 'wellbeing': 9},
+        ],
+    },
+]
+
 
 @login_required
 def home(request):
@@ -65,6 +92,7 @@ def home(request):
         ]
 
     mission = MISSIONS[(profile.game_day - 1) % len(MISSIONS)]
+    gist_event = GIST_EVENTS[(profile.game_day - 1) % len(GIST_EVENTS)]
     game_log = CampusGameLog.objects.filter(user=request.user)[:5]
     if request.method == 'POST' and request.POST.get('action') == 'play_game':
         if profile.actions_today >= 3:
@@ -72,7 +100,18 @@ def home(request):
             return redirect('campus_life_home')
 
         game_action = request.POST.get('game_action', '')
-        if game_action == 'explore':
+        if game_action == 'gist':
+            choice_key = request.POST.get('gist_choice', '')
+            choice = next((item for item in gist_event['choices'] if item['key'] == choice_key), None)
+            if not choice:
+                messages.error(request, 'Choose one of today’s campus story options.')
+                return redirect('campus_life_home')
+            profile.community = min(100, profile.community + choice['community'])
+            profile.wellbeing = min(100, profile.wellbeing + choice['wellbeing'])
+            story = choice['story']
+            wallet_delta = 0
+            code = 'gist_' + choice['key']
+        elif game_action == 'explore':
             place_name = request.POST.get('place', '')
             allowed_places = {place['name'] for place in places}
             if place_name not in allowed_places:
@@ -225,6 +264,7 @@ def home(request):
         'places': places,
         'game_log': game_log,
         'mission': mission,
+        'gist_event': gist_event,
         'mission_complete': profile.mission_claim_day == profile.game_day,
         'moves_left': max(0, 3 - profile.actions_today),
         'game_university': university,
