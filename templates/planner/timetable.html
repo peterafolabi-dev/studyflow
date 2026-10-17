@@ -6,9 +6,10 @@
       <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Timetable</h1>
       <p class="text-slate-500 dark:text-slate-400 mt-1">Your weekly class schedule.</p>
     </div>
-    <a href="{% url 'timetable_create' %}" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm shrink-0">
-      + Add class
-    </a>
+    <div class="flex gap-2">
+      <a href="{% url 'weekly_plan' %}" class="rounded-lg border border-brand-300 text-brand-700 dark:text-brand-300 px-4 py-2 text-sm font-medium shrink-0">Smart plan</a>
+      <a href="{% url 'timetable_create' %}" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm shrink-0">+ Add class</a>
+    </div>
   </div>
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -40,5 +40,7 @@ class ProfileForm(forms.ModelForm):
         help_texts = {
             'reading_goal': 'How many books do you want to read this year?',
             'avatar_color': 'Choose a number from 0 to 5 to set your theme color.',
+            'weekly_study_goal_hours': 'Used by the study buddy matcher and weekly plan.',
+            'preferred_study_time': 'Used to place suggested study blocks at a time that suits you.',
         }
 

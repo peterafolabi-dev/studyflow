@@ -36,6 +36,8 @@ def _user_task(request, pk):
 def dashboard(request):
     today = timezone.localdate()
     week_end = today + timedelta(days=7)
+    from .reminders import create_deadline_reminders
+    create_deadline_reminders(request.user)
 
     open_tasks = Task.objects.filter(
         course__user=request.user, is_done=False
@@ -96,6 +98,7 @@ def dashboard(request):
             ('SIWES Hub', '💼', 'siwes_hub'),
             ('Marketplace', '🛍️', 'marketplace'),
             ('Timetable', '🗓️', 'timetable'),
+            ('Weekly Plan', '🧭', 'weekly_plan'),
             ('GPA Calculator', '🧮', 'gpa_calculator'),
             ('Study Groups', '💬', 'thread_list'),
         ],

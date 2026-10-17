@@ -111,6 +111,7 @@
           </div>
           
           <a href="{% url 'study_room' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'study_room' %}text-brand-300 bg-slate-800{% endif %}">Study Room</a>
+          <a href="{% url 'weekly_plan' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'weekly_plan' %}text-brand-300 bg-slate-800{% endif %}">Weekly Plan</a>
 
           <!-- Campus Life Dropdown -->
           <div class="relative group">
@@ -194,6 +195,7 @@
       <a href="{% url 'catalogue' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Library & Catalogue</a>
       <a href="{% url 'cbt_home' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-amber-300 font-medium">CBT Practice 🎯</a>
       <a href="{% url 'study_room' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Study Room</a>
+      <a href="{% url 'weekly_plan' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Weekly Plan</a>
       
       <!-- Mobile Campus Life Header & Sublinks -->
       <div class="pt-2 border-t border-slate-800/80">
@@ -288,6 +290,7 @@
         <a data-command-item data-search="flashcards review" href="{% url 'flashcards' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Flashcards</a>
         <a data-command-item data-search="progress stats achievements" href="{% url 'progress' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">My Progress</a>
         <a data-command-item data-search="timetable schedule" href="{% url 'timetable' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Timetable</a>
+        <a data-command-item data-search="weekly plan study schedule" href="{% url 'weekly_plan' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Weekly Plan</a>
         <a data-command-item data-search="profile settings" href="{% url 'profile' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">My Profile</a>
         <a data-command-item data-search="campus life credits avatar dorm" href="{% url 'campus_life_home' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Study Campus Life</a>
         <a data-command-item data-search="campus hub minna" href="{% url 'campus_hub' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Campus Hub</a>
