@@ -3,6 +3,8 @@
 set -o errexit
 
 pip install -r requirements.txt
+npm ci
+npm run build:css
 
 # NOTE: Tailwind CSS is now loaded via CDN in base.html (works on all environments).
 # The CLI compilation step has been removed — no binary download needed on Render.
