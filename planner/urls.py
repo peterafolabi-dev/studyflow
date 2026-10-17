@@ -18,6 +18,7 @@ urlpatterns = [
     path('search/', views.global_search, name='global_search'),
     path('gpa-calculator/', views.gpa_calculator, name='gpa_calculator'),
     path('timetable/', views.timetable, name='timetable'),
+    path('weekly-plan/', views.weekly_plan, name='weekly_plan'),
     path('study/', views.study_room, name='study_room'),
     path('study/log/', views.log_study, name='log_study'),
     path('flashcards/', views.flashcard_hubs, name='flashcards'),

@@ -29,7 +29,10 @@ from .models import Profile
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['bio', 'department', 'level', 'reading_goal', 'avatar_color']
+        fields = [
+            'bio', 'department', 'level', 'reading_goal', 'avatar_color',
+            'weekly_study_goal_hours', 'preferred_study_time',
+        ]
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Tell us about your academic interests...'}),
             'department': forms.TextInput(attrs={'placeholder': 'e.g. Computer Science'}),

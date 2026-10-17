@@ -1,20 +1,59 @@
 {% extends 'base.html' %}
-{% block title %}Study Buddies{% endblock %}
+{% block title %}Study Buddies · StudyFlow{% endblock %}
 {% block content %}
-<div class="page">
-    <h2>Study Buddy Matcher</h2>
-    <ul class="tasks">
+<div class="max-w-4xl mx-auto">
+  <header class="mb-7">
+    <p class="text-xs uppercase tracking-widest font-bold text-brand-600 dark:text-brand-300">Study together</p>
+    <h1 class="font-display text-3xl font-bold text-slate-900 dark:text-white mt-1">Study Buddy Matcher</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Matches use shared course codes, class-free time, study-time preference, and weekly study goals.</p>
+  </header>
+
+  {% if incoming_requests %}
+  <section class="rounded-2xl border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 mb-6">
+    <h2 class="font-bold text-slate-900 dark:text-white mb-3">Study requests for you</h2>
+    <div class="space-y-3">
+      {% for buddy_request in incoming_requests %}
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 pt-3">
+        <a class="font-semibold text-brand-700 dark:text-brand-300" href="{% url 'public_profile' buddy_request.from_user.username %}">{{ buddy_request.from_user.username }}</a>
+        <div class="flex gap-2">
+          <form method="post" action="{% url 'respond_buddy_request' buddy_request.pk %}">{% csrf_token %}<input type="hidden" name="decision" value="accepted"><button class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white">Accept</button></form>
+          <form method="post" action="{% url 'respond_buddy_request' buddy_request.pk %}">{% csrf_token %}<input type="hidden" name="decision" value="rejected"><button class="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">Decline</button></form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="space-y-3">
     {% for b in buddies %}
-        <li class="task">
-            <div class="task-main">
-                <a href="{% url 'public_profile' b.user.username %}" class="task-title" style="color: var(--primary);">{{ b.user.username }}</a>
-                <p class="task-course">Shared courses: {{ b.overlap|join:", " }}</p>
-            </div>
-            <button class="btn ghost">Send Request</button>
-        </li>
+    <article class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="min-w-0">
+          <a href="{% url 'public_profile' b.user.username %}" class="font-display text-lg font-bold text-slate-900 dark:text-white hover:text-brand-600">{{ b.user.username }}</a>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Shared courses: {{ b.overlap|join:', ' }}</p>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <span class="rounded-full bg-brand-50 dark:bg-brand-950/50 px-2.5 py-1 text-xs text-brand-700 dark:text-brand-300">{{ b.shared_slots }} shared free hours</span>
+            <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300">{{ b.goal }}h weekly goal</span>
+            {% if b.time_match %}<span class="rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-xs text-emerald-700 dark:text-emerald-300">Similar study time</span>{% endif %}
+          </div>
+        </div>
+        {% if b.request_status == 'pending' %}
+          <span class="text-sm font-semibold text-amber-600 dark:text-amber-300">Request sent</span>
+        {% elif b.request_status == 'accepted' %}
+          <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-300">Study buddies</span>
+        {% else %}
+          <form method="post" action="{% url 'send_buddy_request' b.user.pk %}">{% csrf_token %}<button class="rounded-xl bg-brand-600 hover:bg-brand-700 px-4 py-2 text-sm font-semibold text-white">Send request</button></form>
+        {% endif %}
+      </div>
+    </article>
     {% empty %}
-        <li class="empty">No matches found right now. Add more courses!</li>
+    <div class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-8 text-center">
+      <h2 class="font-bold text-slate-800 dark:text-white">No course matches yet</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Add course codes and set your study preferences in your profile. Matches appear when classmates add the same course.</p>
+      <a class="inline-block mt-4 text-sm font-semibold text-brand-600 dark:text-brand-300 hover:underline" href="{% url 'edit_profile' %}">Update study preferences</a>
+    </div>
     {% endfor %}
-    </ul>
+  </section>
 </div>
 {% endblock %}

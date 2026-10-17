@@ -13,6 +13,32 @@
     </div>
   </div>
 
+  <section class="section-block fade-in-up" aria-labelledby="course-progress-heading">
+    <div class="page-head small">
+      <h2 id="course-progress-heading">Course progress</h2>
+      <a class="btn ghost" href="{% url 'progress' %}">Overall progress</a>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="rounded-xl bg-brand-50 dark:bg-slate-800 p-4">
+        <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ task_done }}/{{ task_total }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">Tasks complete</div>
+        <div class="h-2 mt-3 rounded-full bg-white dark:bg-slate-700 overflow-hidden"><div class="h-full bg-brand-500" style="width: {{ task_progress }}%"></div></div>
+      </div>
+      <div class="rounded-xl bg-emerald-50 dark:bg-slate-800 p-4">
+        <div class="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ study_minutes }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">Study minutes logged</div>
+      </div>
+      <div class="rounded-xl bg-amber-50 dark:bg-slate-800 p-4">
+        <div class="text-2xl font-bold text-amber-700 dark:text-amber-300">{{ flashcard_total }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">Flashcards in this course</div>
+      </div>
+      <div class="rounded-xl bg-sky-50 dark:bg-slate-800 p-4">
+        <div class="text-2xl font-bold text-sky-700 dark:text-sky-300">{{ flashcard_due }}</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">Cards ready to review</div>
+      </div>
+    </div>
+  </section>
+
   <section class="section-block fade-in-up">
     <div class="page-head small">
       <h2>Tasks</h2>

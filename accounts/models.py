@@ -28,6 +28,15 @@ class Profile(models.Model):
     ], blank=True, null=True)
     reading_goal = models.PositiveIntegerField(default=12)
     avatar_color = models.PositiveSmallIntegerField(default=0)
+    weekly_study_goal_hours = models.PositiveSmallIntegerField(default=8)
+    preferred_study_time = models.CharField(
+        max_length=12,
+        choices=[
+            ('morning', 'Morning'), ('afternoon', 'Afternoon'),
+            ('evening', 'Evening'), ('flexible', 'Flexible'),
+        ],
+        default='flexible',
+    )
     university = models.CharField(max_length=60, choices=UNIVERSITY_CHOICES, default='FUT Minna')
     spotify_playlist_url = models.URLField(max_length=300, blank=True)
 

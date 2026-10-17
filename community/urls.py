@@ -10,6 +10,8 @@ urlpatterns = [
     path('study-groups/<int:pk>/', views.thread_detail, name='thread_detail'),
     path('study-groups/<int:pk>/delete/', views.thread_delete, name='thread_delete'),
     path('study-groups/buddies/', views.find_buddies, name='find_buddies'),
+    path('study-groups/buddies/request/<int:user_id>/', views.send_buddy_request, name='send_buddy_request'),
+    path('study-groups/buddies/respond/<int:request_id>/', views.respond_buddy_request, name='respond_buddy_request'),
     path('study-groups/<int:pk>/vote/', views.vote_thread, name='vote_thread'),
     # Phase 6 — Moderation
     path('posts/<int:pk>/report/', views.report_post, name='report_post'),
