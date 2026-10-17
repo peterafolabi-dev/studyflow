@@ -58,7 +58,10 @@
   </section>
 
   <section class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 p-6 shadow-sm">
-    <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mb-4">Recent logins</h2>
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white">Recent logins <span class="text-sm font-normal text-slate-500">({{ total_login_records }} total)</span></h2>
+      <a href="{% url 'admin:accounts_loginrecord_changelist' %}" class="text-sm font-semibold text-brand-600 dark:text-brand-300 hover:underline whitespace-nowrap">View all</a>
+    </div>
     {% if recent_logins %}
       <div class="overflow-x-auto max-h-80 overflow-y-auto">
         <table class="w-full text-sm">

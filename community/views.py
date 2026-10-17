@@ -334,6 +334,7 @@ def admin_dashboard(request):
         'active_users': active_users,
         'online_users': online_users,
         'recent_logins': recent_logins,
+        'total_login_records': LoginRecord.objects.count(),
         'online_window_minutes': 5,
         'total_signups_30d': User.objects.filter(date_joined__date__gte=thirty_days_ago).count(),
         'signups': list(signups),
