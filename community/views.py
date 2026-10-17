@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import Post, Thread, ChatMessage
@@ -152,16 +153,139 @@ from planner.models import Course
 @login_required
 def find_buddies(request):
     User = get_user_model()
-    my_courses = set(Course.objects.filter(user=request.user).values_list('code', flat=True))
+    from accounts.models import Profile
+    from .models import StudyBuddyRequest
+    from planner.models import TimetableEntry
+    from datetime import time
+
+    my_profile, _ = Profile.objects.get_or_create(user=request.user)
+    my_courses = {
+        code.strip().upper() for code in Course.objects.filter(user=request.user)
+        .exclude(code='').values_list('code', flat=True)
+    }
+    user_ids = list(User.objects.filter(is_active=True).exclude(pk=request.user.pk).values_list('pk', flat=True))
+    courses_by_user = {}
+    for user_id, code in Course.objects.filter(user_id__in=user_ids).exclude(code='').values_list('user_id', 'code'):
+        courses_by_user.setdefault(user_id, set()).add(code.strip().upper())
+
+    entries_by_user = {}
+    entries = list(TimetableEntry.objects.filter(user_id__in=[*user_ids, request.user.pk]))
+    for entry in entries:
+        entries_by_user.setdefault(entry.user_id, []).append(entry)
+
+    def free_slots(entries):
+        return {
+            (day, hour)
+            for day in range(7)
+            for hour in range(9, 20)
+            if all(
+                time(hour + 1) <= entry.start_time or time(hour) >= entry.end_time
+                for entry in entries if entry.day_of_week == day
+            )
+        }
+
+    my_free = free_slots(entries_by_user.get(request.user.pk, []))
+    profiles = {
+        profile.user_id: profile
+        for profile in Profile.objects.filter(user_id__in=user_ids)
+    }
+    my_time = my_profile.preferred_study_time
     buddies = []
     if my_courses:
-        other_users = User.objects.exclude(id=request.user.id)
-        for u in other_users:
-            u_courses = set(Course.objects.filter(user=u).values_list('code', flat=True))
-            overlap = my_courses.intersection(u_courses)
-            if overlap:
-                buddies.append({'user': u, 'overlap': overlap})
-    return render(request, 'community/find_buddies.html', {'buddies': buddies})
+        for user in User.objects.filter(pk__in=user_ids).only('id', 'username'):
+            overlap = my_courses.intersection(courses_by_user.get(user.pk, set()))
+            if not overlap:
+                continue
+            their_profile = profiles.get(user.pk)
+            goal = their_profile.weekly_study_goal_hours if their_profile else 8
+            study_time = their_profile.preferred_study_time if their_profile else 'flexible'
+            their_entries = entries_by_user.get(user.pk, [])
+            comparable_availability = bool(entries_by_user.get(request.user.pk) and their_entries)
+            shared_slots = len(my_free & free_slots(their_entries)) if comparable_availability else 0
+            time_match = my_time == study_time or 'flexible' in {my_time, study_time}
+            goal_match = abs(my_profile.weekly_study_goal_hours - goal) <= 2
+            score = len(overlap) * 4 + min(3, shared_slots // 10) + int(time_match) * 2 + int(goal_match)
+            buddies.append({
+                'user': user, 'overlap': sorted(overlap), 'shared_slots': shared_slots,
+                'comparable_availability': comparable_availability,
+                'time_match': time_match, 'goal': goal, 'score': score,
+            })
+    buddies.sort(key=lambda item: (-item['score'], item['user'].username.lower()))
+
+    sent_status = {}
+    for buddy_request in StudyBuddyRequest.objects.filter(from_user=request.user).order_by('-created_at'):
+        sent_status.setdefault(buddy_request.to_user_id, buddy_request.status)
+    for buddy in buddies:
+        buddy['request_status'] = sent_status.get(buddy['user'].pk, '')
+
+    incoming = StudyBuddyRequest.objects.filter(
+        to_user=request.user, status='pending'
+    ).select_related('from_user').order_by('-created_at')
+    return render(request, 'community/find_buddies.html', {
+        'buddies': buddies,
+        'incoming_requests': incoming,
+        'my_profile': my_profile,
+    })
+
+
+@login_required
+@require_POST
+def send_buddy_request(request, user_id):
+    User = get_user_model()
+    from accounts.models import Notification
+    from .models import StudyBuddyRequest
+
+    target = get_object_or_404(User, pk=user_id, is_active=True)
+    if target.pk == request.user.pk:
+        messages.error(request, 'You cannot send a study request to yourself.')
+        return redirect('find_buddies')
+
+    buddy_request = StudyBuddyRequest.objects.filter(
+        from_user=request.user, to_user=target
+    ).order_by('-created_at').first()
+    if buddy_request and buddy_request.status in {'pending', 'accepted'}:
+        messages.info(request, 'You already have an active request with this student.')
+    else:
+        if buddy_request:
+            buddy_request.status = 'pending'
+            buddy_request.created_at = timezone.now()
+            buddy_request.save(update_fields=['status', 'created_at'])
+        else:
+            StudyBuddyRequest.objects.create(from_user=request.user, to_user=target)
+        Notification.objects.create(
+            user=target,
+            message=f'{request.user.username} wants to study with you.',
+            link='/study-groups/buddies/',
+        )
+        messages.success(request, f'Study request sent to {target.username}.')
+    return redirect('find_buddies')
+
+
+@login_required
+@require_POST
+def respond_buddy_request(request, request_id):
+    from accounts.models import Notification
+    from .models import StudyBuddyRequest
+
+    buddy_request = get_object_or_404(
+        StudyBuddyRequest, pk=request_id, to_user=request.user, status='pending'
+    )
+    decision = request.POST.get('decision')
+    if decision not in {'accepted', 'rejected'}:
+        messages.error(request, 'Choose whether to accept or decline the request.')
+        return redirect('find_buddies')
+    buddy_request.status = decision
+    buddy_request.save(update_fields=['status'])
+    if decision == 'accepted':
+        Notification.objects.create(
+            user=buddy_request.from_user,
+            message=f'{request.user.username} accepted your study request.',
+            link='/study-groups/buddies/',
+        )
+        messages.success(request, f'You and {buddy_request.from_user.username} are now study buddies.')
+    else:
+        messages.info(request, 'Study request declined.')
+    return redirect('find_buddies')
 
 @login_required
 @require_POST
@@ -286,7 +410,7 @@ def admin_dashboard(request):
     from django.utils import timezone
     from .models import Feedback
     from planner.models import StudySession, XPLog
-    from accounts.models import LoginRecord
+    from accounts.models import LoginRecord, UserPresence
 
     if not request.user.is_staff:
         from django.core.exceptions import PermissionDenied
@@ -305,10 +429,16 @@ def admin_dashboard(request):
         .order_by('day')
     )
 
-    # Active users (logged in last 7 days)
-    active_users = LoginRecord.objects.filter(
-        timestamp__date__gte=today - timedelta(days=7)
+    now = timezone.now()
+    online_cutoff = now - timedelta(minutes=5)
+    active_cutoff = now - timedelta(days=7)
+    online_users = UserPresence.objects.filter(
+        last_seen__gte=online_cutoff, user__is_active=True
+    ).select_related('user').order_by('-last_seen')
+    active_users = UserPresence.objects.filter(
+        last_seen__gte=active_cutoff, user__is_active=True
     ).values('user').distinct().count()
+    recent_logins = LoginRecord.objects.select_related('user').order_by('-timestamp')[:25]
 
     # Feature usage this week
     week_ago = today - timedelta(days=7)
@@ -324,8 +454,12 @@ def admin_dashboard(request):
     avg_rating = Feedback.objects.aggregate(avg=models.Avg('rating'))['avg'] or 0
 
     context = {
-        'total_users': User.objects.count(),
+        'total_users': User.objects.filter(is_active=True).count(),
         'active_users': active_users,
+        'online_users': online_users,
+        'recent_logins': recent_logins,
+        'total_login_records': LoginRecord.objects.count(),
+        'online_window_minutes': 5,
         'total_signups_30d': User.objects.filter(date_joined__date__gte=thirty_days_ago).count(),
         'signups': list(signups),
         'feature_usage': feature_usage,

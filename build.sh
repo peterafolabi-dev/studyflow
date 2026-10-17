@@ -3,9 +3,9 @@
 set -o errexit
 
 pip install -r requirements.txt
+# Tailwind is compiled locally into static/css/tailwind.css and committed.
 
-# NOTE: Tailwind CSS is now loaded via CDN in base.html (works on all environments).
-# The CLI compilation step has been removed — no binary download needed on Render.
+# Render runs a Python-only environment, so it serves the committed CSS bundle.
 
 python manage.py collectstatic --no-input
 python manage.py migrate

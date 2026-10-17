@@ -27,29 +27,7 @@
     })();
   </script>
 
-  <!-- Tailwind CSS via CDN (works on all environments) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Instrument Sans', 'system-ui', 'sans-serif'],
-            display: ['Bricolage Grotesque', 'Instrument Sans', 'system-ui', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
-              400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
-              800: '#5b21b6', 900: '#4c1d95',
-            },
-          },
-        },
-      },
-    };
-  </script>
-
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <!-- Markdown parser and sanitizer for AI chat -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -133,6 +111,7 @@
           </div>
           
           <a href="{% url 'study_room' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'study_room' %}text-brand-300 bg-slate-800{% endif %}">Study Room</a>
+          <a href="{% url 'weekly_plan' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'weekly_plan' %}text-brand-300 bg-slate-800{% endif %}">Weekly Plan</a>
 
           <!-- Campus Life Dropdown -->
           <div class="relative group">
@@ -216,6 +195,7 @@
       <a href="{% url 'catalogue' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Library & Catalogue</a>
       <a href="{% url 'cbt_home' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-amber-300 font-medium">CBT Practice 🎯</a>
       <a href="{% url 'study_room' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Study Room</a>
+      <a href="{% url 'weekly_plan' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Weekly Plan</a>
       
       <!-- Mobile Campus Life Header & Sublinks -->
       <div class="pt-2 border-t border-slate-800/80">
@@ -310,6 +290,7 @@
         <a data-command-item data-search="flashcards review" href="{% url 'flashcards' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Flashcards</a>
         <a data-command-item data-search="progress stats achievements" href="{% url 'progress' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">My Progress</a>
         <a data-command-item data-search="timetable schedule" href="{% url 'timetable' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Timetable</a>
+        <a data-command-item data-search="weekly plan study schedule" href="{% url 'weekly_plan' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Weekly Plan</a>
         <a data-command-item data-search="profile settings" href="{% url 'profile' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">My Profile</a>
         <a data-command-item data-search="campus life credits avatar dorm" href="{% url 'campus_life_home' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Study Campus Life</a>
         <a data-command-item data-search="campus hub minna" href="{% url 'campus_hub' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Campus Hub</a>
@@ -1115,6 +1096,44 @@
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
   updateOnlineStatus();
+
+  function sendOfflineMessage(type, urls, status) {
+    status.textContent = type === 'SAVE_OFFLINE' ? 'Saving on this device…' : 'Clearing saved pages…';
+    if (!('serviceWorker' in navigator)) { status.textContent = 'Offline storage is not supported in this browser.'; return; }
+    navigator.serviceWorker.ready.then(function (registration) {
+      var worker = registration.active;
+      if (!worker) { status.textContent = 'Offline support is still starting. Try again in a moment.'; return; }
+      var channel = new MessageChannel();
+      channel.port1.onmessage = function (event) {
+        var result = event.data || {};
+        if (type === 'CLEAR_OFFLINE') {
+          status.textContent = 'Offline copies cleared.';
+        } else if (result.saved) {
+          status.textContent = 'Saved for offline use on this device.';
+        } else {
+          status.textContent = (result.failures && result.failures[0]) || 'Could not save for offline use.';
+        }
+      };
+      worker.postMessage({ type: type, urls: urls || [] }, [channel.port2]);
+    }).catch(function () { status.textContent = 'Offline support is unavailable right now.'; });
+  }
+
+  document.addEventListener('click', function (event) {
+    var saveButton = event.target.closest('[data-save-offline]');
+    var clearButton = event.target.closest('[data-clear-offline]');
+    var button = saveButton || clearButton;
+    if (!button) return;
+    var status = button.parentElement.querySelector('[data-offline-status]') || document.querySelector('[data-offline-status]');
+    if (!status) return;
+    var urls = saveButton ? (button.dataset.offlinePaths || '').split('|').filter(Boolean) : [];
+    if (saveButton) {
+      document.querySelectorAll('link[rel="stylesheet"][href], img[src]').forEach(function (asset) {
+        var raw = asset.href || asset.src;
+        try { if (new URL(raw, location.href).origin === location.origin) urls.push(raw); } catch (e) {}
+      });
+    }
+    sendOfflineMessage(saveButton ? 'SAVE_OFFLINE' : 'CLEAR_OFFLINE', urls, status);
+  });
 </script>
 
 </body>

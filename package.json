@@ -1,0 +1,10 @@
+{
+  "name": "studyflow-assets",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./static/css/tailwind-input.css -o ./static/css/tailwind.css --minify --watch=false"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

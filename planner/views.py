@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 from urllib.parse import urlsplit
 
 from django.contrib import messages
@@ -15,9 +15,10 @@ from resources.models import Resource
 from community.models import Thread
 from library.models import Book
 from campus_life.models import CreditEvent
+from accounts.models import Profile
 
 from .forms import CourseForm, TaskForm, TimetableEntryForm
-from .models import Course, Task, TimetableEntry, FlashcardDeck, Flashcard
+from .models import Course, Task, TimetableEntry, FlashcardDeck, Flashcard, StudySession
 
 # SECURITY RULE: every query below is filtered by the logged-in user.
 # Without that, a user could open someone else's data by editing the ID in the URL.
@@ -35,6 +36,8 @@ def _user_task(request, pk):
 def dashboard(request):
     today = timezone.localdate()
     week_end = today + timedelta(days=7)
+    from .reminders import create_deadline_reminders
+    create_deadline_reminders(request.user)
 
     open_tasks = Task.objects.filter(
         course__user=request.user, is_done=False
@@ -47,7 +50,6 @@ def dashboard(request):
     # Onboarding Checklist State
     has_reviewed_flashcards = Flashcard.objects.filter(deck__course__user=request.user, last_reviewed_at__isnull=False).exists()
     has_done_tasks = Task.objects.filter(course__user=request.user, is_done=True).exists()
-    from .models import StudySession
     has_pomodoro = StudySession.objects.filter(user=request.user).exists()
     
     onboarding_completed = sum([has_reviewed_flashcards, has_done_tasks, has_pomodoro])
@@ -96,6 +98,7 @@ def dashboard(request):
             ('SIWES Hub', '💼', 'siwes_hub'),
             ('Marketplace', '🛍️', 'marketplace'),
             ('Timetable', '🗓️', 'timetable'),
+            ('Weekly Plan', '🧭', 'weekly_plan'),
             ('GPA Calculator', '🧮', 'gpa_calculator'),
             ('Study Groups', '💬', 'thread_list'),
         ],
@@ -129,6 +132,14 @@ def course_create(request):
 @login_required
 def course_detail(request, pk):
     course = _user_course(request, pk)
+    task_total = course.tasks.count()
+    task_done = course.tasks.filter(is_done=True).count()
+    study_minutes = StudySession.objects.filter(user=request.user, course=course).aggregate(
+        total=Sum('duration_minutes')
+    )['total'] or 0
+    course_cards = Flashcard.objects.filter(deck__course=course)
+    flashcard_total = course_cards.count()
+    flashcard_due = course_cards.filter(next_review_date__lte=timezone.localdate()).count()
     related_resources = (
         Resource.objects.filter(course_code__iexact=course.code) if course.code else Resource.objects.none()
     )
@@ -141,6 +152,12 @@ def course_detail(request, pk):
             'tasks': course.tasks.all(),
             'related_resources': related_resources,
             'threads': threads,
+            'task_total': task_total,
+            'task_done': task_done,
+            'task_progress': round(task_done * 100 / task_total) if task_total else 0,
+            'study_minutes': study_minutes,
+            'flashcard_total': flashcard_total,
+            'flashcard_due': flashcard_due,
         },
     )
 
@@ -250,6 +267,105 @@ def timetable(request):
         for num, label in TimetableEntry.DAY_CHOICES
     ]
     return render(request, 'planner/timetable.html', {'days': days})
+
+
+@login_required
+def weekly_plan(request):
+    """Build a lightweight weekly study plan around classes and deadlines."""
+    today = timezone.localdate()
+    last_day = today + timedelta(days=6)
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    class_entries = list(TimetableEntry.objects.filter(user=request.user))
+    sessions = list(StudySession.objects.filter(
+        user=request.user, date__gte=today - timedelta(days=30), course__isnull=False,
+    ).values_list('course_id', 'date'))
+    last_studied = {}
+    for course_id, session_date in sessions:
+        last_studied[course_id] = max(last_studied.get(course_id, session_date), session_date)
+
+    daily_slots = {}
+    for offset in range(7):
+        day = today + timedelta(days=offset)
+        day_classes = [entry for entry in class_entries if entry.day_of_week == day.weekday()]
+        candidates = []
+        for hour in range(9, 20):
+            start = time(hour)
+            end = (datetime.combine(day, start) + timedelta(minutes=50)).time()
+            if all(end <= entry.start_time or start >= entry.end_time for entry in day_classes):
+                candidates.append((start, end))
+        if profile.preferred_study_time == 'morning':
+            candidates.sort(key=lambda slot: (slot[0] >= time(12), slot[0]))
+        elif profile.preferred_study_time == 'afternoon':
+            candidates.sort(key=lambda slot: (not time(12) <= slot[0] < time(17), slot[0]))
+        elif profile.preferred_study_time == 'evening':
+            candidates.sort(key=lambda slot: (slot[0] < time(17), slot[0]))
+        daily_slots[day] = candidates
+
+    items_by_day = {today + timedelta(days=offset): [] for offset in range(7)}
+    open_tasks = list(Task.objects.filter(
+        course__user=request.user, is_done=False, due_date__lte=last_day,
+    ).select_related('course').order_by('due_date', 'created_at'))
+    unscheduled = []
+
+    for task in open_tasks:
+        first_day = max(today, task.due_date - timedelta(days=2))
+        scheduled = False
+        final_offset = max(0, min(6, (task.due_date - today).days))
+        for day_offset in range(max(0, (first_day - today).days), final_offset + 1):
+            day = today + timedelta(days=day_offset)
+            if len(items_by_day[day]) >= 3 or not daily_slots[day]:
+                continue
+            start, end = daily_slots[day].pop(0)
+            items_by_day[day].append({
+                'start': start, 'end': end, 'title': task.title,
+                'course': task.course, 'task': task,
+                'url': f"/courses/{task.course_id}/",
+                'note': 'Overdue' if task.due_date < today else f"Due {task.due_date.strftime('%a, %b %d').replace(' 0', ' ')}",
+            })
+            scheduled = True
+            break
+        if not scheduled:
+            unscheduled.append(task)
+
+    # Fill remaining capacity toward the user's weekly goal with course reviews.
+    courses = list(Course.objects.filter(user=request.user))
+    courses.sort(key=lambda course: last_studied.get(course.pk, today - timedelta(days=365)))
+    goal_blocks = min(21, max(1, profile.weekly_study_goal_hours * 60 // 50))
+    planned_blocks = sum(len(items) for items in items_by_day.values())
+    course_index = 0
+    while courses and planned_blocks < goal_blocks:
+        added_block = False
+        for day in items_by_day:
+            if planned_blocks >= goal_blocks:
+                break
+            if len(items_by_day[day]) >= 3 or not daily_slots[day]:
+                continue
+            course = courses[course_index % len(courses)]
+            course_index += 1
+            start, end = daily_slots[day].pop(0)
+            items_by_day[day].append({
+                'start': start, 'end': end, 'title': f'Review {course.name}',
+                'course': course, 'task': None, 'url': f'/courses/{course.pk}/',
+                'note': 'Suggested course review',
+            })
+            planned_blocks += 1
+            added_block = True
+        if not added_block:
+            break
+
+    plan_days = [
+        {'date': day, 'label': day.strftime('%A'), 'items': sorted(items, key=lambda item: item['start'])}
+        for day, items in items_by_day.items()
+    ]
+    return render(request, 'planner/weekly_plan.html', {
+        'plan_days': plan_days,
+        'unscheduled': unscheduled,
+        'plan_count': sum(len(items) for items in items_by_day.values()),
+        'goal_hours': profile.weekly_study_goal_hours,
+        'preferred_time': profile.get_preferred_study_time_display(),
+        'has_courses': bool(courses),
+        'has_tasks': bool(open_tasks),
+    })
 
 
 @login_required

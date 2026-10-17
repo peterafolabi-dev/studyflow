@@ -28,6 +28,15 @@ class Profile(models.Model):
     ], blank=True, null=True)
     reading_goal = models.PositiveIntegerField(default=12)
     avatar_color = models.PositiveSmallIntegerField(default=0)
+    weekly_study_goal_hours = models.PositiveSmallIntegerField(default=8)
+    preferred_study_time = models.CharField(
+        max_length=12,
+        choices=[
+            ('morning', 'Morning'), ('afternoon', 'Afternoon'),
+            ('evening', 'Evening'), ('flexible', 'Flexible'),
+        ],
+        default='flexible',
+    )
     university = models.CharField(max_length=60, choices=UNIVERSITY_CHOICES, default='FUT Minna')
     spotify_playlist_url = models.URLField(max_length=300, blank=True)
 
@@ -64,6 +73,18 @@ class LoginRecord(models.Model):
 
     def __str__(self):
         return f"{self.user.username} logged in at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+
+
+class UserPresence(models.Model):
+    """Most recent authenticated activity, used for a short online window."""
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='presence')
+    last_seen = models.DateTimeField(db_index=True)
+
+    class Meta:
+        verbose_name_plural = 'User presence'
+
+    def __str__(self):
+        return f"{self.user.username} last seen {self.last_seen}"
 
 
 @receiver(user_logged_in)

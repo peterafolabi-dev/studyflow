@@ -10,6 +10,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+node_modules/
 
 # Virtual environments
 venv/
@@ -33,18 +34,3 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
-
-# Scratch scripts from development
-fix_*.py
-update_*.py
-add_*.py
-build_chat.py
-build_features.py
-build_game.py
-build_study_room.py
-bento_dashboard.py
-clean_signup.py
-make_legendary.py
-move_break.py
-project_explanation.txt
-project_files.txt

@@ -11,7 +11,7 @@
 </div>
 
 <!-- Top KPIs -->
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 fade-in-up">
+<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4 mb-8 fade-in-up">
   <div class="rounded-2xl border border-brand-200 dark:border-brand-900/50 bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-950/40 dark:to-slate-900 p-5 text-center shadow-sm">
     <div class="font-display text-3xl font-extrabold text-brand-600 dark:text-brand-400">{{ total_users }}</div>
     <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">Total Users</div>
@@ -19,6 +19,10 @@
   <div class="rounded-2xl border border-emerald-200 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-slate-900 p-5 text-center shadow-sm">
     <div class="font-display text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{{ active_users }}</div>
     <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">Active (7 days)</div>
+  </div>
+  <div class="rounded-2xl border border-teal-200 dark:border-teal-900/50 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/40 dark:to-slate-900 p-5 text-center shadow-sm">
+    <div class="font-display text-3xl font-extrabold text-teal-600 dark:text-teal-400">{{ online_users|length }}</div>
+    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">Online now</div>
   </div>
   <div class="rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-950/40 dark:to-slate-900 p-5 text-center shadow-sm">
     <div class="font-display text-3xl font-extrabold text-blue-600 dark:text-blue-400">{{ total_signups_30d }}</div>
@@ -28,6 +32,60 @@
     <div class="font-display text-3xl font-extrabold text-yellow-600 dark:text-yellow-400">{{ avg_rating }}⭐</div>
     <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">Avg Feedback Rating</div>
   </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+  <section class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 p-6 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white">Online now</h2>
+      <span class="text-xs text-slate-500 dark:text-slate-400">Active in the last {{ online_window_minutes }} minutes</span>
+    </div>
+    {% if online_users %}
+      <div class="divide-y divide-slate-100 dark:divide-slate-800">
+        {% for presence in online_users %}
+        <div class="flex items-center justify-between py-3 gap-4">
+          <div class="min-w-0">
+            <div class="font-semibold text-slate-900 dark:text-white truncate">{{ presence.user.username }}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 truncate">{{ presence.user.email|default:"No email" }}</div>
+          </div>
+          <span class="text-xs text-emerald-600 dark:text-emerald-400 whitespace-nowrap">Seen {{ presence.last_seen|timesince }} ago</span>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-sm text-slate-500 dark:text-slate-400 py-4">No users have been active in the last five minutes.</p>
+    {% endif %}
+  </section>
+
+  <section class="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 p-6 shadow-sm">
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white">Recent logins <span class="text-sm font-normal text-slate-500">({{ total_login_records }} total)</span></h2>
+      <a href="{% url 'admin:accounts_loginrecord_changelist' %}" class="text-sm font-semibold text-brand-600 dark:text-brand-300 hover:underline whitespace-nowrap">View all</a>
+    </div>
+    {% if recent_logins %}
+      <div class="overflow-x-auto max-h-80 overflow-y-auto">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 bg-white dark:bg-slate-900"><tr class="border-b border-slate-200 dark:border-slate-700">
+            <th class="text-left py-2 pr-3 text-xs font-semibold text-slate-500 uppercase">User</th>
+            <th class="text-left py-2 pr-3 text-xs font-semibold text-slate-500 uppercase">Method</th>
+            <th class="text-left py-2 pr-3 text-xs font-semibold text-slate-500 uppercase">IP</th>
+            <th class="text-left py-2 text-xs font-semibold text-slate-500 uppercase">When</th>
+          </tr></thead>
+          <tbody>{% for record in recent_logins %}
+            <tr class="border-b border-slate-100 dark:border-slate-800">
+              <td class="py-2 pr-3 font-medium text-slate-900 dark:text-white">{{ record.user.username }}</td>
+              <td class="py-2 pr-3 text-slate-600 dark:text-slate-300">{{ record.login_method }}</td>
+              <td class="py-2 pr-3 text-slate-500 dark:text-slate-400">{{ record.ip_address|default:"—" }}</td>
+              <td class="py-2 text-slate-500 dark:text-slate-400 whitespace-nowrap" title="{{ record.timestamp|date:'DATETIME_FORMAT' }}">{{ record.timestamp|timesince }} ago</td>
+            </tr>
+          {% endfor %}</tbody>
+        </table>
+      </div>
+      <p class="text-xs text-slate-400 mt-3">Showing the latest 25 successful logins.</p>
+    {% else %}
+      <p class="text-sm text-slate-500 dark:text-slate-400 py-4">No login records yet.</p>
+    {% endif %}
+  </section>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

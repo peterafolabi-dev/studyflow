@@ -12,10 +12,16 @@
           Join open discussions, grouped by course code. Ask questions, share notes, and collaborate.
         </p>
       </div>
-      <a href="{% url 'thread_create' %}{% if course_code %}?course={{ course_code }}{% endif %}"
-         class="rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold px-6 py-3.5 text-sm shadow-lg shadow-brand-500/30 transition-all hover:scale-105 shrink-0 flex items-center gap-2 group">
-        <span class="group-hover:rotate-90 transition-transform">➕</span> Start a discussion
-      </a>
+      <div class="flex flex-wrap items-center gap-3 shrink-0">
+        <a href="{% url 'find_buddies' %}"
+           class="rounded-2xl border border-brand-200 dark:border-brand-800 bg-white/80 dark:bg-slate-900/80 text-brand-700 dark:text-brand-300 font-bold px-5 py-3.5 text-sm transition hover:bg-brand-50 dark:hover:bg-brand-950/40">
+          Find study buddies
+        </a>
+        <a href="{% url 'thread_create' %}{% if course_code %}?course={{ course_code }}{% endif %}"
+           class="rounded-2xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-bold px-6 py-3.5 text-sm shadow-lg shadow-brand-500/30 transition-all hover:scale-105 shrink-0 flex items-center gap-2 group">
+          <span class="group-hover:rotate-90 transition-transform">➕</span> Start a discussion
+        </a>
+      </div>
     </div>
 
     <!-- Search Bar -->

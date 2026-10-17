@@ -2,7 +2,14 @@ module.exports = {
   darkMode: 'class',
   content: [
     './templates/**/*.html',
-    './**/*.py',
+    './accounts/**/*.py',
+    './planner/**/*.py',
+    './library/**/*.py',
+    './resources/**/*.py',
+    './community/**/*.py',
+    './campus/**/*.py',
+    './campus_life/**/*.py',
+    './static/js/**/*.js',
   ],
   theme: {
     extend: {
