@@ -355,6 +355,7 @@ def weekly_plan(request):
         'goal_hours': profile.weekly_study_goal_hours,
         'preferred_time': profile.get_preferred_study_time_display(),
         'has_courses': bool(courses),
+        'has_tasks': bool(open_tasks),
     })
 
 

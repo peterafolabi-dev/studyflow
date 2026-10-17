@@ -1096,6 +1096,44 @@
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
   updateOnlineStatus();
+
+  function sendOfflineMessage(type, urls, status) {
+    status.textContent = type === 'SAVE_OFFLINE' ? 'Saving on this device…' : 'Clearing saved pages…';
+    if (!('serviceWorker' in navigator)) { status.textContent = 'Offline storage is not supported in this browser.'; return; }
+    navigator.serviceWorker.ready.then(function (registration) {
+      var worker = registration.active;
+      if (!worker) { status.textContent = 'Offline support is still starting. Try again in a moment.'; return; }
+      var channel = new MessageChannel();
+      channel.port1.onmessage = function (event) {
+        var result = event.data || {};
+        if (type === 'CLEAR_OFFLINE') {
+          status.textContent = 'Offline copies cleared.';
+        } else if (result.saved) {
+          status.textContent = 'Saved for offline use on this device.';
+        } else {
+          status.textContent = (result.failures && result.failures[0]) || 'Could not save for offline use.';
+        }
+      };
+      worker.postMessage({ type: type, urls: urls || [] }, [channel.port2]);
+    }).catch(function () { status.textContent = 'Offline support is unavailable right now.'; });
+  }
+
+  document.addEventListener('click', function (event) {
+    var saveButton = event.target.closest('[data-save-offline]');
+    var clearButton = event.target.closest('[data-clear-offline]');
+    var button = saveButton || clearButton;
+    if (!button) return;
+    var status = button.parentElement.querySelector('[data-offline-status]') || document.querySelector('[data-offline-status]');
+    if (!status) return;
+    var urls = saveButton ? (button.dataset.offlinePaths || '').split('|').filter(Boolean) : [];
+    if (saveButton) {
+      document.querySelectorAll('link[rel="stylesheet"][href], img[src]').forEach(function (asset) {
+        var raw = asset.href || asset.src;
+        try { if (new URL(raw, location.href).origin === location.origin) urls.push(raw); } catch (e) {}
+      });
+    }
+    sendOfflineMessage(saveButton ? 'SAVE_OFFLINE' : 'CLEAR_OFFLINE', urls, status);
+  });
 </script>
 
 </body>

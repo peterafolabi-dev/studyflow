@@ -6,10 +6,16 @@
       <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Timetable</h1>
       <p class="text-slate-500 dark:text-slate-400 mt-1">Your weekly class schedule.</p>
     </div>
-    <div class="flex gap-2">
+    <div class="flex flex-wrap gap-2">
+      <button type="button" data-save-offline data-offline-paths="{% url 'timetable' %}" class="rounded-lg border border-emerald-300 text-emerald-700 dark:text-emerald-300 px-4 py-2 text-sm font-medium">Save offline</button>
       <a href="{% url 'weekly_plan' %}" class="rounded-lg border border-brand-300 text-brand-700 dark:text-brand-300 px-4 py-2 text-sm font-medium shrink-0">Smart plan</a>
       <a href="{% url 'timetable_create' %}" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm shrink-0">+ Add class</a>
     </div>
+  </div>
+  <p class="text-xs text-slate-400 dark:text-slate-500 text-right -mt-2 mb-3">Saved copies stay on this device and are cleared when you sign out.</p>
+  <div class="flex justify-end mb-4">
+    <button type="button" data-clear-offline class="text-xs text-slate-500 dark:text-slate-400 hover:underline">Clear offline copies</button>
+    <span data-offline-status role="status" class="ml-3 text-xs text-slate-500 dark:text-slate-400"></span>
   </div>
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
