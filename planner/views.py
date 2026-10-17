@@ -327,22 +327,31 @@ def weekly_plan(request):
         if not scheduled:
             unscheduled.append(task)
 
-    # If deadlines do not fill the week, rotate in course review blocks.
+    # Fill remaining capacity toward the user's weekly goal with course reviews.
     courses = list(Course.objects.filter(user=request.user))
     courses.sort(key=lambda course: last_studied.get(course.pk, today - timedelta(days=365)))
-    course_rotation = iter(courses)
-    for day in items_by_day:
-        if len(items_by_day[day]) >= 2 or not daily_slots[day]:
-            continue
-        course = next(course_rotation, None)
-        if course is None:
+    goal_blocks = min(21, max(1, profile.weekly_study_goal_hours * 60 // 50))
+    planned_blocks = sum(len(items) for items in items_by_day.values())
+    course_index = 0
+    while courses and planned_blocks < goal_blocks:
+        added_block = False
+        for day in items_by_day:
+            if planned_blocks >= goal_blocks:
+                break
+            if len(items_by_day[day]) >= 3 or not daily_slots[day]:
+                continue
+            course = courses[course_index % len(courses)]
+            course_index += 1
+            start, end = daily_slots[day].pop(0)
+            items_by_day[day].append({
+                'start': start, 'end': end, 'title': f'Review {course.name}',
+                'course': course, 'task': None, 'url': f'/courses/{course.pk}/',
+                'note': 'Suggested course review',
+            })
+            planned_blocks += 1
+            added_block = True
+        if not added_block:
             break
-        start, end = daily_slots[day].pop(0)
-        items_by_day[day].append({
-            'start': start, 'end': end, 'title': f'Review {course.name}',
-            'course': course, 'task': None, 'url': f'/courses/{course.pk}/',
-            'note': 'Suggested course review',
-        })
 
     plan_days = [
         {'date': day, 'label': day.strftime('%A'), 'items': sorted(items, key=lambda item: item['start'])}
