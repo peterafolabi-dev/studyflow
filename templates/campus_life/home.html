@@ -4,9 +4,9 @@
 <div class="max-w-5xl mx-auto space-y-8 pb-72 sm:pb-80">
   <header class="flex flex-wrap items-end justify-between gap-4 border-b border-slate-700 pb-5">
     <div>
-      <p class="text-xs font-semibold uppercase text-emerald-300">FUT Minna · personal progress</p>
-      <h1 class="mt-1 font-display text-3xl font-bold text-white">Study Campus Life</h1>
-      <p class="mt-2 text-sm text-slate-300">{{ career_title }} · {{ study_hours }} study hours</p>
+      <p class="text-xs font-semibold uppercase text-emerald-300">{{ game_university }} · your student story</p>
+      <h1 class="mt-1 font-display text-3xl font-bold text-white">Campus Life Simulator</h1>
+      <p class="mt-2 text-sm text-slate-300">Day {{ game_profile.game_day }} · {{ career_title }} · {{ study_hours }} study hours</p>
     </div>
     <div class="text-right">
       <p class="text-2xl font-bold text-emerald-300">{{ credits }} Credits</p>
@@ -14,6 +14,72 @@
     </div>
   </header>
   {% if show_career_celebration %}<p class="rounded-lg border border-emerald-500/40 bg-emerald-950/40 p-3 text-sm font-semibold text-emerald-200" role="status">Career milestone reached: {{ career_title }}. Your progress never goes backward.</p>{% endif %}
+
+  <section class="grid gap-5 lg:grid-cols-[1.4fr_1fr]" aria-labelledby="student-day-title">
+    <div class="rounded-2xl border border-slate-700 bg-gradient-to-br from-[#123c37] via-slate-900 to-[#15253c] p-5 sm:p-7">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wider text-emerald-300">Your student day · Day {{ game_profile.game_day }}</p>
+          <h2 id="student-day-title" class="mt-1 font-display text-2xl font-bold text-white">A little campus, a little hustle</h2>
+          <p class="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">Pick up to three activities each day. Your story saves automatically, and your stats never drop while you are away.</p>
+        </div>
+        <div class="rounded-xl border border-emerald-400/30 bg-black/20 px-4 py-3 text-right">
+          <p class="text-[11px] uppercase tracking-wide text-slate-400">Game wallet</p>
+          <p class="text-xl font-extrabold text-emerald-300">₦{{ game_profile.game_wallet|floatformat:0 }}</p>
+          <p class="text-[10px] text-slate-400">Fictional · no cash value</p>
+        </div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-xl bg-black/20 p-3"><div class="flex justify-between text-xs text-slate-300"><span>Energy</span><span>{{ game_profile.energy }}%</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-700"><div class="h-full rounded-full bg-sky-400" style="width: {{ game_profile.energy }}%"></div></div></div>
+        <div class="rounded-xl bg-black/20 p-3"><div class="flex justify-between text-xs text-slate-300"><span>Fullness</span><span>{{ game_profile.hunger }}%</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-700"><div class="h-full rounded-full bg-amber-400" style="width: {{ game_profile.hunger }}%"></div></div></div>
+        <div class="rounded-xl bg-black/20 p-3"><div class="flex justify-between text-xs text-slate-300"><span>Community</span><span>{{ game_profile.community }}%</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-700"><div class="h-full rounded-full bg-fuchsia-400" style="width: {{ game_profile.community }}%"></div></div></div>
+        <div class="rounded-xl bg-black/20 p-3"><div class="flex justify-between text-xs text-slate-300"><span>Wellbeing</span><span>{{ game_profile.wellbeing }}%</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-slate-700"><div class="h-full rounded-full bg-emerald-400" style="width: {{ game_profile.wellbeing }}%"></div></div></div>
+      </div>
+      <div class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 p-4">
+        <div><p class="text-xs font-bold uppercase tracking-wide text-amber-300">Daily side quest</p><p class="mt-1 font-semibold text-white">{{ mission.title }} {% if mission_complete %}<span class="text-emerald-300">· Complete ✓</span>{% endif %}</p><p class="mt-1 text-xs text-slate-300">{{ mission.description }} · first completion earns ₦3,000 game cash</p></div>
+        <span class="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-200">{{ moves_left }} of 3 moves left</span>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-700 bg-slate-900/80 p-5 sm:p-6">
+      <div class="flex items-center justify-between gap-3">
+        <div><p class="text-xs font-semibold uppercase tracking-wide text-sky-300">The city is yours</p><h2 class="mt-1 font-display text-xl font-bold text-white">Student map</h2></div>
+        <span class="rounded-full bg-sky-400/10 px-3 py-1 text-xs font-semibold text-sky-200">Now at {{ game_profile.game_location }}</span>
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        {% for place in places %}
+        <form method="post" class="min-w-0 rounded-xl border border-slate-700 bg-slate-800/70 p-3 transition hover:border-sky-400/60">
+          {% csrf_token %}<input type="hidden" name="action" value="play_game"><input type="hidden" name="game_action" value="explore"><input type="hidden" name="place" value="{{ place.name }}">
+          <button class="w-full text-left" {% if not moves_left or game_profile.game_wallet < 500 %}disabled{% endif %}>
+            <span class="text-2xl" aria-hidden="true">{{ place.icon }}</span><span class="mt-2 block truncate text-sm font-bold text-white">{{ place.name }}</span><span class="mt-1 block min-h-8 text-[11px] leading-relaxed text-slate-400">{{ place.tag }}</span><span class="mt-2 block text-[10px] font-bold uppercase text-sky-300">Explore · ₦500 game cash</span>
+          </button>
+        </form>
+        {% endfor %}
+      </div>
+      <p class="mt-3 text-[11px] leading-relaxed text-slate-500">Places are story settings, not live transit guidance. Check current routes and fares before travelling in real life.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="daily-activities-title">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p class="text-xs font-semibold uppercase tracking-wide text-emerald-300">Make your moves</p><h2 id="daily-activities-title" class="mt-1 font-display text-2xl font-bold text-white">What does today look like?</h2></div><p class="text-xs text-slate-400">Three moves per day · no real money or purchases</p></div>
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {% for key, item in game_actions.items %}
+      <form method="post" class="flex min-h-40 flex-col justify-between rounded-xl border border-slate-700 bg-slate-900/80 p-4 transition hover:border-emerald-400/50">
+        {% csrf_token %}<input type="hidden" name="action" value="play_game"><input type="hidden" name="game_action" value="{{ key }}">
+        <div><div class="flex items-center gap-3"><span class="text-2xl" aria-hidden="true">{{ item.icon }}</span><h3 class="font-bold text-white">{{ item.label }}</h3></div><p class="mt-2 text-xs leading-relaxed text-slate-400">{{ item.story }}</p></div>
+        <button class="mt-4 w-full rounded-lg bg-emerald-700 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50" {% if not moves_left %}disabled{% endif %}>Choose this activity</button>
+      </form>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if game_log %}
+  <section class="rounded-2xl border border-slate-700 bg-slate-900/70 p-5" aria-labelledby="story-log-title">
+    <div class="mb-3 flex items-center justify-between"><h2 id="story-log-title" class="font-display text-xl font-bold text-white">Your recent story</h2><span class="text-xs text-slate-400">Latest 5 moments</span></div>
+    <ol class="space-y-2">{% for entry in game_log %}<li class="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-slate-800/70 px-3 py-2.5"><p class="text-sm text-slate-200">{{ entry.message }}</p><span class="shrink-0 text-[11px] font-semibold text-slate-400">Day {{ entry.game_day }}{% if entry.wallet_delta > 0 %} · +₦{{ entry.wallet_delta }}{% elif entry.wallet_delta < 0 %} · −₦{{ entry.wallet_delta|stringformat:'d'|slice:'1:' }}{% endif %}</span></li>{% endfor %}</ol>
+  </section>
+  {% endif %}
 
   <section class="grid min-w-0 gap-8 md:grid-cols-2 md:gap-10">
     <div class="min-w-0 border-b border-slate-700 pb-8">
