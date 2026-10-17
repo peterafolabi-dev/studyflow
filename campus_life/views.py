@@ -13,12 +13,12 @@ from .services import credit_balance
 
 
 GAME_ACTIONS = {
-    'lecture': {'label': 'Make it to class', 'icon': '🎓', 'cost': 0, 'energy': -12, 'hunger': -7, 'community': 2, 'wellbeing': 3, 'wallet': 1500, 'story': 'You made it to class and caught the important bits.'},
-    'library': {'label': 'Lock in at the library', 'icon': '📚', 'cost': 0, 'energy': -16, 'hunger': -8, 'community': 0, 'wellbeing': 5, 'wallet': 2000, 'story': 'A focused library session moved your semester forward.'},
-    'hustle': {'label': 'Pick up a student gig', 'icon': '💼', 'cost': 0, 'energy': -20, 'hunger': -12, 'community': 2, 'wellbeing': -3, 'wallet': 7000, 'story': 'You finished a small student gig and earned game cash.'},
-    'food': {'label': 'Grab a proper meal', 'icon': '🍛', 'cost': 1500, 'energy': 5, 'hunger': 30, 'community': 0, 'wellbeing': 5, 'wallet': -1500, 'story': 'You stopped for a filling campus meal.'},
-    'linkup': {'label': 'Catch up with your people', 'icon': '🫶', 'cost': 1000, 'energy': -8, 'hunger': -3, 'community': 22, 'wellbeing': 12, 'wallet': -1000, 'story': 'A good link-up boosted your community and mood.'},
-    'rest': {'label': 'Take a proper breather', 'icon': '🛏️', 'cost': 0, 'energy': 28, 'hunger': -5, 'community': 0, 'wellbeing': 8, 'wallet': 0, 'story': 'You took time to rest and reset.'},
+    'lecture': {'label': 'Make it to class', 'icon': '🎓', 'cost': 0, 'energy': -12, 'hunger': -7, 'community': 2, 'wellbeing': 3, 'wallet': 1500, 'effect': 'Earn ₦1,500 game cash · build your campus routine', 'story': 'You made it to class and caught the important bits.'},
+    'library': {'label': 'Lock in at the library', 'icon': '📚', 'cost': 0, 'energy': -16, 'hunger': -8, 'community': 0, 'wellbeing': 5, 'wallet': 2000, 'effect': 'Earn ₦2,000 game cash · improve wellbeing', 'story': 'A focused library session moved your semester forward.'},
+    'hustle': {'label': 'Pick up a student gig', 'icon': '💼', 'cost': 0, 'energy': -20, 'hunger': -12, 'community': 2, 'wellbeing': -3, 'wallet': 7000, 'effect': 'Earn ₦7,000 game cash · uses more energy', 'story': 'You finished a small student gig and earned game cash.'},
+    'food': {'label': 'Grab a proper meal', 'icon': '🍛', 'cost': 1500, 'energy': 5, 'hunger': 30, 'community': 0, 'wellbeing': 5, 'wallet': -1500, 'effect': 'Spend ₦1,500 game cash · restore fullness', 'story': 'You stopped for a filling campus meal.'},
+    'linkup': {'label': 'Catch up with your people', 'icon': '🫶', 'cost': 1000, 'energy': -8, 'hunger': -3, 'community': 22, 'wellbeing': 12, 'wallet': -1000, 'effect': 'Spend ₦1,000 game cash · boost community', 'story': 'A good link-up boosted your community and mood.'},
+    'rest': {'label': 'Take a proper breather', 'icon': '🛏️', 'cost': 0, 'energy': 28, 'hunger': -5, 'community': 0, 'wellbeing': 8, 'wallet': 0, 'effect': 'Free · restore energy and wellbeing', 'story': 'You took time to rest and reset.'},
 }
 
 MISSIONS = [

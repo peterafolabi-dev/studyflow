@@ -67,7 +67,7 @@
       {% for key, item in game_actions.items %}
       <form method="post" class="flex min-h-40 flex-col justify-between rounded-xl border border-slate-700 bg-slate-900/80 p-4 transition hover:border-emerald-400/50">
         {% csrf_token %}<input type="hidden" name="action" value="play_game"><input type="hidden" name="game_action" value="{{ key }}">
-        <div><div class="flex items-center gap-3"><span class="text-2xl" aria-hidden="true">{{ item.icon }}</span><h3 class="font-bold text-white">{{ item.label }}</h3></div><p class="mt-2 text-xs leading-relaxed text-slate-400">{{ item.story }}</p></div>
+        <div><div class="flex items-center gap-3"><span class="text-2xl" aria-hidden="true">{{ item.icon }}</span><h3 class="font-bold text-white">{{ item.label }}</h3></div><p class="mt-2 text-xs leading-relaxed text-slate-400">{{ item.story }}</p><p class="mt-2 text-[11px] font-semibold text-emerald-300">{{ item.effect }}</p></div>
         <button class="mt-4 w-full rounded-lg bg-emerald-700 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50" {% if not moves_left %}disabled{% endif %}>Choose this activity</button>
       </form>
       {% endfor %}
