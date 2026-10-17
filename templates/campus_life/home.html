@@ -77,7 +77,7 @@
   {% if game_log %}
   <section class="rounded-2xl border border-slate-700 bg-slate-900/70 p-5" aria-labelledby="story-log-title">
     <div class="mb-3 flex items-center justify-between"><h2 id="story-log-title" class="font-display text-xl font-bold text-white">Your recent story</h2><span class="text-xs text-slate-400">Latest 5 moments</span></div>
-    <ol class="space-y-2">{% for entry in game_log %}<li class="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-slate-800/70 px-3 py-2.5"><p class="text-sm text-slate-200">{{ entry.message }}</p><span class="shrink-0 text-[11px] font-semibold text-slate-400">Day {{ entry.game_day }}{% if entry.wallet_delta > 0 %} · +₦{{ entry.wallet_delta }}{% elif entry.wallet_delta < 0 %} · −₦{{ entry.wallet_delta|stringformat:'d'|slice:'1:' }}{% endif %}</span></li>{% endfor %}</ol>
+    <ol class="space-y-2">{% for entry in game_log %}<li class="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-slate-800/70 px-3 py-2.5"><p class="text-sm text-slate-200">{{ entry.message }}</p><span class="shrink-0 text-[11px] font-semibold text-slate-400">Day {{ entry.game_day }}{% if entry.wallet_delta > 0 %} · +₦{{ entry.wallet_delta }}{% elif entry.wallet_delta < 0 %} · ₦{{ entry.wallet_delta }}{% endif %}</span></li>{% endfor %}</ol>
   </section>
   {% endif %}
 
