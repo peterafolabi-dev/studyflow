@@ -33,7 +33,7 @@
           <a href="{% url 'public_profile' b.user.username %}" class="font-display text-lg font-bold text-slate-900 dark:text-white hover:text-brand-600">{{ b.user.username }}</a>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Shared courses: {{ b.overlap|join:', ' }}</p>
           <div class="flex flex-wrap gap-2 mt-3">
-            <span class="rounded-full bg-brand-50 dark:bg-brand-950/50 px-2.5 py-1 text-xs text-brand-700 dark:text-brand-300">{{ b.shared_slots }} shared free hours</span>
+            <span class="rounded-full bg-brand-50 dark:bg-brand-950/50 px-2.5 py-1 text-xs text-brand-700 dark:text-brand-300">{% if b.comparable_availability %}{{ b.shared_slots }} shared class-free hours{% else %}Add timetables to compare free time{% endif %}</span>
             <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300">{{ b.goal }}h weekly goal</span>
             {% if b.time_match %}<span class="rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-xs text-emerald-700 dark:text-emerald-300">Similar study time</span>{% endif %}
           </div>

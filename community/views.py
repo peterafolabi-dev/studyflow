@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import Post, Thread, ChatMessage
@@ -198,12 +199,15 @@ def find_buddies(request):
             their_profile = profiles.get(user.pk)
             goal = their_profile.weekly_study_goal_hours if their_profile else 8
             study_time = their_profile.preferred_study_time if their_profile else 'flexible'
-            shared_slots = len(my_free & free_slots(entries_by_user.get(user.pk, [])))
+            their_entries = entries_by_user.get(user.pk, [])
+            comparable_availability = bool(entries_by_user.get(request.user.pk) and their_entries)
+            shared_slots = len(my_free & free_slots(their_entries)) if comparable_availability else 0
             time_match = my_time == study_time or 'flexible' in {my_time, study_time}
             goal_match = abs(my_profile.weekly_study_goal_hours - goal) <= 2
             score = len(overlap) * 4 + min(3, shared_slots // 10) + int(time_match) * 2 + int(goal_match)
             buddies.append({
                 'user': user, 'overlap': sorted(overlap), 'shared_slots': shared_slots,
+                'comparable_availability': comparable_availability,
                 'time_match': time_match, 'goal': goal, 'score': score,
             })
     buddies.sort(key=lambda item: (-item['score'], item['user'].username.lower()))

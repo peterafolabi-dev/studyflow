@@ -44,8 +44,9 @@ self.addEventListener('activate', function (event) {
 self.addEventListener('message', function (event) {
   const data = event.data || {};
   if (data.type === 'CLEAR_OFFLINE') {
-    event.waitUntil(caches.delete(USER_CACHE));
-    if (event.ports[0]) event.ports[0].postMessage({ cleared: true });
+    event.waitUntil(caches.delete(USER_CACHE).then(function () {
+      if (event.ports[0]) event.ports[0].postMessage({ cleared: true });
+    }));
     return;
   }
   if (data.type !== 'SAVE_OFFLINE') return;
