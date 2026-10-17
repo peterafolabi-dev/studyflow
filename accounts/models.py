@@ -66,6 +66,18 @@ class LoginRecord(models.Model):
         return f"{self.user.username} logged in at {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
+class UserPresence(models.Model):
+    """Most recent authenticated activity, used for a short online window."""
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='presence')
+    last_seen = models.DateTimeField(db_index=True)
+
+    class Meta:
+        verbose_name_plural = 'User presence'
+
+    def __str__(self):
+        return f"{self.user.username} last seen {self.last_seen}"
+
+
 @receiver(user_logged_in)
 def record_user_login(sender, request, user, **kwargs):
     is_first_login = not LoginRecord.objects.filter(user=user).exists()

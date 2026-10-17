@@ -286,7 +286,7 @@ def admin_dashboard(request):
     from django.utils import timezone
     from .models import Feedback
     from planner.models import StudySession, XPLog
-    from accounts.models import LoginRecord
+    from accounts.models import LoginRecord, UserPresence
 
     if not request.user.is_staff:
         from django.core.exceptions import PermissionDenied
@@ -305,10 +305,16 @@ def admin_dashboard(request):
         .order_by('day')
     )
 
-    # Active users (logged in last 7 days)
-    active_users = LoginRecord.objects.filter(
-        timestamp__date__gte=today - timedelta(days=7)
+    now = timezone.now()
+    online_cutoff = now - timedelta(minutes=5)
+    active_cutoff = now - timedelta(days=7)
+    online_users = UserPresence.objects.filter(
+        last_seen__gte=online_cutoff, user__is_active=True
+    ).select_related('user').order_by('-last_seen')
+    active_users = UserPresence.objects.filter(
+        last_seen__gte=active_cutoff, user__is_active=True
     ).values('user').distinct().count()
+    recent_logins = LoginRecord.objects.select_related('user').order_by('-timestamp')[:25]
 
     # Feature usage this week
     week_ago = today - timedelta(days=7)
@@ -324,8 +330,11 @@ def admin_dashboard(request):
     avg_rating = Feedback.objects.aggregate(avg=models.Avg('rating'))['avg'] or 0
 
     context = {
-        'total_users': User.objects.count(),
+        'total_users': User.objects.filter(is_active=True).count(),
         'active_users': active_users,
+        'online_users': online_users,
+        'recent_logins': recent_logins,
+        'online_window_minutes': 5,
         'total_signups_30d': User.objects.filter(date_joined__date__gte=thirty_days_ago).count(),
         'signups': list(signups),
         'feature_usage': feature_usage,
