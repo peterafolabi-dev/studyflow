@@ -15,6 +15,30 @@
   </header>
   {% if show_career_celebration %}<p class="rounded-lg border border-emerald-500/40 bg-emerald-950/40 p-3 text-sm font-semibold text-emerald-200" role="status">Career milestone reached: {{ career_title }}. Your progress never goes backward.</p>{% endif %}
 
+  <section class="grid gap-5 lg:grid-cols-[1.15fr_.85fr]" aria-label="Campus activities">
+    <div class="rounded-2xl border border-indigo-400/20 bg-gradient-to-br from-indigo-950 via-slate-900 to-fuchsia-950 p-5 sm:p-6">
+      <div class="flex items-center justify-between gap-3">
+        <div><p class="text-xs font-bold uppercase tracking-[.18em] text-fuchsia-300">The Campus Gist</p><h2 class="mt-1 font-display text-2xl font-bold text-white">Your next good story starts here</h2></div>
+        <span class="text-3xl" aria-hidden="true">📣</span>
+      </div>
+      <p class="mt-3 max-w-xl text-sm leading-6 text-slate-300">The library is calling, your course group has a question, and somebody might need that old textbook. Pick a thread and see where campus takes you.</p>
+      <div class="mt-5 grid gap-3 sm:grid-cols-3">
+        <a href="{% url 'global_chat' %}" class="group rounded-xl border border-white/10 bg-white/5 p-4 transition hover:-translate-y-1 hover:bg-white/10"><span class="text-2xl" aria-hidden="true">🗣️</span><p class="mt-2 font-bold text-white">Heard around campus</p><p class="mt-1 text-xs leading-5 text-slate-400">Drop into the student chat and join the conversation.</p><span class="mt-3 inline-block text-xs font-bold text-fuchsia-300 group-hover:text-white">Join the gist →</span></a>
+        <a href="{% url 'thread_list' %}" class="group rounded-xl border border-white/10 bg-white/5 p-4 transition hover:-translate-y-1 hover:bg-white/10"><span class="text-2xl" aria-hidden="true">📚</span><p class="mt-2 font-bold text-white">Study squad needed</p><p class="mt-1 text-xs leading-5 text-slate-400">Find a group, swap notes and tackle a course together.</p><span class="mt-3 inline-block text-xs font-bold text-fuchsia-300 group-hover:text-white">Find your people →</span></a>
+        <a href="{% url 'marketplace' %}" class="group rounded-xl border border-white/10 bg-white/5 p-4 transition hover:-translate-y-1 hover:bg-white/10"><span class="text-2xl" aria-hidden="true">🛍️</span><p class="mt-2 font-bold text-white">The book swap</p><p class="mt-1 text-xs leading-5 text-slate-400">Browse student listings or pass useful things along.</p><span class="mt-3 inline-block text-xs font-bold text-fuchsia-300 group-hover:text-white">Browse the market →</span></a>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-emerald-400/20 bg-slate-900 p-5 sm:p-6">
+      <p class="text-xs font-bold uppercase tracking-[.18em] text-emerald-300">Choose your side quest</p><h2 class="mt-1 font-display text-2xl font-bold text-white">Little campus missions</h2>
+      <p class="mt-2 text-sm text-slate-400">Explore at your own pace. Your credits come from tracked study activity, and these missions are just for the fun of it.</p>
+      <div class="mt-4 space-y-3">
+        <a href="{% url 'campus_hub' %}" class="flex items-center gap-3 rounded-xl border border-slate-700 p-3 transition hover:border-emerald-400/60 hover:bg-slate-800"><span class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-400/10 text-xl">🧭</span><span class="min-w-0 flex-1"><span class="block text-sm font-bold text-white">Explore the campus hub</span><span class="block text-xs text-slate-400">Check what’s happening around campus</span></span><span class="text-emerald-300">→</span></a>
+        <a href="{% url 'catalogue' %}" class="flex items-center gap-3 rounded-xl border border-slate-700 p-3 transition hover:border-emerald-400/60 hover:bg-slate-800"><span class="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-400/10 text-xl">🔎</span><span class="min-w-0 flex-1"><span class="block text-sm font-bold text-white">Go on a library hunt</span><span class="block text-xs text-slate-400">Find something useful for your next study session</span></span><span class="text-emerald-300">→</span></a>
+        <a href="{% url 'dashboard' %}" class="flex items-center gap-3 rounded-xl border border-slate-700 p-3 transition hover:border-emerald-400/60 hover:bg-slate-800"><span class="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-400/10 text-xl">✨</span><span class="min-w-0 flex-1"><span class="block text-sm font-bold text-white">Set up your next win</span><span class="block text-xs text-slate-400">Add a task or plan a focused study session</span></span><span class="text-emerald-300">→</span></a>
+      </div>
+    </div>
+  </section>
+
   <section class="grid min-w-0 gap-8 md:grid-cols-2 md:gap-10">
     <div class="min-w-0 border-b border-slate-700 pb-8">
       <h2 class="font-display text-xl font-bold text-white">Your campus avatar</h2>
