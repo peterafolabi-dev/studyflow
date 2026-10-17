@@ -82,6 +82,10 @@ MAX_UPLOAD_SIZE_MB=10
 | Markdown | marked.js + DOMPurify |
 | PWA | Web App Manifest + Service Worker |
 
+### Styling assets
+
+Tailwind utilities are compiled into `static/css/tailwind.css` and served locally. When changing utility classes in templates or app code, rebuild and commit the stylesheet with `npm ci` followed by `npm run build:css`. Render serves the committed file as part of its Python build, so it does not need Node.js.
+
 ---
 
 ## 📸 Screenshots
