@@ -57,12 +57,7 @@ def login_view(request):
     else:
         form = LoginForm()
 
-    from django.conf import settings
-    return render(request, 'accounts/login.html', {
-        'form': form,
-        'error': error,
-        'firebase_web_config': settings.FIREBASE_WEB_CONFIG,
-    })
+    return render(request, 'accounts/login.html', {'form': form, 'error': error})
 
 
 @require_POST
