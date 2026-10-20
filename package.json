@@ -2,6 +2,7 @@
   "name": "studyflow-assets",
   "private": true,
   "scripts": {
+    "dev": "python manage.py runserver",
     "build:css": "tailwindcss -i ./static/css/tailwind-input.css -o ./static/css/tailwind.css --minify --watch=false"
   },
   "devDependencies": {
