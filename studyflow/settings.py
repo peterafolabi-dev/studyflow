@@ -33,6 +33,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-insecure-key-change-me')
 
+# Firebase Web app configuration is public client metadata, not a server secret.
+FIREBASE_WEB_CONFIG = {
+    'apiKey': os.environ.get('FIREBASE_API_KEY', ''),
+    'authDomain': os.environ.get('FIREBASE_AUTH_DOMAIN', ''),
+    'projectId': os.environ.get('FIREBASE_PROJECT_ID', ''),
+    'appId': os.environ.get('FIREBASE_APP_ID', ''),
+}
+
 # SECURITY WARNING: don't run with debug turned on in production!
 IS_RENDER = bool(os.environ.get('RENDER') or os.environ.get('RENDER_SERVICE_ID'))
 DEBUG = os.environ.get('DEBUG', '').lower() not in ('false', '0', 'no') and not IS_RENDER
