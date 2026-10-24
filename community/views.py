@@ -445,7 +445,8 @@ def admin_dashboard(request):
     from django.utils import timezone
     from .models import Feedback
     from planner.models import StudySession, XPLog
-    from accounts.models import LoginRecord, UserPresence
+    from accounts.models import DailyActivity, LoginRecord
+    from accounts.presence import ONLINE_WINDOW, active_user_count, online_users as get_online_users
 
     if not request.user.is_staff:
         from django.core.exceptions import PermissionDenied
@@ -464,15 +465,22 @@ def admin_dashboard(request):
         .order_by('day')
     )
 
-    now = timezone.now()
-    online_cutoff = now - timedelta(minutes=5)
-    active_cutoff = now - timedelta(days=7)
-    online_users = UserPresence.objects.filter(
-        last_seen__gte=online_cutoff, user__is_active=True
-    ).select_related('user').order_by('-last_seen')
-    active_users = UserPresence.objects.filter(
-        last_seen__gte=active_cutoff, user__is_active=True
-    ).values('user').distinct().count()
+    online_users = get_online_users()
+
+    # Daily active users for the last 14 days, zero-filled so quiet days still show.
+    chart_start = today - timedelta(days=13)
+    dau_counts = dict(
+        DailyActivity.objects.filter(date__gte=chart_start, user__is_active=True)
+        .values('date').annotate(count=Count('user', distinct=True)).values_list('date', 'count')
+    )
+    dau_series = [
+        {'day': chart_start + timedelta(days=i), 'count': dau_counts.get(chart_start + timedelta(days=i), 0)}
+        for i in range(14)
+    ]
+    dau_peak = max([point['count'] for point in dau_series] + [1])
+    for point in dau_series:
+        point['pct'] = round(point['count'] * 100 / dau_peak)
+
     recent_logins = LoginRecord.objects.select_related('user').order_by('-timestamp')[:25]
 
     # Feature usage this week
@@ -490,11 +498,14 @@ def admin_dashboard(request):
 
     context = {
         'total_users': User.objects.filter(is_active=True).count(),
-        'active_users': active_users,
+        'active_users': active_user_count(7),
+        'active_today': active_user_count(1),
+        'active_30d': active_user_count(30),
+        'dau_series': dau_series,
         'online_users': online_users,
         'recent_logins': recent_logins,
         'total_login_records': LoginRecord.objects.count(),
-        'online_window_minutes': 5,
+        'online_window_minutes': int(ONLINE_WINDOW.total_seconds() // 60),
         'total_signups_30d': User.objects.filter(date_joined__date__gte=thirty_days_ago).count(),
         'signups': list(signups),
         'feature_usage': feature_usage,
