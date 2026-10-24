@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import models
@@ -6,8 +8,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from studyflow.http import int_or, redirect_back
+
 from .models import Post, Thread, ChatMessage
 
+logger = logging.getLogger(__name__)
+
+CHAT_ROOMS = {'global', 'futminna'}
+CHAT_MAX_LENGTH = 500  # matches ChatMessage.text max_length
 
 
 @login_required
@@ -63,8 +71,32 @@ def generate_ai_answer_for_thread(thread, question_context=''):
             max_tokens=850
         )
         return completion.choices[0].message.content
-    except Exception as e:
-        return f"🤖 **StudyFlow AI Coach:** I tried to generate an answer for you, but encountered an error: {e}. Please try again shortly!"
+    except Exception:
+        logger.exception('AI thread answer failed for thread %s', thread.pk)
+        return "🤖 **StudyFlow AI Coach:** I couldn't generate an answer right now. Please try again shortly!"
+
+
+def _ai_coach_user():
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    ai_user, created = User.objects.get_or_create(
+        username='StudyFlow AI Coach', defaults={'first_name': 'StudyFlow', 'last_name': 'AI Coach'}
+    )
+    if created:
+        ai_user.set_unusable_password()
+        ai_user.save(update_fields=['password'])
+    return ai_user
+
+
+def _ai_rate_limited(request):
+    """Shared Groq budget guard for thread answers; returns True (and flashes) when over the limit."""
+    from resources.ai_service import RateLimitExceeded, check_and_increment_rate_limit
+    try:
+        check_and_increment_rate_limit(request.user.id, bucket='thread_ai', max_requests=5, window=600)
+    except RateLimitExceeded as e:
+        messages.error(request, str(e))
+        return True
+    return False
 
 
 @login_required
@@ -87,12 +119,9 @@ def thread_create(request):
                     thread=thread, user=request.user, body=body,
                     is_anonymous=bool(request.POST.get('is_anonymous')),
                 )
-            if ask_ai:
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-                ai_user, _ = User.objects.get_or_create(username='StudyFlow AI Coach', defaults={'first_name': 'StudyFlow', 'last_name': 'AI Coach'})
+            if ask_ai and not _ai_rate_limited(request):
                 ai_reply = generate_ai_answer_for_thread(thread, body)
-                Post.objects.create(thread=thread, user=ai_user, body=ai_reply, is_anonymous=False)
+                Post.objects.create(thread=thread, user=_ai_coach_user(), body=ai_reply, is_anonymous=False)
                 messages.success(request, 'Discussion started & StudyFlow AI Coach provided an instant answer!')
             else:
                 messages.success(request, 'Discussion started.')
@@ -104,12 +133,12 @@ def thread_create(request):
 @login_required
 def thread_detail(request, pk):
     thread = get_object_or_404(Thread, pk=pk)
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    ai_user, _ = User.objects.get_or_create(username='StudyFlow AI Coach', defaults={'first_name': 'StudyFlow', 'last_name': 'AI Coach'})
+    ai_user = _ai_coach_user()
 
     if request.method == 'POST':
         if 'ask_ai' in request.POST:
+            if _ai_rate_limited(request):
+                return redirect('thread_detail', pk=thread.pk)
             first_post = thread.posts.first()
             context = first_post.body if first_post else ''
             ai_reply = generate_ai_answer_for_thread(thread, context)
@@ -291,7 +320,9 @@ def respond_buddy_request(request, request_id):
 @require_POST
 def vote_thread(request, pk):
     thread = get_object_or_404(Thread, pk=pk)
-    val = int(request.POST.get('value', 1))
+    val = int_or(request.POST.get('value'), 1)
+    if val not in (1, -1):
+        val = 1
     ThreadVote.objects.update_or_create(user=request.user, thread=thread, defaults={'value': val})
     return redirect('thread_detail', pk=pk)
 
@@ -310,22 +341,24 @@ def chat_api(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            text = data.get('text', '').strip()
+            text = str(data.get('text', '')).strip()
             room = data.get('room', 'global')
-            if text:
-                ChatMessage.objects.create(user=request.user, text=text, room=room)
-                return JsonResponse({'status': 'ok'})
-        except Exception as e:
-            pass
+        except (ValueError, AttributeError):
+            return JsonResponse({'status': 'error'}, status=400)
+        if text and room in CHAT_ROOMS:
+            ChatMessage.objects.create(user=request.user, text=text[:CHAT_MAX_LENGTH], room=room)
+            return JsonResponse({'status': 'ok'})
         return JsonResponse({'status': 'error'}, status=400)
-    messages = ChatMessage.objects.filter(room=room).order_by('-created_at')[:50]
+    if room not in CHAT_ROOMS:
+        room = 'global'
+    recent = ChatMessage.objects.filter(room=room).select_related('user').order_by('-created_at')[:50]
     data = []
-    for msg in reversed(messages):
+    for msg in reversed(recent):
         data.append({
             'username': msg.user.username,
             'text': msg.text,
             'time': msg.created_at.strftime('%H:%M'),
-            'is_me': msg.user == request.user
+            'is_me': msg.user_id == request.user.id
         })
     return JsonResponse({'messages': data})
 
@@ -338,6 +371,8 @@ def report_post(request, pk):
     from .models import PostReport
     post = get_object_or_404(Post, pk=pk)
     reason = request.POST.get('reason', 'other')
+    if reason not in dict(PostReport.REASONS):
+        reason = 'other'
     detail = request.POST.get('detail', '')[:300]
 
     _, created = PostReport.objects.get_or_create(
@@ -349,7 +384,7 @@ def report_post(request, pk):
         messages.success(request, 'Report submitted. Our team will review it.')
     else:
         messages.info(request, 'You already reported this post.')
-    return redirect(request.META.get('HTTP_REFERER', 'thread_list'))
+    return redirect_back(request, 'thread_list')
 
 
 @login_required
@@ -362,7 +397,7 @@ def mute_user(request, username):
 
     if target == request.user:
         messages.error(request, "You can't mute yourself.")
-        return redirect(request.META.get('HTTP_REFERER', 'thread_list'))
+        return redirect_back(request, 'thread_list')
 
     obj, created = MutedUser.objects.get_or_create(muter=request.user, muted=target)
     if created:
@@ -371,7 +406,7 @@ def mute_user(request, username):
         # Toggle off — unmute
         obj.delete()
         messages.success(request, f'@{target.username} unmuted.')
-    return redirect(request.META.get('HTTP_REFERER', 'thread_list'))
+    return redirect_back(request, 'thread_list')
 
 
 # ── Phase 7: Feedback ────────────────────────────────────────────────────────
@@ -396,8 +431,8 @@ def submit_feedback(request):
             page=page,
         )
         return JsonResponse({'success': True, 'message': 'Thanks for your feedback! 🙏'})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Rating must be 1–5.'}, status=400)
 
 
 @login_required
