@@ -5,11 +5,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Q
 from django.db.models import Sum
-from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
+
+from studyflow.http import int_or, redirect_next
 
 from resources.models import Resource
 from community.models import Thread
@@ -235,22 +237,20 @@ def task_delete(request, pk):
 def task_toggle(request, pk):
     task = _user_task(request, pk)
     task.is_done = not task.is_done
-    task.save(update_fields=['is_done'])
+    task.completed_at = timezone.now() if task.is_done else None
+    first_completion = task.is_done and not task.xp_awarded
+    if first_completion:
+        task.xp_awarded = True
+    task.save(update_fields=['is_done', 'completed_at', 'xp_awarded'])
 
-    # Award XP when task is completed
-    if task.is_done:
+    if first_completion:
         _award_xp(request.user, 'task_done', points=15)
         if task.due_date >= timezone.localdate():
             from campus_life.services import earn_credits
             earn_credits(request.user, f'task:{task.pk}', 'on_time_task', 5)
 
     # Go back to the page the click came from, but only if it's a safe local URL.
-    next_url = request.POST.get('next', '')
-    if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        next_url = ''
-    if next_url:
-        return redirect(next_url)
-    return redirect('course_detail', pk=task.course_id)
+    return redirect_next(request, reverse('course_detail', args=[task.course_id]))
 
 
 
@@ -487,9 +487,16 @@ def study_room(request):
 @login_required
 @require_POST
 def log_study(request):
-    duration = int(request.POST.get('duration', 0))
+    duration = int_or(request.POST.get('duration'), 0)
     course_id = request.POST.get('course_id')
-    if duration > 0:
+    logged_today = StudySession.objects.filter(
+        user=request.user, date=timezone.localdate()
+    ).aggregate(total=Sum('duration_minutes'))['total'] or 0
+    if not 0 < duration <= MAX_SESSION_MINUTES:
+        messages.error(request, f'Sessions must be between 1 and {MAX_SESSION_MINUTES} minutes.')
+    elif logged_today + duration > MAX_DAILY_STUDY_MINUTES:
+        messages.error(request, "That's more focus time than fits in one day — take a break! 🌙")
+    else:
         course = Course.objects.filter(id=course_id, user=request.user).first() if course_id else None
         session = StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
         from campus_life.services import earn_credits
@@ -505,7 +512,8 @@ def log_study(request):
             'focused_minutes',
             max(0, focused_minutes // 10 - already_earned),
         )
-        _award_xp(request.user, 'pomodoro', points=20)
+        if duration >= MIN_XP_SESSION_MINUTES:
+            _award_xp(request.user, 'pomodoro', points=20)
     return redirect('study_room')
 
 
