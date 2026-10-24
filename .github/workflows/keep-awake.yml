@@ -2,14 +2,15 @@
 # Render sleeps after ~15 idle minutes, so we ping every 5 minutes (GitHub
 # sometimes delays or skips scheduled runs; 5 minutes leaves headroom).
 #
-# Hours: 06:00–23:59 Lagos time (UTC+1) = 05:00–22:59 UTC. Overnight it may
-# sleep, which saves Render's shared 750 free instance-hours per month.
-# To change the hours, edit the "5-22" hour range below (it is in UTC).
+# Hours: 14:00–22:00 Lagos time (UTC+1) = 13:00–20:59 UTC, i.e. 8 hours a day
+# (~250 of Render's shared 750 free instance-hours per month). Outside these
+# hours the app may sleep and the first visitor waits ~30–60 seconds.
+# To change the hours, edit the "13-20" hour range below (it is in UTC).
 name: Keep Render awake
 
 on:
   schedule:
-    - cron: '*/5 5-22 * * *'
+    - cron: '*/5 13-20 * * *'
   workflow_dispatch: {}
 
 permissions: {}
