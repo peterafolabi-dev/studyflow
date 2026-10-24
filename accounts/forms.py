@@ -14,15 +14,28 @@ class LoginForm(forms.Form):
 
 
 class SignUpForm(UserCreationForm):
-    """Username + password (with confirmation). Django validates password strength."""
+    """Username + email + password (with confirmation). Django validates password strength.
+    Email is required so password-reset emails can reach the user."""
+
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'autocomplete': 'email'}),
+    )
 
     class Meta(UserCreationForm.Meta):
-        fields = ('username',)
+        fields = ('username', 'email')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.help_text = ''
+
+    def clean_email(self):
+        from django.contrib.auth import get_user_model
+        email = self.cleaned_data['email'].strip().lower()
+        if get_user_model().objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError('An account with this email already exists.')
+        return email
 from .models import Profile
 
 

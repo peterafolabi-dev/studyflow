@@ -34,3 +34,7 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Database backups (may contain user data)
+*.bak
+*.sqlite3*

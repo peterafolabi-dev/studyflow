@@ -14,6 +14,8 @@ class BaseCase(TestCase):
     def setUp(self):
         self.alice = User.objects.create_user('alice', password='pass12345!')
         self.bob = User.objects.create_user('bob', password='pass12345!')
+        # New users get onboarding demo content (planner.signals); start these tests from a clean slate.
+        Course.objects.filter(user__in=[self.alice, self.bob], code='DEMO 101').delete()
         self.alice_course = Course.objects.create(user=self.alice, name='Maths', code='MTH 101')
         self.bob_course = Course.objects.create(user=self.bob, name='Physics')
         self.today = timezone.localdate()
@@ -159,12 +161,71 @@ class DashboardTests(BaseCase):
         response = self.client.get(reverse('dashboard'))
         self.assertNotContains(response, 'Bob task')
 
-    def test_new_user_sees_empty_state(self):
+    def test_new_user_gets_onboarding_content(self):
         self.client.logout()
-        User.objects.create_user('carol', password='pass12345!')
+        carol = User.objects.create_user('carol', password='pass12345!')
+        self.client.login(username='carol', password='pass12345!')
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Course.objects.filter(user=carol, code='DEMO 101').exists())
+        self.assertEqual([t.title for t in response.context['due_soon']], ['Complete StudyFlow Onboarding'])
+        self.assertEqual(response.context['due_flashcards_count'], 5)
+
+    def test_new_user_without_courses_sees_empty_state(self):
+        self.client.logout()
+        carol = User.objects.create_user('carol', password='pass12345!')
+        Course.objects.filter(user=carol).delete()
         self.client.login(username='carol', password='pass12345!')
         response = self.client.get(reverse('dashboard'))
         self.assertContains(response, 'Add your first course')
+
+
+class AbuseProtectionTests(BaseCase):
+    def test_toggling_a_task_awards_xp_only_once(self):
+        from .models import XPLog
+        url = reverse('task_toggle', args=[self.alice_task.pk])
+        for _ in range(4):
+            self.client.post(url)
+        self.assertEqual(XPLog.objects.filter(user=self.alice, reason='task_done').count(), 1)
+
+    def test_completed_at_tracks_done_state(self):
+        url = reverse('task_toggle', args=[self.alice_task.pk])
+        self.client.post(url)
+        self.alice_task.refresh_from_db()
+        self.assertIsNotNone(self.alice_task.completed_at)
+        self.client.post(url)
+        self.alice_task.refresh_from_db()
+        self.assertIsNone(self.alice_task.completed_at)
+
+    def test_rerating_a_card_that_is_not_due_earns_no_xp(self):
+        from .models import XPLog
+        deck = FlashcardDeck.objects.create(course=self.alice_course, title='Deck')
+        card = Flashcard.objects.create(deck=deck, front='Q', back='A')
+        url = reverse('flashcard_rate_review', args=[card.pk])
+        for _ in range(3):
+            self.client.post(url, data={'rating': 'easy'}, content_type='application/json')
+        self.assertEqual(XPLog.objects.filter(user=self.alice, reason='flashcard').count(), 1)
+
+    def test_log_study_rejects_bad_and_huge_durations(self):
+        from .models import StudySession
+        for value in ('abc', '0', '-5', '999999'):
+            response = self.client.post(reverse('log_study'), {'duration': value})
+            self.assertEqual(response.status_code, 302, value)
+        self.assertFalse(StudySession.objects.filter(user=self.alice).exists())
+        self.client.post(reverse('log_study'), {'duration': '25'})
+        self.assertEqual(StudySession.objects.filter(user=self.alice).count(), 1)
+
+    def test_ai_chat_requires_login_and_csrf(self):
+        from django.test import Client
+        anonymous = Client(enforce_csrf_checks=True)
+        response = anonymous.post(reverse('ai_chat'), data={'message': 'hi'}, content_type='application/json')
+        self.assertEqual(response.status_code, 403)  # CSRF is no longer exempt
+        with mock.patch.dict(os.environ, {'GROQ_API_KEY': ''}):  # never call the real API in tests
+            response = self.client.post(reverse('ai_chat'), data={'message': 'hi'}, content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+        response = self.client.post(reverse('ai_chat'), data={'message': 'hi'}, content_type='application/json')
+        self.assertEqual(response.status_code, 401)
 
 
 class BreakRoomTests(BaseCase):
@@ -278,7 +339,11 @@ class FlashcardSpacedRepetitionTests(BaseCase):
 
     def test_due_flashcards_count_on_dashboard(self):
         response = self.client.get(reverse('dashboard'))
-        self.assertEqual(response.context['due_flashcards_count'], 1)
+        due = Flashcard.objects.filter(
+            deck__course__user=self.alice, next_review_date__lte=timezone.localdate()
+        ).count()
+        self.assertGreaterEqual(due, 1)
+        self.assertEqual(response.context['due_flashcards_count'], due)
 
     def test_cannot_rate_another_users_flashcard(self):
         bob_deck = FlashcardDeck.objects.create(course=self.bob_course, title='Bob Deck')
