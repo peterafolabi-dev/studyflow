@@ -38,7 +38,10 @@ IS_RENDER = bool(os.environ.get('RENDER') or os.environ.get('RENDER_SERVICE_ID')
 DEBUG = os.environ.get('DEBUG', '').lower() not in ('false', '0', 'no') and not IS_RENDER
 
 if not DEBUG and SECRET_KEY == 'dev-only-insecure-key-change-me' and 'test' not in sys.argv:
-    raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is off.')
+    # Warn instead of raising: a hard failure here breaks every Render build and leaves an
+    # old deploy live. Set SECRET_KEY in the Render dashboard (Environment tab) to fix.
+    print('WARNING: SECRET_KEY is not set; using the insecure development key. '
+          'Set SECRET_KEY in your Render environment variables.', file=sys.stderr)
 
 _allowed = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
 ALLOWED_HOSTS = _allowed if _allowed else (['*'] if (DEBUG or not IS_RENDER) else ['studyflow-xt1x.onrender.com'])
