@@ -10,6 +10,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from studyflow.http import redirect_back, redirect_next
+
 from .forms import ResourceUploadForm
 from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceRating
 
@@ -123,7 +125,7 @@ def resource_download(request, pk):
     resource = get_object_or_404(Resource, pk=pk)
     if not resource.file:
         messages.error(request, 'This resource has no file attached yet.')
-        return redirect(request.META.get('HTTP_REFERER') or 'dashboard')
+        return redirect_back(request, 'dashboard')
 
     Resource.objects.filter(pk=pk).update(
         download_count=F('download_count') + 1, last_downloaded_at=timezone.now()
@@ -151,7 +153,7 @@ def resource_delete(request, pk):
         messages.info(request, f'Removed "{title}".')
         _, _, url_name = TYPE_GROUPS.get(reverse_type, (None, None, 'notes_list'))
         return redirect(url_name)
-    return redirect(request.META.get('HTTP_REFERER') or 'dashboard')
+    return redirect_back(request, 'dashboard')
 
 
 @login_required
@@ -205,8 +207,7 @@ def return_holding(request, pk):
         holding.save(update_fields=['is_available'])
         messages.success(request, f'"{holding.title}" returned. Thanks!')
 
-    next_url = request.POST.get('next') or 'ibb_library'
-    return redirect(next_url)
+    return redirect_next(request, 'ibb_library')
 
 
 @login_required
@@ -235,8 +236,7 @@ def rate_resource(request, pk):
     else:
         ResourceRating.objects.update_or_create(user=request.user, resource=resource, defaults={'stars': stars})
         messages.success(request, 'Thanks for the rating!')
-    next_url = request.POST.get('next') or 'notes_list'
-    return redirect(next_url)
+    return redirect_next(request, 'notes_list')
 
 
 import json
@@ -361,10 +361,15 @@ def resource_ai_save_flashcards(request, pk):
 
         deck = FlashcardDeck.objects.create(course=course, title=deck_title)
 
+    if not isinstance(cards_data, list):
+        return JsonResponse({'error': 'Flashcards must be a list.'}, status=400)
+
     cards_to_create = []
-    for c in cards_data:
-        front = (c.get('front') or '').strip()
-        back = (c.get('back') or '').strip()
+    for c in cards_data[:100]:
+        if not isinstance(c, dict):
+            continue
+        front = str(c.get('front') or '').strip()
+        back = str(c.get('back') or '').strip()
         if front and back:
             cards_to_create.append(Flashcard(deck=deck, front=front, back=back))
 
