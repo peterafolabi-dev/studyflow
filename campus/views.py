@@ -4,6 +4,8 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from studyflow.http import int_or
+
 from .models import (
     StudySpot, PowerVote, CourseNotice, LodgeReview, RoommateProfile,
     SIWESCompany, SIWESLogEntry, MarketplaceItem, EmergencyContact
@@ -104,8 +106,10 @@ def create_notice(request):
         body = request.POST.get('body', '').strip()
         course_code = request.POST.get('course_code', '').strip().upper()
         department = request.POST.get('department', '').strip() or 'All Departments'
-        level = int(request.POST.get('level', 0))
+        level = int_or(request.POST.get('level'), 0)
         urgency = request.POST.get('urgency', 'normal')
+        if urgency not in dict(CourseNotice.URGENCY_CHOICES):
+            urgency = 'normal'
 
         if title and body:
             CourseNotice.objects.create(
@@ -151,10 +155,10 @@ def add_lodge_review(request):
         lodge_name = request.POST.get('lodge_name', '').strip()
         area = request.POST.get('area', 'GK Gate')
         rent_estimate = request.POST.get('rent_estimate', '').strip()
-        water = int(request.POST.get('water_rating', 4))
-        power = int(request.POST.get('power_rating', 3))
-        security = int(request.POST.get('security_rating', 4))
-        landlord = int(request.POST.get('landlord_rating', 4))
+        water = min(5, max(1, int_or(request.POST.get('water_rating'), 4)))
+        power = min(5, max(1, int_or(request.POST.get('power_rating'), 3)))
+        security = min(5, max(1, int_or(request.POST.get('security_rating'), 4)))
+        landlord = min(5, max(1, int_or(request.POST.get('landlord_rating'), 4)))
         review_text = request.POST.get('review_text', '').strip()
 
         if lodge_name and review_text:
@@ -177,7 +181,7 @@ def add_lodge_review(request):
 def update_roommate_profile(request):
     if request.method == 'POST':
         department = request.POST.get('department', '').strip()
-        level = int(request.POST.get('level', 200))
+        level = int_or(request.POST.get('level'), 200)
         budget = request.POST.get('budget_range', '').strip()
         preferred_area = request.POST.get('preferred_area', 'GK Gate')
         cleanliness = request.POST.get('cleanliness', 'Very Neat')
@@ -236,7 +240,7 @@ def siwes_hub(request):
 @login_required
 def add_siwes_log(request):
     if request.method == 'POST':
-        week = int(request.POST.get('week_number', 1))
+        week = min(52, max(1, int_or(request.POST.get('week_number'), 1)))
         unit = request.POST.get('department_unit', '').strip()
         work = request.POST.get('work_done', '').strip()
         skills = request.POST.get('skills_acquired', '').strip()
@@ -284,15 +288,19 @@ def create_listing(request):
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         category = request.POST.get('category', 'textbook')
+        if category not in dict(MarketplaceItem.CATEGORY_CHOICES):
+            category = 'textbook'
         price_val = request.POST.get('price', '0')
         is_free = request.POST.get('is_free') == 'on'
         condition = request.POST.get('condition', 'good')
+        if condition not in dict(MarketplaceItem.CONDITION_CHOICES):
+            condition = 'good'
         description = request.POST.get('description', '').strip()
         whatsapp = request.POST.get('whatsapp_number', '').strip()
 
         try:
-            price = float(price_val) if not is_free else 0.0
-        except ValueError:
+            price = max(0.0, float(price_val)) if not is_free else 0.0
+        except (TypeError, ValueError):
             price = 0.0
 
         if title and whatsapp:

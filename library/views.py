@@ -7,6 +7,8 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
+from studyflow.http import redirect_next
+
 from .content import generate_chapters
 from .models import Book, BookRating, SavedBook
 
@@ -193,8 +195,7 @@ def toggle_save(request, pk):
     else:
         messages.success(request, f'Added "{book.title}" to your library.')
 
-    next_url = request.POST.get('next') or 'catalogue'
-    return redirect(next_url)
+    return redirect_next(request, 'catalogue')
 
 
 @login_required
@@ -211,8 +212,7 @@ def update_status(request, pk):
         entry.save(update_fields=['status', 'updated_at'])
         messages.success(request, f'"{book.title}" marked as {valid_statuses[status].lower()}.')
 
-    next_url = request.POST.get('next') or 'my_library'
-    return redirect(next_url)
+    return redirect_next(request, 'my_library')
 
 @login_required
 @require_POST
@@ -221,11 +221,11 @@ def update_progress(request, pk):
     entry, _created = SavedBook.objects.get_or_create(user=request.user, book=book)
     notes = request.POST.get('notes', '')
     try:
-        page = int(request.POST.get('current_page', 0))
-    except ValueError:
+        page = max(0, int(request.POST.get('current_page', 0)))
+    except (TypeError, ValueError):
         page = 0
     
-    entry.notes = notes
+    entry.notes = notes[:5000]
     entry.current_page = page
     entry.save(update_fields=['notes', 'current_page', 'updated_at'])
     messages.success(request, f'Progress and notes saved for "{book.title}".')
