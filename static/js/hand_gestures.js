@@ -1,5 +1,7 @@
 (function () {
-  const DEBUG = true;
+  // Enable with ?gesture_debug=1 to log landmark deltas to the console.
+  const DEBUG = new URLSearchParams(window.location.search).has('gesture_debug');
+  const MEDIAPIPE_HANDS_VERSION = '0.4.1675469240'; // keep in sync with the <script> tag in flashcards.html
   const flashcardReview = document.getElementById('quiz-modal');
   const enableButton = document.getElementById('gesture-toggle');
   const stopButton = document.getElementById('gesture-stop');
@@ -53,20 +55,34 @@
     report(result || fallback);
   }
 
+  function distance(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  // A finger is extended when its tip is clearly farther from the wrist than its middle
+  // joint. Unlike comparing y values, this works whatever angle the hand is held at.
   function countExtendedFingers(landmarks) {
-    return [8, 12, 16, 20].filter((tip) => landmarks[tip].y < landmarks[tip - 2].y).length;
+    const wrist = landmarks[0];
+    return [8, 12, 16, 20].filter(
+      (tip) => distance(landmarks[tip], wrist) > distance(landmarks[tip - 2], wrist) * 1.15
+    ).length;
   }
 
   function detectPose(landmarks) {
     const extended = countExtendedFingers(landmarks);
-    const otherFingersCurled = extended <= 1;
-    const thumbUp = landmarks[4].y < landmarks[3].y - 0.05;
-    const thumbDown = landmarks[4].y > landmarks[3].y + 0.05;
+    const otherFingersCurled = extended === 0;
+    // Hand size (wrist to middle-finger knuckle) makes thresholds independent of camera distance.
+    const handSize = distance(landmarks[0], landmarks[9]) || 1;
+    // A tucked thumb in a normal fist stays close to the index knuckle; only a thumb that
+    // is clearly sticking out counts, so a fist is never misread as thumbs-down.
+    const thumbOut = distance(landmarks[4], landmarks[5]) > handSize * 0.55;
+    const thumbRise = (landmarks[2].y - landmarks[4].y) / handSize; // + when tip is above its base
+    const thumbVertical = Math.abs(landmarks[4].y - landmarks[2].y) > Math.abs(landmarks[4].x - landmarks[2].x);
 
-    if (thumbUp && otherFingersCurled) return 'thumbs-up';
-    if (thumbDown && otherFingersCurled) return 'thumbs-down';
+    if (thumbOut && thumbVertical && otherFingersCurled && thumbRise > 0.4) return 'thumbs-up';
+    if (thumbOut && thumbVertical && otherFingersCurled && thumbRise < -0.4) return 'thumbs-down';
     if (extended >= 4) return 'palm';
-    if (extended <= 1) return 'fist';
+    if (extended === 0 && !thumbOut) return 'fist';
     return '';
   }
 
@@ -110,7 +126,7 @@
 
     if (trackingState !== 'hand') {
       trackingState = 'hand';
-      report('Hand detected. Try an open palm, swipe, thumbs-up, or pinch.');
+      report('Hand detected. Try an open palm, fist, swipe, or thumbs up/down.');
     }
 
     const landmarks = results.multiHandLandmarks[0];
@@ -129,8 +145,9 @@
       const mostlyOpen = openFrames >= Math.ceil(handXHistory.length * 0.6);
       if (mostlyOpen && handXHistory.length >= 3 && Math.abs(deltaX) >= 0.15 &&
           now - handXHistory[0].time <= 400 && now >= gestureCooldownUntil) {
+        // selfieMode makes x mirror-image, so +x is the user's own right.
         const direction = deltaX > 0 ? 1 : -1;
-        const label = direction > 0 ? 'Swipe right ->' : 'Swipe left ->';
+        const label = direction > 0 ? 'Swipe right →' : 'Swipe left ←';
         debug('detected gesture:', label, 'x delta:', deltaX);
         gestureCooldownUntil = now + 700;
         handXHistory = [];
@@ -223,15 +240,21 @@
     enableButton.disabled = true;
     report('Requesting camera permission…');
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Hand tracking doesn't need HD; a small frame keeps it smooth on modest laptops.
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      });
       video.srcObject = stream;
       video.classList.remove('hidden');
       await video.play();
       debug('video ready:', video.videoWidth, video.videoHeight);
       tracker = new window.Hands({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@${MEDIAPIPE_HANDS_VERSION}/${file}`,
       });
-      tracker.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.65, minTrackingConfidence: 0.65 });
+      tracker.setOptions({
+        selfieMode: true, // mirror like the preview, so "swipe right" means the user's right
+        maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.65, minTrackingConfidence: 0.65,
+      });
       tracker.onResults(onResults);
       debug('model loaded: MediaPipe Hands');
       active = true;

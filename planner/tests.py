@@ -321,12 +321,12 @@ class FlashcardSpacedRepetitionTests(BaseCase):
 
     def test_camera_assets_are_only_loaded_on_flashcards(self):
         flashcards = self.client.get(reverse('flashcards'))
-        self.assertContains(flashcards, '@mediapipe/hands/hands.js')
+        self.assertContains(flashcards, '@mediapipe/hands@0.4.1675469240/hands.js')
         self.assertContains(flashcards, 'static/js/hand_gestures.js')
 
         for page_name in ('study_room', 'dashboard', 'catalogue'):
             response = self.client.get(reverse(page_name))
-            self.assertNotContains(response, '@mediapipe/hands/hands.js', msg_prefix=page_name)
+            self.assertNotContains(response, '@mediapipe/hands', msg_prefix=page_name)
             self.assertNotContains(response, 'static/js/hand_gestures.js', msg_prefix=page_name)
             self.assertNotContains(response, 'getUserMedia', msg_prefix=page_name)
 
