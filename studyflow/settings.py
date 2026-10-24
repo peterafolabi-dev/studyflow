@@ -37,6 +37,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-insecure-key-change-me')
 IS_RENDER = bool(os.environ.get('RENDER') or os.environ.get('RENDER_SERVICE_ID'))
 DEBUG = os.environ.get('DEBUG', '').lower() not in ('false', '0', 'no') and not IS_RENDER
 
+if not DEBUG and SECRET_KEY == 'dev-only-insecure-key-change-me' and 'test' not in sys.argv:
+    raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is off.')
+
 _allowed = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
 ALLOWED_HOSTS = _allowed if _allowed else (['*'] if (DEBUG or not IS_RENDER) else ['studyflow-xt1x.onrender.com'])
 _csrf_hosts = _allowed or ['studyflow-xt1x.onrender.com', 'localhost', '127.0.0.1']
@@ -153,10 +156,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
+# Database cache so rate limits are shared across gunicorn workers
+# (run `python manage.py createcachetable` once per database; build.sh does this).
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'studyflow-cache',
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'studyflow_cache',
     }
 }
 
@@ -188,8 +193,7 @@ if not EMAIL_HOST and not EMAIL_HOST_USER and DEBUG:
 
 if not DEBUG and 'test' not in sys.argv:
     SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -228,11 +232,9 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-LOGIN_REDIRECT_URL = 'dashboard'
 ACCOUNT_LOGOUT_REDIRECT_URL = 'login'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+ACCOUNT_LOGIN_METHODS = {'username', 'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # Automatically sign up and link Google OAuth accounts with matching verified emails
@@ -244,9 +246,10 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 # Fix for Render HTTPS proxy (prevents OAuth callback 500 errors)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http' if DEBUG else 'https'
+# Secure cookies only travel over HTTPS, so keep them off for local http development.
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = 'Lax'
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
@@ -262,7 +265,7 @@ LOGGING = {
     'loggers': {
         'allauth': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'DEBUG' if DEBUG else 'INFO',
         },
     },
 }
