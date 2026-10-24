@@ -423,6 +423,7 @@
   </div>
 </div>
 
+{{ due_cards_data|json_script:"due-cards-data" }}
 <script>
 function getCookie(name) {
   let cookieValue = null;
@@ -439,7 +440,7 @@ function getCookie(name) {
   return cookieValue;
 }
 
-const dueCardsData = {{ due_cards_json|safe }};
+const dueCardsData = JSON.parse(document.getElementById('due-cards-data').textContent);
 
 function toggleAddCard(deckId) {
   const el = document.getElementById('add-card-' + deckId);

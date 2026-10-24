@@ -188,8 +188,9 @@
 </div>
 
 <!-- Raw questions data passed securely from Django context -->
+{{ questions_data|json_script:"cbt-questions" }}
 <script>
-  const QUESTIONS = {{ questions_json|safe }};
+  const QUESTIONS = JSON.parse(document.getElementById('cbt-questions').textContent);
   const TOTAL_QUESTIONS = QUESTIONS.length;
   const TIME_LIMIT_SECONDS = {{ time_limit_seconds }};
   const BANK_ID = {{ bank.pk }};
@@ -304,8 +305,9 @@
             ? 'bg-brand-600 text-white shadow-sm'
             : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600'
         }">${opt.letter}</span>
-        <span class="text-xs sm:text-sm pt-0.5 leading-relaxed">${opt.text}</span>
+        <span class="text-xs sm:text-sm pt-0.5 leading-relaxed"></span>
       `;
+      btn.lastElementChild.textContent = opt.text;
 
       btn.addEventListener('click', () => {
         userAnswers[qId] = opt.letter;

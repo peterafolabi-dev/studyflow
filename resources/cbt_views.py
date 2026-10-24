@@ -109,7 +109,7 @@ def cbt_take(request, bank_id):
         'questions_count': len(questions),
         'time_limit_minutes': bank.time_limit_minutes,
         'time_limit_seconds': bank.time_limit_minutes * 60,
-        'questions_json': json.dumps(questions_data),
+        'questions_data': questions_data,
     }
     return render(request, 'cbt/cbt_take.html', context)
 

@@ -588,7 +588,7 @@ def flashcard_hubs(request):
         'decks': decks,
         'courses': courses,
         'due_count': due_count,
-        'due_cards_json': json.dumps(due_cards_data),
+        'due_cards_data': due_cards_data,
     }
     return render(request, 'planner/flashcards.html', context)
 
