@@ -19,6 +19,11 @@ from resources.ai_service import (
 )
 
 
+def _visible_banks(user):
+    """Banks a user may open: public ones plus their own private ones."""
+    return QuestionBank.objects.filter(Q(is_public=True) | Q(created_by=user))
+
+
 @login_required
 def cbt_home(request):
     """
@@ -59,7 +64,7 @@ def cbt_detail(request, bank_id):
     """
     Overview of a CBT test bank before taking the timed exam.
     """
-    bank = get_object_or_404(QuestionBank, pk=bank_id)
+    bank = get_object_or_404(_visible_banks(request.user), pk=bank_id)
     recent_attempts = TestAttempt.objects.filter(
         user=request.user, bank=bank, is_completed=True
     ).order_by('-completed_at')[:5]
@@ -77,7 +82,7 @@ def cbt_take(request, bank_id):
     """
     Interactive Timed Exam Runner with countdown timer, question navigator, and auto-submit.
     """
-    bank = get_object_or_404(QuestionBank, pk=bank_id)
+    bank = get_object_or_404(_visible_banks(request.user), pk=bank_id)
     questions = list(bank.questions.order_by('order', 'id'))
 
     if not questions:
@@ -116,7 +121,7 @@ def cbt_submit(request, bank_id):
     Calculates practice score, records answers, and redirects to the results page.
     Handles both manual submission and countdown timer auto-submission.
     """
-    bank = get_object_or_404(QuestionBank, pk=bank_id)
+    bank = get_object_or_404(_visible_banks(request.user), pk=bank_id)
     questions = {str(q.id): q for q in bank.questions.all()}
 
     # Parse submitted JSON or POST body
