@@ -1,11 +1,9 @@
-from datetime import timedelta
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from django.utils import timezone
 
-from .models import LoginRecord, Notification, Profile
+from .models import DailyActivity, LoginRecord, Notification, Profile, UserPresence
+from .presence import active_user_count, is_online, online_users
 
 
 class ProfileInline(admin.StackedInline):

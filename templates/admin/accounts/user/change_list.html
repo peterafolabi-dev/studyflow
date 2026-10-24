@@ -3,6 +3,10 @@
 {% block object-tools %}
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 0 0 20px;">
     <div style="background: #fff; border: 1px solid #dfe3e8; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+      <div style="font-size: 11px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.08em;">Online now (5 min)</div>
+      <div style="font-size: 32px; font-weight: 700; color: #059669; margin-top: 6px;">{{ online_now }}</div>
+    </div>
+    <div style="background: #fff; border: 1px solid #dfe3e8; border-radius: 8px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
       <div style="font-size: 11px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.08em;">Active today</div>
       <div style="font-size: 32px; font-weight: 700; color: #1f2937; margin-top: 6px;">{{ active_users_today }}</div>
     </div>
