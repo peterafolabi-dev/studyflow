@@ -194,6 +194,10 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no
 if not EMAIL_HOST and not EMAIL_HOST_USER and DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+if 'test' in sys.argv:
+    # Real hashing is deliberately slow; tests create many users, so use a fast hasher there only.
+    PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
 if not DEBUG and 'test' not in sys.argv:
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
