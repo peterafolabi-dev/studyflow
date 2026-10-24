@@ -87,6 +87,22 @@ class UserPresence(models.Model):
         return f"{self.user.username} last seen {self.last_seen}"
 
 
+class DailyActivity(models.Model):
+    """One row per user per day they used the app; powers daily/weekly/monthly active counts."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='daily_activity')
+    date = models.DateField(db_index=True)
+
+    class Meta:
+        ordering = ['-date']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'date'], name='unique_daily_activity'),
+        ]
+        verbose_name_plural = 'Daily activity'
+
+    def __str__(self):
+        return f"{self.user.username} active on {self.date}"
+
+
 @receiver(user_logged_in)
 def record_user_login(sender, request, user, **kwargs):
     is_first_login = not LoginRecord.objects.filter(user=user).exists()
@@ -110,6 +126,8 @@ def record_user_login(sender, request, user, **kwargs):
         user_agent=user_agent,
         login_method=login_method
     )
+    from .presence import touch_presence
+    touch_presence(user, force=True)
     if request and hasattr(request, '_messages'):
         welcome = (
             f"Welcome to StudyFlow, {user.username}! Let's get started."

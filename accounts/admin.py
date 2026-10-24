@@ -29,9 +29,10 @@ class LoginRecordInline(admin.TabularInline):
 class CustomUserAdmin(BaseUserAdmin):
     inlines = [ProfileInline, LoginRecordInline]
     list_display = [
-        'username', 'email', 'get_department', 'last_login', 'date_joined',
-        'is_staff', 'get_login_count'
+        'username', 'email', 'get_department', 'get_online', 'get_last_seen', 'last_login',
+        'date_joined', 'is_staff', 'get_login_count'
     ]
+    list_select_related = ['profile', 'presence']
     list_filter = ['is_staff', 'is_superuser', 'is_active', 'date_joined', 'last_login']
     search_fields = ['username', 'email', 'profile__department']
     ordering = ['-last_login']
@@ -47,21 +48,25 @@ class CustomUserAdmin(BaseUserAdmin):
         return obj.login_records.count()
     get_login_count.short_description = 'Total Logins'
 
-    def changelist_view(self, request, extra_context=None):
-        """Add active user stats to the admin dashboard."""
-        extra_context = extra_context or {}
-        now = timezone.now()
+    def get_online(self, obj):
+        return is_online(getattr(obj, 'presence', None))
+    get_online.short_description = 'Online'
+    get_online.boolean = True
 
+    def get_last_seen(self, obj):
+        presence = getattr(obj, 'presence', None)
+        return presence.last_seen if presence else None
+    get_last_seen.short_description = 'Last seen'
+    get_last_seen.admin_order_field = 'presence__last_seen'
+
+    def changelist_view(self, request, extra_context=None):
+        """Add online / active user stats (based on real activity, not just logins)."""
+        extra_context = extra_context or {}
         extra_context.update({
-            'active_users_today': User.objects.filter(
-                login_records__timestamp__date=now.date()
-            ).distinct().count(),
-            'active_users_7d': User.objects.filter(
-                login_records__timestamp__gte=now - timedelta(days=7)
-            ).distinct().count(),
-            'active_users_30d': User.objects.filter(
-                login_records__timestamp__gte=now - timedelta(days=30)
-            ).distinct().count(),
+            'online_now': online_users().count(),
+            'active_users_today': active_user_count(1),
+            'active_users_7d': active_user_count(7),
+            'active_users_30d': active_user_count(30),
             'total_users': User.objects.filter(is_active=True).count(),
         })
 
@@ -80,6 +85,34 @@ class LoginRecordAdmin(admin.ModelAdmin):
     readonly_fields = ['user', 'timestamp', 'ip_address', 'user_agent', 'login_method']
     date_hierarchy = 'timestamp'
     ordering = ['-timestamp']
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(UserPresence)
+class UserPresenceAdmin(admin.ModelAdmin):
+    list_display = ['user', 'last_seen', 'get_online']
+    search_fields = ['user__username', 'user__email']
+    ordering = ['-last_seen']
+    readonly_fields = ['user', 'last_seen']
+
+    def get_online(self, obj):
+        return is_online(obj)
+    get_online.short_description = 'Online'
+    get_online.boolean = True
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(DailyActivity)
+class DailyActivityAdmin(admin.ModelAdmin):
+    list_display = ['date', 'user']
+    list_filter = ['date']
+    search_fields = ['user__username']
+    date_hierarchy = 'date'
+    readonly_fields = ['user', 'date']
 
     def has_add_permission(self, request):
         return False
