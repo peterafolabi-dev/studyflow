@@ -1,11 +1,21 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import include, path
+from django.views.decorators.cache import never_cache
 
 from . import pwa
 
+
+@never_cache
+def healthz(request):
+    """Cheap uptime check (no database, no login) used by the keep-awake GitHub Action."""
+    return HttpResponse('ok', content_type='text/plain')
+
+
 urlpatterns = [
+    path('healthz/', healthz, name='healthz'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('manifest.webmanifest', pwa.manifest, name='pwa_manifest'),

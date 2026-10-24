@@ -10,6 +10,12 @@ User = get_user_model()
 
 
 class AuthTests(TestCase):
+    def test_healthz_is_public_cheap_and_uncached(self):
+        response = self.client.get(reverse('healthz'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'ok')
+        self.assertIn('no-cache', response['Cache-Control'])
+
     def test_public_admin_setup_route_is_not_exposed(self):
         self.assertEqual(self.client.get('/setup-admin-777/').status_code, 404)
 

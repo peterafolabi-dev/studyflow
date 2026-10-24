@@ -1,0 +1,34 @@
+# Keeps the Render free-tier web service from sleeping during the day.
+# Render sleeps after ~15 idle minutes, so we ping every 5 minutes (GitHub
+# sometimes delays or skips scheduled runs; 5 minutes leaves headroom).
+#
+# Hours: 06:00–23:59 Lagos time (UTC+1) = 05:00–22:59 UTC. Overnight it may
+# sleep, which saves Render's shared 750 free instance-hours per month.
+# To change the hours, edit the "5-22" hour range below (it is in UTC).
+name: Keep Render awake
+
+on:
+  schedule:
+    - cron: '*/5 5-22 * * *'
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: keep-awake
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Ping StudyFlow
+        env:
+          SITE: https://studyflow-xt1x.onrender.com
+        run: |
+          # /healthz/ is the cheap check; fall back to the login page if it isn't deployed yet.
+          curl -fsS --retry 3 --retry-delay 15 --retry-all-errors --max-time 90 \
+               -o /dev/null -w "healthz: HTTP %{http_code} in %{time_total}s\n" "$SITE/healthz/" \
+          || curl -fsS --retry 2 --retry-delay 15 --retry-all-errors --max-time 90 \
+               -o /dev/null -w "login: HTTP %{http_code} in %{time_total}s\n" "$SITE/login/"
