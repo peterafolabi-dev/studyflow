@@ -296,6 +296,8 @@ def resource_ai_generate_cbt(request, pk):
         fields = {key: str(q.get(key) or '').strip() for key in
                   ('question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'explanation')}
         fields['correct_option'] = fields['correct_option'].upper()[:1]
+        for x in 'abcd':
+            fields[f'option_{x}'] = fields[f'option_{x}'][:500]  # CBTQuestion.option_* max_length
         if fields['question'] and all(fields[f'option_{x}'] for x in 'abcd') and fields['correct_option'] in 'ABCD' and fields['correct_option']:
             valid_questions.append(fields)
     if not valid_questions:

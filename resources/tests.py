@@ -332,3 +332,51 @@ class CBTModeTests(TestCase):
         bank = QuestionBank.objects.get(pk=data['bank_id'])
         self.assertEqual(bank.questions.count(), 1)
         self.assertEqual(bank.questions.first().correct_option, "A")
+
+
+class AccessAndRedirectTests(TestCase):
+    def setUp(self):
+        from resources.models import CBTQuestion, QuestionBank
+        User = get_user_model()
+        self.owner = User.objects.create_user('owner', password='S7rong-pass-99')
+        self.other = User.objects.create_user('other', password='S7rong-pass-99')
+        self.private_bank = QuestionBank.objects.create(title='Private', created_by=self.owner, is_public=False)
+        self.question = CBTQuestion.objects.create(
+            bank=self.private_bank, text='2+2?', option_a='3', option_b='4', option_c='5', option_d='6',
+            correct_option='B',
+        )
+        self.client.login(username='other', password='S7rong-pass-99')
+
+    def test_private_bank_is_hidden_from_other_users(self):
+        for name in ('cbt_detail', 'cbt_take'):
+            self.assertEqual(self.client.get(reverse(name, args=[self.private_bank.pk])).status_code, 404, name)
+        response = self.client.post(reverse('cbt_submit', args=[self.private_bank.pk]), {'answers': '{}'})
+        self.assertEqual(response.status_code, 404)
+        response = self.client.post(
+            reverse('cbt_explain_answer'), {'question_id': self.question.pk, 'user_choice': 'A'},
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_owner_can_open_private_bank(self):
+        self.client.login(username='owner', password='S7rong-pass-99')
+        self.assertEqual(self.client.get(reverse('cbt_detail', args=[self.private_bank.pk])).status_code, 200)
+
+    def test_cbt_take_embeds_questions_without_script_breakout(self):
+        from resources.models import CBTQuestion
+        self.private_bank.is_public = True
+        self.private_bank.save()
+        CBTQuestion.objects.create(
+            bank=self.private_bank, text='</script><script>alert(1)</script>',
+            option_a='a', option_b='b', option_c='c', option_d='d', correct_option='A',
+        )
+        response = self.client.get(reverse('cbt_take', args=[self.private_bank.pk]))
+        self.assertNotContains(response, '</script><script>alert(1)')
+        self.assertContains(response, 'id="cbt-questions"')
+
+    def test_rating_ignores_external_next(self):
+        resource = Resource.objects.create(title='Notes', course_code='MTH101', resource_type='notes')
+        response = self.client.post(
+            reverse('rate_resource', args=[resource.pk]), {'stars': 5, 'next': 'https://evil.example/'}
+        )
+        self.assertRedirects(response, reverse('notes_list'), fetch_redirect_response=False)

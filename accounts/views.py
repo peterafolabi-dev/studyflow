@@ -25,7 +25,7 @@ def signup(request):
             form.save()
             messages.success(request, "You've signed up successfully! Please log in.")
             return redirect('login')
-        messages.error(request, 'Sign-up failed. Check that the username is available and both passwords match.')
+        messages.error(request, 'Sign-up failed. Check that the username is available, the email is valid and unused, and both passwords match.')
     else:
         form = SignUpForm()
 
@@ -44,6 +44,14 @@ def login_view(request):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
+            from resources.ai_service import RateLimitExceeded, check_and_increment_rate_limit
+            try:
+                # Slows password guessing against one account; legit users rarely hit 10 tries.
+                check_and_increment_rate_limit(username.lower(), bucket='login', max_requests=10, window=900)
+            except RateLimitExceeded:
+                error = 'Too many login attempts. Please wait a few minutes and try again.'
+                messages.error(request, error)
+                return render(request, 'accounts/login.html', {'form': form, 'error': error}, status=429)
             user = authenticate(request, username=username, password=password,
                                 backend='django.contrib.auth.backends.ModelBackend')
             if user is not None:

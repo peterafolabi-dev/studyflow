@@ -15,10 +15,11 @@ class AuthTests(TestCase):
 
     def test_signup_creates_user_redirects_to_login_without_logging_in(self):
         response = self.client.post(reverse('signup'), {
-            'username': 'newstudent', 'password1': 'S7rong-pass-99', 'password2': 'S7rong-pass-99',
+            'username': 'newstudent', 'email': 'New@Example.com',
+            'password1': 'S7rong-pass-99', 'password2': 'S7rong-pass-99',
         }, follow=True)
         self.assertEqual(response.redirect_chain, [(reverse('login'), 302)])
-        self.assertTrue(User.objects.filter(username='newstudent').exists())
+        self.assertEqual(User.objects.get(username='newstudent').email, 'new@example.com')
         self.assertNotIn('_auth_user_id', self.client.session)
         self.assertContains(response, 'You&#x27;ve signed up successfully! Please log in.')
         self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
@@ -30,6 +31,39 @@ class AuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(username='x').exists())
         self.assertContains(response, 'Sign-up failed. Check that the username is available')
+
+    def test_signup_requires_unique_email(self):
+        User.objects.create_user('taken', email='taken@example.com', password='S7rong-pass-99')
+        for email in ('', 'TAKEN@example.com'):
+            response = self.client.post(reverse('signup'), {
+                'username': 'another', 'email': email,
+                'password1': 'S7rong-pass-99', 'password2': 'S7rong-pass-99',
+            })
+            self.assertEqual(response.status_code, 200, email)
+        self.assertFalse(User.objects.filter(username='another').exists())
+
+    def test_login_ignores_external_next(self):
+        User.objects.create_user('sam', password='S7rong-pass-99')
+        response = self.client.post(
+            reverse('login') + '?next=https://evil.example/phish',
+            {'username': 'sam', 'password': 'S7rong-pass-99'},
+        )
+        self.assertRedirects(response, reverse('dashboard'), fetch_redirect_response=False)
+
+    def test_login_is_rate_limited_per_username(self):
+        User.objects.create_user('sam', password='S7rong-pass-99')
+        for _ in range(10):
+            self.client.post(reverse('login'), {'username': 'sam', 'password': 'wrong'})
+        response = self.client.post(reverse('login'), {'username': 'sam', 'password': 'S7rong-pass-99'})
+        self.assertEqual(response.status_code, 429)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_login_follows_local_next(self):
+        User.objects.create_user('sam', password='S7rong-pass-99')
+        response = self.client.post(
+            reverse('login') + '?next=/courses/', {'username': 'sam', 'password': 'S7rong-pass-99'},
+        )
+        self.assertRedirects(response, '/courses/', fetch_redirect_response=False)
 
     def test_login_and_logout(self):
         User.objects.create_user('sam', password='S7rong-pass-99')
@@ -68,6 +102,49 @@ class AuthTests(TestCase):
         response = self.client.post(reverse('login'), {'username': 'sam', 'password': 'wrong'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Invalid username or password. Please try again.')
+
+
+class PresenceTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('sam', password='S7rong-pass-99')
+
+    def test_login_marks_user_online_and_active_today(self):
+        from .models import DailyActivity
+        from .presence import active_user_count, online_users
+        self.client.post(reverse('login'), {'username': 'sam', 'password': 'S7rong-pass-99'})
+        self.assertIn(self.user.pk, [p.user_id for p in online_users()])
+        self.assertTrue(DailyActivity.objects.filter(user=self.user).exists())
+        self.assertEqual(active_user_count(1), 1)
+
+    def test_browsing_records_one_activity_row_per_day(self):
+        from .models import DailyActivity
+        self.client.login(username='sam', password='S7rong-pass-99')
+        for _ in range(3):
+            self.client.get(reverse('profile'))
+        self.assertEqual(DailyActivity.objects.filter(user=self.user).count(), 1)
+
+    def test_logout_marks_user_offline_immediately(self):
+        from .presence import online_users
+        self.client.post(reverse('login'), {'username': 'sam', 'password': 'S7rong-pass-99'})
+        self.client.post(reverse('logout'))
+        self.assertNotIn(self.user.pk, [p.user_id for p in online_users()])
+
+    def test_presence_ping_requires_login_and_post(self):
+        url = reverse('presence_ping')
+        self.assertEqual(self.client.post(url).status_code, 302)
+        self.client.login(username='sam', password='S7rong-pass-99')
+        self.assertEqual(self.client.get(url).status_code, 405)
+        self.assertEqual(self.client.post(url).status_code, 200)
+
+    def test_staff_dashboard_shows_activity(self):
+        staff = User.objects.create_user('boss', password='S7rong-pass-99', is_staff=True)
+        self.client.login(username='boss', password='S7rong-pass-99')
+        self.client.get(reverse('profile'))
+        response = self.client.get(reverse('admin_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['active_today'], 1)
+        self.assertEqual(len(response.context['dau_series']), 14)
+        self.assertIn(staff.pk, [p.user_id for p in response.context['online_users']])
 
 
 class AdminBootstrapTests(TestCase):
