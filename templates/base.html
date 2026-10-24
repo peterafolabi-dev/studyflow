@@ -1047,6 +1047,23 @@
     });
   }
 </script>
+<script>
+  // Presence heartbeat: keeps users on long pages (Pomodoro, reading, CBT) counted as online.
+  (function () {
+    const tokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!tokenEl) return;
+    const ping = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch('{% url "presence_ping" %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': tokenEl.value },
+        credentials: 'same-origin',
+      }).catch(() => {});
+    };
+    setInterval(ping, 90000);
+    document.addEventListener('visibilitychange', ping);
+  })();
+</script>
 {% endif %}
 
 <script>

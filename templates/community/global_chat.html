@@ -165,7 +165,7 @@
             <div class="flex flex-col max-w-[85%] sm:max-w-[75%] self-end items-end opacity-70 transition-opacity animate-in zoom-in-95 duration-200" id="temp-msg">
                 <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">You <span class="mx-1 opacity-50">•</span> ${timeString}</span>
                 <div class="bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20 px-4 py-3 text-sm leading-relaxed">
-                    ${text}
+                    ${escapeChat(text)}
                 </div>
             </div>
         `;

@@ -30,6 +30,9 @@ class Task(models.Model):
     due_date = models.DateField()
     is_done = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    # XP is granted once per task, so ticking done/undone repeatedly can't farm points.
+    xp_awarded = models.BooleanField(default=False)
 
     class Meta:
         # Open tasks first, soonest deadline first.
