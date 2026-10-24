@@ -22,6 +22,13 @@ from accounts.models import Profile
 from .forms import CourseForm, TaskForm, TimetableEntryForm
 from .models import Course, Task, TimetableEntry, FlashcardDeck, Flashcard, StudySession
 
+MAX_SESSION_MINUTES = 60          # longest Pomodoro preset in the study room
+MAX_DAILY_STUDY_MINUTES = 12 * 60
+MIN_XP_SESSION_MINUTES = 15       # shortest preset; tiny sessions log time but don't earn XP
+
+AI_CHAT_MAX_MESSAGE_CHARS = 12000  # leaves room for an attached file's text
+AI_CHAT_MAX_HISTORY = 20
+
 # SECURITY RULE: every query below is filtered by the logged-in user.
 # Without that, a user could open someone else's data by editing the ID in the URL.
 
@@ -602,15 +609,18 @@ def flashcard_rate_review(request, pk):
     if rating not in ['hard', 'medium', 'easy']:
         return JsonResponse({'error': 'Rating must be hard, medium, or easy.'}, status=400)
 
+    # Reviewing ahead is allowed, but only due cards earn rewards (no re-rating farm).
+    was_due = card.next_review_date is None or card.next_review_date <= timezone.localdate()
     next_date = card.process_review(rating)
-    _award_xp(request.user, 'flashcard', points=5)
-    from campus_life.services import earn_credits
-    earn_credits(
-        request.user,
-        f'flashcard:{card.pk}:{timezone.localdate().isoformat()}',
-        'flashcard_review',
-        1,
-    )
+    if was_due:
+        _award_xp(request.user, 'flashcard', points=5)
+        from campus_life.services import earn_credits
+        earn_credits(
+            request.user,
+            f'flashcard:{card.pk}:{timezone.localdate().isoformat()}',
+            'flashcard_review',
+            1,
+        )
     return JsonResponse({
         'success': True,
         'card_id': card.id,
@@ -624,25 +634,34 @@ def flashcard_rate_review(request, pk):
 
 from django.http import JsonResponse
 import json
-from django.views.decorators.csrf import csrf_exempt
 import os
 
 import logging
 logger = logging.getLogger('django.request')
 
-@csrf_exempt
 @require_POST
 def ai_chat_api(request):
+    # JSON 401 (not a login redirect) so the chat widget can show a readable message.
+    if not request.user.is_authenticated:
+        return JsonResponse({'reply': 'Please log in to chat with StudyFlow Coach.'}, status=401)
+    client = None
+    model_name = os.environ.get('MODEL_NAME') or os.environ.get('GROQ_MODEL_NAME') or 'openai/gpt-oss-20b'
     try:
         data = json.loads(request.body)
-        user_message = data.get('message', '').strip()
+        user_message = str(data.get('message', '')).strip()[:AI_CHAT_MAX_MESSAGE_CHARS]
         if not user_message:
             return JsonResponse({'reply': 'Ask me something!'})
-            
+
         api_key = os.environ.get('GROQ_API_KEY')
         if not api_key:
             return JsonResponse({'reply': 'I am ready to go! To activate me, add GROQ_API_KEY to your Render environment variables (or .env file).'})
-            
+
+        from resources.ai_service import RateLimitExceeded, check_and_increment_rate_limit
+        try:
+            check_and_increment_rate_limit(request.user.id, bucket='ai_chat', max_requests=20, window=600)
+        except RateLimitExceeded as e:
+            return JsonResponse({'reply': str(e)}, status=429)
+
         from groq import Groq
         client = Groq(api_key=api_key)
         
@@ -707,14 +726,16 @@ When making a flashcard, use exactly this layout:
 
 Do not add a stray number or heading before the card."""
 
-        model_name = os.environ.get('MODEL_NAME') or os.environ.get('GROQ_MODEL_NAME') or 'openai/gpt-oss-20b'
-
-        # Build full message history with system prompt first
+        # Build recent message history with system prompt first
         history = data.get('history', [])
+        if not isinstance(history, list):
+            history = []
         formatted_messages = [{"role": "system", "content": system_prompt}]
-        for item in history:
+        for item in history[-AI_CHAT_MAX_HISTORY:]:
+            if not isinstance(item, dict):
+                continue
             role = item.get('role')
-            content = item.get('content', '').strip()
+            content = str(item.get('content', '')).strip()[:AI_CHAT_MAX_MESSAGE_CHARS]
             if role in ['user', 'assistant'] and content:
                 formatted_messages.append({"role": role, "content": content})
 
@@ -732,15 +753,18 @@ Do not add a stray number or heading before the card."""
         # Check if error is model_not_found (404)
         if (hasattr(e, 'status_code') and e.status_code == 404) or 'model_not_found' in error_msg or 'does not exist' in error_msg:
             available_list = []
-            try:
-                available_list = [m.id for m in client.models.list().data if 'whisper' not in m.id]
-            except Exception:
-                pass
+            if client is not None:
+                try:
+                    available_list = [m.id for m in client.models.list().data if 'whisper' not in m.id]
+                except Exception:
+                    pass
             extra = f" Available models: {', '.join(available_list[:6])}." if available_list else ""
             return JsonResponse({
                 'reply': f"Model '{model_name}' not found on Groq.{extra} Set MODEL_NAME in your environment to choose an available model."
             }, status=500)
-        return JsonResponse({'reply': f'Oops, error: {type(e).__name__} - {e}'}, status=500)
+        if isinstance(e, ValueError):
+            return JsonResponse({'reply': 'Sorry, I could not read that message.'}, status=400)
+        return JsonResponse({'reply': "Sorry, I'm having trouble right now. Please try again in a moment."}, status=500)
 
 
 @login_required
@@ -826,7 +850,7 @@ def progress(request):
     pomodoro_count = StudySession.objects.filter(user=request.user, date__gte=week_start).count()
     tasks_done_week = Task.objects.filter(
         course__user=request.user, is_done=True,
-        created_at__date__gte=week_start
+        completed_at__gte=timezone.make_aware(datetime.combine(week_start, time.min)),
     ).count()
     flashcards_reviewed_week = XPLog.objects.filter(
         user=request.user, reason='flashcard', created_at__date__gte=week_start
