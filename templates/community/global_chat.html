@@ -90,6 +90,13 @@
     let currentRoom = 'global';
     let isScrolledToBottom = true;
 
+    // Chat text is user-supplied: always escape before it goes into innerHTML.
+    function escapeChat(value) {
+        const div = document.createElement('div');
+        div.textContent = value == null ? '' : String(value);
+        return div.innerHTML;
+    }
+
     function switchRoom(room) {
         currentRoom = room;
         
@@ -124,17 +131,17 @@
 
     async function fetchMessages() {
         try {
-            const res = await fetch(`{% url 'chat_api' %}?room=${currentRoom}`);
+            const res = await fetch(`{% url 'chat_api' %}?room=${encodeURIComponent(currentRoom)}`);
             const data = await res.json();
             
             chatMessages.innerHTML = data.messages.map(msg => `
                 <div class="flex flex-col max-w-[85%] sm:max-w-[75%] ${msg.is_me ? 'self-end items-end' : 'self-start items-start'} animate-in slide-in-from-bottom-2 fade-in duration-300">
-                    <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">${msg.is_me ? 'You' : msg.username} <span class="mx-1 opacity-50">•</span> ${msg.time}</span>
+                    <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">${msg.is_me ? 'You' : escapeChat(msg.username)} <span class="mx-1 opacity-50">•</span> ${escapeChat(msg.time)}</span>
                     <div class="${msg.is_me 
                         ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20' 
                         : 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/50 dark:border-slate-700/50 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-sm shadow-sm'} 
                         px-4 py-3 text-sm leading-relaxed">
-                        ${msg.text}
+                        ${escapeChat(msg.text)}
                     </div>
                 </div>
             `).join('');
