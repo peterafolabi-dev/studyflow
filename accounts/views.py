@@ -9,8 +9,10 @@ from django.views.decorators.http import require_POST
 from library.models import BookRating, SavedBook
 from planner.models import Course, Task, TimetableEntry
 from resources.models import Loan, Resource, ResourceRating
+from studyflow.http import redirect_next
 
 from .forms import LoginForm, SignUpForm
+from .presence import mark_offline, touch_presence
 
 
 def signup(request):
@@ -46,8 +48,7 @@ def login_view(request):
                                 backend='django.contrib.auth.backends.ModelBackend')
             if user is not None:
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                next_url = request.GET.get('next', '')
-                return redirect(next_url if next_url else 'dashboard')
+                return redirect_next(request, 'dashboard', url=request.GET.get('next', ''))
             else:
                 error = 'Invalid username or password. Please try again.'
                 messages.error(request, error)
@@ -62,6 +63,8 @@ def login_view(request):
 
 @require_POST
 def logout_view(request):
+    if request.user.is_authenticated:
+        mark_offline(request.user)
     logout(request)
     messages.success(request, "You've been logged out. See you soon!")
     return redirect('login')
@@ -219,6 +222,14 @@ def public_profile(request, username):
     target_user = get_object_or_404(User, username=username)
     profile, _ = Profile.objects.get_or_create(user=target_user)
     return render(request, 'accounts/public_profile.html', {'target_user': target_user, 'profile': profile})
+
+@login_required
+@require_POST
+def presence_ping(request):
+    """Heartbeat from open tabs so users on long pages (e.g. a Pomodoro) stay 'online'."""
+    touch_presence(request.user)
+    return JsonResponse({'ok': True})
+
 
 @login_required
 def notifications_view(request):
