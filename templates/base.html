@@ -288,6 +288,7 @@
       <h2 id="command-palette-title" class="sr-only">Search pages and courses</h2>
       <input id="command-palette-input" type="search" autocomplete="off" placeholder="Search pages or your courses..." class="w-full border-0 border-b border-slate-700 bg-transparent px-5 py-4 text-base text-white outline-none placeholder:text-slate-500">
       <nav id="command-palette-results" class="max-h-[55vh] overflow-y-auto p-2" aria-label="Page results">
+        <a id="command-palette-search-all" href="{% url 'global_search' %}" class="hidden rounded-lg px-3 py-2 text-sm font-semibold text-brand-300 hover:bg-slate-800">🔎 Search everything for “<span></span>”</a>
         <a data-command-item data-search="dashboard home" href="{% url 'dashboard' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Dashboard</a>
         <a data-command-item data-search="courses course list" href="{% url 'course_list' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Courses</a>
         {% for course in user.courses.all %}
@@ -323,7 +324,8 @@
         <a data-command-item data-search="marketplace" href="{% url 'marketplace' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Marketplace</a>
         <a data-command-item data-search="emergency helplines" href="{% url 'emergency_directory' %}" class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-slate-800">Emergency Directory</a>
       </nav>
-      <p id="command-palette-empty" class="hidden px-5 pb-4 text-sm text-slate-400">No matching pages or courses.</p>
+      <p id="command-palette-empty" class="hidden px-5 pb-4 text-sm text-slate-400">No matching pages. Press Enter to search books, resources and discussions.</p>
+      <p class="border-t border-slate-800 px-5 py-2 text-[11px] text-slate-500">↑ ↓ to move · Enter to open · Esc to close</p>
     </section>
   </div>
   <script>
@@ -333,6 +335,19 @@
       const input = document.getElementById('command-palette-input');
       const items = Array.from(document.querySelectorAll('[data-command-item]'));
       const empty = document.getElementById('command-palette-empty');
+      const searchAll = document.getElementById('command-palette-search-all');
+      const searchUrl = searchAll.getAttribute('href');
+      let activeIndex = 0;
+      function visibleLinks() {
+        return [searchAll, ...items].filter((el) => !el.classList.contains('hidden'));
+      }
+      function highlight(index) {
+        const links = visibleLinks();
+        if (!links.length) return;
+        activeIndex = (index + links.length) % links.length;
+        links.forEach((el, i) => el.classList.toggle('bg-slate-800', i === activeIndex));
+        links[activeIndex].scrollIntoView({ block: 'nearest' });
+      }
       function closePalette() {
         palette.classList.add('opacity-0');
         panel.classList.add('scale-95');
@@ -363,9 +378,28 @@
           if (matches) visible++;
         });
         empty.classList.toggle('hidden', visible !== 0);
+        // Pages are filtered here; "Search everything" hands the query to the full site search.
+        searchAll.classList.toggle('hidden', !query);
+        searchAll.classList.toggle('block', Boolean(query));
+        searchAll.href = `${searchUrl}?q=${encodeURIComponent(input.value.trim())}`;
+        searchAll.querySelector('span').textContent = input.value.trim();
+        // Prefer a matching page; otherwise Enter runs the full search.
+        highlight(visible ? 1 : 0);
       }
       document.getElementById('command-palette-trigger').addEventListener('click', openPalette);
+      document.querySelectorAll('[data-open-command-palette]').forEach((btn) => btn.addEventListener('click', openPalette));
       input.addEventListener('input', filterItems);
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          highlight(activeIndex + (event.key === 'ArrowDown' ? 1 : -1));
+        } else if (event.key === 'Enter') {
+          event.preventDefault();
+          const target = visibleLinks()[activeIndex];
+          if (target) window.location.href = target.href;
+          else if (input.value.trim()) window.location.href = `${searchUrl}?q=${encodeURIComponent(input.value.trim())}`;
+        }
+      });
       palette.addEventListener('click', (event) => { if (event.target === palette) closePalette(); });
       document.addEventListener('keydown', (event) => {
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
