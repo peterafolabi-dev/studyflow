@@ -354,3 +354,24 @@ class FlashcardSpacedRepetitionTests(BaseCase):
         response = self.client.post(url, data={'rating': 'easy'}, content_type='application/json')
         self.assertEqual(response.status_code, 404)
 
+
+
+class WeeklyPlanAndSearchTests(BaseCase):
+    def test_weekly_plan_shows_today_summary_and_block_types(self):
+        Task.objects.create(course=self.alice_course, title='Late lab', due_date=self.today - timedelta(days=1))
+        response = self.client.get(reverse('weekly_plan'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Today')
+        self.assertContains(response, 'Planned this week')
+        self.assertEqual(response.context['overdue_count'], 1)
+        kinds = {item['kind'] for day in response.context['plan_days'] for item in day['items']}
+        self.assertIn('overdue', kinds)
+        self.assertTrue(response.context['plan_days'][0]['is_today'])
+
+    def test_every_screen_size_has_a_search_entry_point(self):
+        response = self.client.get(reverse('dashboard'))
+        search_url = reverse('global_search')
+        # wide-screen box + mobile-menu box, plus the navigator's "search everything" link
+        self.assertGreaterEqual(response.content.decode().count(f'action="{search_url}"'), 2)
+        self.assertContains(response, 'data-open-command-palette')
+        self.assertContains(response, 'id="command-palette-search-all"')

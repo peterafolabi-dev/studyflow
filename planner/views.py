@@ -326,7 +326,8 @@ def weekly_plan(request):
             items_by_day[day].append({
                 'start': start, 'end': end, 'title': task.title,
                 'course': task.course, 'task': task,
-                'url': f"/courses/{task.course_id}/",
+                'url': reverse('course_detail', args=[task.course_id]),
+                'kind': 'overdue' if task.due_date < today else 'deadline',
                 'note': 'Overdue' if task.due_date < today else f"Due {task.due_date.strftime('%a, %b %d').replace(' 0', ' ')}",
             })
             scheduled = True
@@ -352,7 +353,8 @@ def weekly_plan(request):
             start, end = daily_slots[day].pop(0)
             items_by_day[day].append({
                 'start': start, 'end': end, 'title': f'Review {course.name}',
-                'course': course, 'task': None, 'url': f'/courses/{course.pk}/',
+                'course': course, 'task': None, 'url': reverse('course_detail', args=[course.pk]),
+                'kind': 'review',
                 'note': 'Suggested course review',
             })
             planned_blocks += 1
@@ -361,13 +363,24 @@ def weekly_plan(request):
             break
 
     plan_days = [
-        {'date': day, 'label': day.strftime('%A'), 'items': sorted(items, key=lambda item: item['start'])}
+        {
+            'date': day, 'label': day.strftime('%A'), 'is_today': day == today,
+            'is_tomorrow': day == today + timedelta(days=1),
+            'items': sorted(items, key=lambda item: item['start']),
+        }
         for day, items in items_by_day.items()
     ]
+    plan_count = sum(len(items) for items in items_by_day.values())
+    planned_hours = round(plan_count * 50 / 60, 1)
+    goal_hours = profile.weekly_study_goal_hours
     return render(request, 'planner/weekly_plan.html', {
         'plan_days': plan_days,
         'unscheduled': unscheduled,
-        'plan_count': sum(len(items) for items in items_by_day.values()),
+        'plan_count': plan_count,
+        'planned_hours': planned_hours,
+        'goal_pct': min(100, round(planned_hours * 100 / goal_hours)) if goal_hours else 0,
+        'deadline_count': sum(1 for task in open_tasks if task.due_date >= today),
+        'overdue_count': sum(1 for task in open_tasks if task.due_date < today),
         'goal_hours': profile.weekly_study_goal_hours,
         'preferred_time': profile.get_preferred_study_time_display(),
         'has_courses': bool(courses),

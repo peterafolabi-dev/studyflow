@@ -384,7 +384,7 @@
         searchAll.href = `${searchUrl}?q=${encodeURIComponent(input.value.trim())}`;
         searchAll.querySelector('span').textContent = input.value.trim();
         // Prefer a matching page; otherwise Enter runs the full search.
-        highlight(visible ? 1 : 0);
+        highlight(query && visible ? 1 : 0);
       }
       document.getElementById('command-palette-trigger').addEventListener('click', openPalette);
       document.querySelectorAll('[data-open-command-palette]').forEach((btn) => btn.addEventListener('click', openPalette));
