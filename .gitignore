@@ -38,3 +38,6 @@ Thumbs.db
 # Database backups (may contain user data)
 *.bak
 *.sqlite3*
+
+# Node dependencies (install with npm ci)
+node_modules/

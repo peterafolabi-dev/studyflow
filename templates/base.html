@@ -88,7 +88,7 @@
       <a href="{% url 'dashboard' %}" class="font-display font-bold text-lg text-brand-300 shrink-0">StudyFlow</a>
 
       {% if user.is_authenticated %}
-        <nav class="hidden md:flex items-center gap-1 text-sm font-medium ml-6 flex-1" aria-label="Main">
+        <nav class="hidden lg:flex items-center gap-1 text-sm font-medium ml-6 flex-1 whitespace-nowrap" aria-label="Main">
           <a href="{% url 'dashboard' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if request.resolver_match.url_name == 'dashboard' %}text-brand-300 bg-slate-800{% endif %}">Dashboard</a>
           <a href="{% url 'course_list' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800 {% if 'course' in request.resolver_match.url_name %}text-brand-300 bg-slate-800{% endif %}">Courses</a>
           
@@ -136,12 +136,16 @@
         </nav>
 
         <div class="flex items-center gap-3">
-          <form method="get" action="{% url 'global_search' %}" class="hidden lg:block w-48">
-            <input type="text" name="q" placeholder="Search..." class="w-full rounded-full border border-slate-700 bg-slate-800 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-100 placeholder-slate-400">
+          <form method="get" action="{% url 'global_search' %}" class="hidden xl:block w-44" role="search">
+            <input type="search" name="q" required aria-label="Search courses, books, resources and discussions" placeholder="Search..." class="w-full rounded-full border border-slate-700 bg-slate-800 px-4 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-100 placeholder-slate-400">
           </form>
 
+          <button type="button" data-open-command-palette class="hidden lg:inline-flex xl:hidden p-2 text-slate-200 hover:bg-slate-800 rounded-lg" aria-label="Search">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+          </button>
+
           <!-- Mobile Hamburger -->
-          <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-200 hover:bg-slate-800 rounded-lg">
+          <button id="mobile-menu-btn" class="lg:hidden p-2 text-slate-200 hover:bg-slate-800 rounded-lg">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
           </button>
 
@@ -149,7 +153,7 @@
           <div class="relative" id="profile-menu-wrapper">
             <button id="profile-menu-btn" type="button" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full border border-slate-700 bg-slate-900/80 hover:bg-slate-800 transition shadow-sm" aria-haspopup="true" aria-expanded="false">
               <span class="h-7 w-7 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs font-bold shadow-sm shadow-brand-500/20">{{ user.username|slice:":1"|upper }}</span>
-              <span class="hidden md:inline text-sm font-semibold text-slate-200">{{ user.username }}</span>
+              <span class="sr-only">{{ user.username }}</span>
               <svg class="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
             </button>
             <div id="profile-menu" role="menu" class="hidden absolute right-0 mt-2 w-64 rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl py-2 text-sm z-50">
@@ -189,7 +193,10 @@
 
     <!-- Mobile Menu -->
     {% if user.is_authenticated %}
-    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-900 px-4 py-4 space-y-2">
+    <div id="mobile-menu" class="hidden lg:hidden border-t border-slate-800 bg-slate-900 px-4 py-4 space-y-2">
+      <form method="get" action="{% url 'global_search' %}" role="search" class="pb-2">
+        <input type="search" name="q" required aria-label="Search courses, books, resources and discussions" placeholder="Search courses, books, notes..." class="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      </form>
       <a href="{% url 'dashboard' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Dashboard</a>
       <a href="{% url 'course_list' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Courses</a>
       <a href="{% url 'catalogue' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Library & Catalogue</a>
