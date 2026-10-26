@@ -81,6 +81,17 @@ class StudySession(models.Model):
     task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True, blank=True, related_name='study_sessions')
     duration_minutes = models.PositiveIntegerField()
     date = models.DateField(auto_now_add=True)
+    ENDED_CHOICES = [
+        ('completed', 'Completed'),       # countdown timer reached zero
+        ('stopped', 'Stopped early'),     # countdown ended by the student before zero
+        ('stopwatch', 'Stopwatch'),       # open-ended count-up session
+    ]
+    ended = models.CharField(max_length=10, choices=ENDED_CHOICES, default='completed')
+    planned_minutes = models.PositiveSmallIntegerField(null=True, blank=True)  # countdown length; empty for stopwatch
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-created_at']
 
 
 class FlashcardDeck(models.Model):
