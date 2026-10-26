@@ -213,6 +213,7 @@ class PasswordResetFlowTests(TestCase):
         self.client.logout()
         reused = self.client.get(link, follow=True)
         self.assertNotIn('new_password1', reused.content.decode())
+        self.assertContains(reused, 'This reset link has expired')
 
     def test_unknown_email_sends_nothing_but_looks_the_same(self):
         from django.core import mail
