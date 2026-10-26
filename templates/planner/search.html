@@ -4,7 +4,7 @@
   <div class="mb-6">
     <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Search</h1>
     <form method="get" class="flex gap-2 mt-3">
-      <input type="text" name="q" value="{{ query }}" autofocus placeholder="Search books, resources, courses, discussions&hellip;"
+      <input type="search" name="q" value="{{ query }}" autofocus placeholder="Search books, resources, courses, discussions&hellip;"
              class="flex-1 rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
       <button class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2">Search</button>
     </form>
@@ -12,6 +12,17 @@
 
   {% if query %}
     <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">{{ total }} result{{ total|pluralize }} for "{{ query }}"</p>
+
+    {% if results.pages %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">🧭 Pages</h2>
+        <div class="flex flex-wrap gap-2">
+          {% for page in results.pages %}
+            <a href="{{ page.url }}" class="rounded-full border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-slate-800">{{ page.label }} →</a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
 
     {% if results.books %}
       <section class="mb-8">
@@ -33,10 +44,10 @@
         <div class="grid gap-3 sm:grid-cols-2">
           {% for r in results.resources %}
             <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex items-center justify-between gap-3">
-              <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ r.get_resource_type_display }}</p>
+              <a href="{% url 'resource_detail' r.pk %}" class="min-w-0 hover:underline">
+                <p class="text-xs font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-300">{{ r.get_resource_type_display }}{% if r.course_code %} · {{ r.course_code }}{% endif %}</p>
                 <p class="font-medium text-sm">{{ r.title }}</p>
-              </div>
+              </a>
               {% if r.file %}<a href="{% url 'resource_download' r.pk %}" class="shrink-0 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium px-3 py-1.5">Download</a>{% endif %}
             </div>
           {% endfor %}
@@ -72,9 +83,25 @@
       </section>
     {% endif %}
 
+    {% if results.banks %}
+      <section class="mb-8">
+        <h2 class="font-display font-bold text-lg mb-3">🎯 Practice Tests</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {% for bank in results.banks %}
+            <a href="{% url 'cbt_detail' bank.pk %}" class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 hover:shadow-sm">
+              <p class="font-semibold text-sm">{{ bank.title }}</p>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ bank.course_code|default:"CBT practice" }} · {{ bank.time_limit_minutes }} min</p>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
     {% if not total %}
       <div class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-700 p-8 text-center text-slate-500 dark:text-slate-400">
-        No results for "{{ query }}".
+        <p>No results for "{{ query }}".</p>
+        <p class="mt-2 text-sm">Try a course code (e.g. <em>MTH 101</em>), a single keyword, or a page name like <em>flashcards</em> or <em>GPA</em>.</p>
+        <p class="mt-4 text-sm">Can't find a resource? <a href="{% url 'resource_upload' %}" class="font-semibold text-brand-600 dark:text-brand-300 hover:underline">Upload it for your classmates →</a></p>
       </div>
     {% endif %}
   {% endif %}

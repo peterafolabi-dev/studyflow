@@ -375,3 +375,30 @@ class WeeklyPlanAndSearchTests(BaseCase):
         self.assertGreaterEqual(response.content.decode().count(f'action="{search_url}"'), 2)
         self.assertContains(response, 'data-open-command-palette')
         self.assertContains(response, 'id="command-palette-search-all"')
+
+
+class GlobalSearchTests(BaseCase):
+    def search(self, q):
+        return self.client.get(reverse('global_search'), {'q': q})
+
+    def test_page_names_are_searchable(self):
+        for query, label in [('gpa', 'GPA Calculator'), ('flashcards', 'Flashcards'), ('where is light', 'Where is Light?')]:
+            labels = [page['label'] for page in self.search(query).context['results']['pages']]
+            self.assertIn(label, labels, query)
+
+    def test_words_match_in_any_order(self):
+        Course.objects.create(user=self.alice, name='Engineering Mathematics II', code='MTH 202')
+        courses = self.search('mathematics engineering').context['results']['courses']
+        self.assertEqual([c.name for c in courses], ['Engineering Mathematics II'])
+
+    def test_other_users_courses_and_private_banks_stay_hidden(self):
+        from resources.models import QuestionBank
+        QuestionBank.objects.create(title='Bob private physics', created_by=self.bob, is_public=False)
+        response = self.search('physics')
+        self.assertEqual(list(response.context['results']['courses']), [])
+        self.assertEqual(list(response.context['results']['banks']), [])
+
+    def test_no_results_shows_suggestions(self):
+        response = self.search('zzqqxx')
+        self.assertEqual(response.context['total'], 0)
+        self.assertContains(response, 'Try a course code')

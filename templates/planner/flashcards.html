@@ -36,7 +36,7 @@
         <button id="gesture-guide-link" type="button" aria-label="How to use hand gestures" class="rounded-lg border border-brand-500/40 px-3 py-2 text-sm font-semibold text-brand-200 hover:bg-brand-500/10">How it works</button>
       </div>
     </div>
-    <video id="gesture-video" style="transform: scaleX(-1);" class="mt-3 hidden h-24 w-40 rounded border border-slate-600 object-cover" autoplay muted playsinline aria-label="Local camera preview"></video>
+    <video id="gesture-video" style="transform: scaleX(-1);" class="mt-3 hidden h-36 w-48 rounded-lg border border-slate-600 object-cover" autoplay muted playsinline aria-label="Local camera preview"></video>
     <p id="gesture-active-hint" class="mt-2 hidden rounded-md border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs text-slate-300" aria-live="polite">Swipe right = next · Swipe left = previous · Open palm = flip</p>
   </section>
 
@@ -886,12 +886,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   guideLink.addEventListener('click', openGuide);
-  enableButton.addEventListener('click', (event) => {
-    if (guideSeen) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    openGuide();
-  }, true);
+  // "Enable" always starts the camera right away. (It used to open this guide on first use,
+  // and closing the guide with × left the camera off, which looked like the camera was broken.)
+  // The guide stays one click away under "How it works"; the on-screen hint covers the basics.
+  enableButton.addEventListener('click', markGuideSeen);
   closeButton.addEventListener('click', () => closeGuide(false));
   startButton.addEventListener('click', () => {
     const cameraAlreadyActive = stopButton && !stopButton.classList.contains('hidden');

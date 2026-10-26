@@ -443,24 +443,79 @@ def export_calendar(request):
     return response
 
 
+# Pages people commonly search for by name: (label, url name, extra keywords).
+SEARCH_PAGES = [
+    ('Dashboard', 'dashboard', 'home overview'),
+    ('Courses', 'course_list', 'my courses subjects'),
+    ('Weekly Plan', 'weekly_plan', 'schedule planner week study plan'),
+    ('Timetable', 'timetable', 'classes lectures schedule'),
+    ('Study Room', 'study_room', 'pomodoro focus timer music spotify'),
+    ('Flashcards', 'flashcards', 'cards revision spaced repetition gestures'),
+    ('My Progress', 'progress', 'xp streak badges stats'),
+    ('GPA Calculator', 'gpa_calculator', 'cgpa grades result'),
+    ('Break Room', 'break_room', 'games 2048 memory typing'),
+    ('CBT Practice', 'cbt_home', 'exam test quiz past questions'),
+    ('Past Questions', 'past_questions', 'exam papers pq'),
+    ('Notes', 'notes_list', 'lecture notes materials handouts'),
+    ('Lecture Slides', 'lecture_slides', 'slides powerpoint'),
+    ('Theses & Papers', 'theses_papers', 'research project thesis'),
+    ('Upload Resource', 'resource_upload', 'share upload pdf'),
+    ('Catalogue', 'catalogue', 'books reading library'),
+    ('My Library', 'my_library', 'saved books reading list'),
+    ('IBB Library', 'ibb_library', 'physical library borrow loan reserve'),
+    ('Study Groups', 'thread_list', 'discussions forum questions community'),
+    ('Campus Chat', 'global_chat', 'chat messages community'),
+    ('Find Study Buddies', 'find_buddies', 'partners friends classmates'),
+    ('Campus Hub', 'campus_hub', 'campus life minna'),
+    ('Where is Light?', 'power_tracker', 'power electricity nepa generator study spots'),
+    ('Notice Board', 'notice_board', 'announcements notices course rep'),
+    ('Lodges & Roommates', 'lodge_roommate_hub', 'hostel housing accommodation roommate'),
+    ('SIWES Hub', 'siwes_hub', 'it industrial training internship placement logbook'),
+    ('Marketplace', 'marketplace', 'buy sell textbooks items'),
+    ('Emergency Directory', 'emergency_directory', 'emergency help clinic security phone'),
+    ('My Profile', 'profile', 'account achievements'),
+    ('Settings', 'edit_profile', 'edit profile study goal preferences'),
+    ('Notifications', 'notifications', 'alerts reminders'),
+]
+SEARCH_STOP_WORDS = {'a', 'an', 'and', 'the', 'of', 'for', 'to', 'in', 'on', 'my', 'how', 'is', 'where'}
+
+
+def _all_terms_match(terms, fields):
+    """Every search word must appear in at least one of the fields (any order)."""
+    condition = Q()
+    for term in terms:
+        term_match = Q()
+        for field in fields:
+            term_match |= Q(**{f'{field}__icontains': term})
+        condition &= term_match
+    return condition
+
+
 @login_required
 def global_search(request):
-    query = request.GET.get('q', '').strip()
-    results = {'books': [], 'resources': [], 'courses': [], 'threads': []}
+    from resources.models import QuestionBank
 
-    if query:
-        results['books'] = Book.objects.filter(
-            Q(title__icontains=query) | Q(author__icontains=query) | Q(subject__icontains=query)
-        )[:8]
+    query = request.GET.get('q', '').strip()[:100]
+    results = {'pages': [], 'books': [], 'resources': [], 'courses': [], 'threads': [], 'banks': []}
+
+    terms = [t for t in query.lower().split() if t not in SEARCH_STOP_WORDS] or query.lower().split()
+    if terms:
+        results['pages'] = [
+            {'label': label, 'url': reverse(url_name)}
+            for label, url_name, keywords in SEARCH_PAGES
+            if all(term in f'{label} {keywords}'.lower() for term in terms)
+        ][:6]
+        results['books'] = Book.objects.filter(_all_terms_match(terms, ['title', 'author', 'subject']))[:8]
         results['resources'] = Resource.objects.filter(
-            Q(title__icontains=query) | Q(course_code__icontains=query) | Q(description__icontains=query)
+            _all_terms_match(terms, ['title', 'course_code', 'description'])
         )[:8]
-        results['courses'] = Course.objects.filter(
-            user=request.user
-        ).filter(Q(name__icontains=query) | Q(code__icontains=query))[:8]
-        results['threads'] = Thread.objects.filter(
-            Q(title__icontains=query) | Q(course_code__icontains=query)
+        results['courses'] = Course.objects.filter(user=request.user).filter(
+            _all_terms_match(terms, ['name', 'code'])
         )[:8]
+        results['threads'] = Thread.objects.filter(_all_terms_match(terms, ['title', 'course_code']))[:8]
+        results['banks'] = QuestionBank.objects.filter(
+            Q(is_public=True) | Q(created_by=request.user)
+        ).filter(_all_terms_match(terms, ['title', 'course_code', 'description']))[:6]
 
     total = sum(len(v) for v in results.values())
     return render(request, 'planner/search.html', {'query': query, 'results': results, 'total': total})
