@@ -18,6 +18,8 @@ from studyflow.http import redirect_next
 from .forms import LoginForm, SignUpForm
 from .presence import mark_offline, touch_presence
 
+logger = logging.getLogger(__name__)
+
 
 def signup(request):
     if request.user.is_authenticated:
