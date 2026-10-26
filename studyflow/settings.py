@@ -194,6 +194,14 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no
 if not EMAIL_HOST and not EMAIL_HOST_USER and DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+# Never let a slow/blocked mail server hang a request (Render's free plan blocks SMTP ports).
+EMAIL_TIMEOUT = 15
+# Brevo sends over HTTPS, which works on Render's free plan. Setting BREVO_API_KEY switches to it;
+# DEFAULT_FROM_EMAIL must be a sender verified in Brevo.
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
+if BREVO_API_KEY and 'test' not in sys.argv:
+    EMAIL_BACKEND = 'studyflow.email_backends.BrevoEmailBackend'
+
 if 'test' in sys.argv:
     # Real hashing is deliberately slow; tests create many users, so use a fast hasher there only.
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
