@@ -571,12 +571,25 @@ def study_room(request):
     if embed:
         spotify_embed_url = f'https://open.spotify.com/embed/{embed[0]}/{embed[1]}'
     courses = Course.objects.filter(user=request.user)
+    # Today's saved sessions power the optional recap card (drawn in the browser, never uploaded).
+    today_sessions = list(
+        StudySession.objects.filter(user=request.user, date=timezone.localdate())
+        .select_related('course').order_by('-id')
+    )
+    last_course = next((s.course.name for s in today_sessions if s.course), '')
+    recap = {
+        'minutes': sum(s.duration_minutes for s in today_sessions),
+        'sessions': len(today_sessions),
+        'streak': streak.current_streak,
+        'course': last_course,
+    }
     return render(request, 'planner/study_room.html', {
         'courses': courses,
         'spotify_error': spotify_error,
         'spotify_playlist_url': profile.spotify_playlist_url,
         'spotify_embed_url': spotify_embed_url,
         'current_streak': streak.current_streak,
+        'recap': recap,
     })
 
 @login_required
