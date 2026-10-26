@@ -469,6 +469,8 @@ function setFocusedFlashcard(cardId) {
   if (!wrapper) return null;
   wrapper.classList.add('gesture-current');
   focusedFlashcardId = String(cardId);
+  // Keep the card the gesture moved to on screen.
+  wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   return wrapper;
 }
 

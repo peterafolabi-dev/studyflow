@@ -30,13 +30,104 @@
   let frameId = null;
   let active = false;
   let heldGesture = '';
-  let handXHistory = [];
   let heldFrames = 0;
   let gestureHandled = false;
   let gestureCooldownUntil = 0;
   let trackingState = '';
   let handEverSeen = false;
   let cameraStartedAt = 0;
+
+  // Swipe engine ("traffic warden" rules): one clear sideways movement = one action.
+  const SWIPE_WINDOW_MS = 350;      // look at the last 350 ms of palm movement
+  const SWIPE_MIN_DX = 0.14;        // at least 14% of the frame width
+  const SWIPE_STRAIGHTNESS = 2;     // sideways movement must be 2x the vertical movement
+  const REST_SPEED = 0.45;          // frame-widths per second; slower than this = hand at rest
+  const REST_FRAMES = 4;            // hand must rest this many frames before the next swipe
+  const RETURN_STROKE_MS = 1000;    // opposite-direction movement this soon is the hand coming back
+  const STILL_SPEED = 0.6;          // palm/fist/thumb poses only count while the hand is nearly still
+  let palmTrack = [];
+  let needsRest = false;
+  let restFrames = 0;
+  let lastSwipeDir = 0;
+  let lastSwipeAt = 0;
+
+  // Overlay on the (mirrored) preview: hand outline + a big arrow when a swipe is recognised.
+  const previewWrap = document.createElement('div');
+  previewWrap.style.cssText = 'position:relative;display:inline-block;margin-top:0.75rem;';
+  video.parentNode.insertBefore(previewWrap, video);
+  previewWrap.appendChild(video);
+  video.style.marginTop = '0';
+  const overlay = document.createElement('canvas');
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;';
+  previewWrap.appendChild(overlay);
+  const arrow = document.createElement('div');
+  arrow.setAttribute('aria-hidden', 'true');
+  arrow.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+    'font:700 1.1rem system-ui,sans-serif;color:#fff;text-shadow:0 2px 6px #000;opacity:0;pointer-events:none;';
+  previewWrap.appendChild(arrow);
+  const HAND_LINKS = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11],
+    [11, 12], [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
+
+  function palmCenter(landmarks) {
+    const ids = [0, 5, 9, 13, 17];
+    return {
+      x: ids.reduce((sum, i) => sum + landmarks[i].x, 0) / ids.length,
+      y: ids.reduce((sum, i) => sum + landmarks[i].y, 0) / ids.length,
+    };
+  }
+
+  function drawHand(landmarks, center) {
+    const w = overlay.clientWidth;
+    const h = overlay.clientHeight;
+    if (!w || !h) return;
+    const ratio = window.devicePixelRatio || 1;
+    if (overlay.width !== Math.round(w * ratio)) {
+      overlay.width = Math.round(w * ratio);
+      overlay.height = Math.round(h * ratio);
+    }
+    const ctx = overlay.getContext('2d');
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    if (!landmarks) return;
+    // selfieMode landmarks are already mirror-image, matching the mirrored preview.
+    ctx.strokeStyle = needsRest ? 'rgba(148,163,184,0.9)' : 'rgba(167,139,250,0.95)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (const [a, b] of HAND_LINKS) {
+      ctx.moveTo(landmarks[a].x * w, landmarks[a].y * h);
+      ctx.lineTo(landmarks[b].x * w, landmarks[b].y * h);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#34d399';
+    ctx.beginPath();
+    ctx.arc(center.x * w, center.y * h, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function flashArrow(direction) {
+    arrow.textContent = direction > 0 ? '→  Next' : '←  Previous';
+    arrow.animate(
+      [{ opacity: 0, transform: `translateX(${-direction * 24}px)` },
+        { opacity: 1, transform: 'translateX(0)', offset: 0.3 },
+        { opacity: 0, transform: `translateX(${direction * 24}px)` }],
+      { duration: 650, easing: 'ease-out' }
+    );
+  }
+
+  // Slide the card that changed in the same direction the hand moved.
+  function slideCard(direction) {
+    const modal = document.getElementById('quiz-modal');
+    const target = modal && modal.style.display === 'flex'
+      ? document.getElementById('quiz-card')
+      : document.querySelector('.sf-flashcard.gesture-current');
+    if (!target || !target.animate) return;
+    target.animate(
+      [{ transform: `translateX(${-direction * 60}px)`, opacity: 0.2 },
+        { transform: 'translateX(0)', opacity: 1 }],
+      { duration: 260, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' }
+    );
+  }
 
   function report(message) {
     status.textContent = message;
@@ -118,7 +209,10 @@
       heldGesture = '';
       heldFrames = 0;
       gestureHandled = false;
-      handXHistory = [];
+      palmTrack = [];
+      needsRest = false;  // taking the hand out of view also re-arms swipes
+      restFrames = 0;
+      drawHand(null);
       if (active && trackingState !== 'no-hand' && trackingState !== 'no-hand-hint') {
         trackingState = 'no-hand';
         report('Camera active; no hand detected. Move your hand into the preview.');
@@ -141,39 +235,63 @@
 
     const landmarks = results.multiHandLandmarks[0];
     const now = performance.now();
-    const handX = landmarks[0].x;
-    handXHistory.push({ x: handX, time: now, open: countExtendedFingers(landmarks) >= 3 });
-    while (handXHistory.length > 10 ||
-           (handXHistory.length > 1 && now - handXHistory[0].time > 400)) {
-      handXHistory.shift();
+    const center = palmCenter(landmarks);
+    drawHand(landmarks, center);
+
+    palmTrack.push({ x: center.x, y: center.y, t: now });
+    while (palmTrack.length > 1 && now - palmTrack[0].t > SWIPE_WINDOW_MS) palmTrack.shift();
+    const prev = palmTrack.length > 1 ? palmTrack[palmTrack.length - 2] : null;
+    const speed = prev ? Math.hypot(center.x - prev.x, center.y - prev.y) / Math.max(1, now - prev.t) * 1000 : 0;
+
+    // After a swipe the hand must settle before another swipe counts (no double fires).
+    if (needsRest) {
+      restFrames = speed < REST_SPEED ? restFrames + 1 : 0;
+      if (restFrames >= REST_FRAMES) {
+        needsRest = false;
+        palmTrack = [{ x: center.x, y: center.y, t: now }];
+      }
+      return;
     }
 
-    if (handXHistory.length > 1) {
-      const deltaX = handX - handXHistory[0].x;
-      if (handXHistory.length % 3 === 0) debug('current hand x:', handX, 'x delta:', deltaX);
-      const openFrames = handXHistory.filter(frame => frame.open).length;
-      const mostlyOpen = openFrames >= Math.ceil(handXHistory.length * 0.6);
-      if (mostlyOpen && handXHistory.length >= 3 && Math.abs(deltaX) >= 0.15 &&
-          now - handXHistory[0].time <= 400 && now >= gestureCooldownUntil) {
-        // selfieMode makes x mirror-image, so +x is the user's own right.
-        const direction = deltaX > 0 ? 1 : -1;
-        const label = direction > 0 ? 'Swipe right →' : 'Swipe left ←';
-        debug('detected gesture:', label, 'x delta:', deltaX);
-        gestureCooldownUntil = now + 700;
-        handXHistory = [];
-        heldGesture = 'palm';
-        heldFrames = 3;
-        gestureHandled = true;
-        if (typeof window.studyflowFlashcardSwipe === 'function') {
-          const outcome = window.studyflowFlashcardSwipe(direction);
-          report(`${label} ${outcome || (direction > 0 ? 'next card' : 'previous card')}`);
-        } else {
-          report(`${label} flashcard navigation is unavailable.`);
-        }
+    const first = palmTrack[0];
+    const dx = center.x - first.x;   // + = the user's own right (selfieMode mirrors the image)
+    const dy = center.y - first.y;
+    const isSwipe = palmTrack.length >= 3 && now - first.t >= 80 &&
+      Math.abs(dx) >= SWIPE_MIN_DX && Math.abs(dx) >= SWIPE_STRAIGHTNESS * Math.abs(dy) &&
+      detectPose(landmarks) !== 'fist';
+    if (isSwipe) {
+      const direction = dx > 0 ? 1 : -1;
+      const isReturnStroke = direction === -lastSwipeDir && now - lastSwipeAt < RETURN_STROKE_MS;
+      needsRest = true;
+      restFrames = 0;
+      palmTrack = [];
+      heldGesture = '';
+      heldFrames = 0;
+      gestureHandled = true;
+      if (isReturnStroke) {
+        debug('ignored return stroke', dx);
         return;
       }
+      lastSwipeDir = direction;
+      lastSwipeAt = now;
+      const label = direction > 0 ? 'Swipe right →' : 'Swipe left ←';
+      debug('detected gesture:', label, 'dx:', dx.toFixed(3), 'dy:', dy.toFixed(3));
+      flashArrow(direction);
+      if (typeof window.studyflowFlashcardSwipe === 'function') {
+        const outcome = window.studyflowFlashcardSwipe(direction);
+        slideCard(direction);
+        report(outcome || `${label} ${direction > 0 ? 'next card' : 'previous card'}`);
+      } else {
+        report(`${label} flashcard navigation is unavailable.`);
+      }
+      return;
     }
 
+    // Poses only count while the hand is nearly still, so a swipe never triggers a flip.
+    if (speed > STILL_SPEED) {
+      heldFrames = 0;
+      return;
+    }
     if (now < gestureCooldownUntil) return;
     const pose = detectPose(landmarks);
 
@@ -183,16 +301,16 @@
         heldFrames = 1;
         gestureHandled = false;
         const prompts = {
-          palm: 'Open palm -> show answer',
-          fist: 'Closed fist -> hide answer',
-          'thumbs-up': 'Thumbs up -> I knew it',
-          'thumbs-down': 'Thumbs down -> I forgot',
+          palm: 'Open palm → show answer',
+          fist: 'Closed fist → hide answer',
+          'thumbs-up': 'Thumbs up → I knew it',
+          'thumbs-down': 'Thumbs down → I forgot',
         };
         report(prompts[pose] || 'Gesture detected.');
       } else {
         heldFrames += 1;
       }
-      if (heldFrames >= 3 && !gestureHandled) {
+      if (heldFrames >= 4 && !gestureHandled) {
         gestureHandled = true;
         gestureCooldownUntil = now + 700;
         debug('detected gesture:', pose);
@@ -226,6 +344,7 @@
     stream = null;
     video.srcObject = null;
     video.classList.add('hidden');
+    drawHand(null);
     if (tracker) {
       try {
         await tracker.close();
