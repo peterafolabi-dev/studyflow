@@ -10,6 +10,13 @@
     </p>
   </div>
 
+  {% if not user.email %}
+    <div class="mb-6 rounded-2xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 flex flex-wrap items-center justify-between gap-3 fade-in-up" role="status">
+      <p class="text-sm text-amber-900 dark:text-amber-100"><strong>Add your email</strong> so you can reset your password if you ever forget it.</p>
+      <a href="{% url 'edit_profile' %}" class="rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm px-4 py-2 transition">Add email</a>
+    </div>
+  {% endif %}
+
   {% if course_count == 0 %}
     <div class="mb-8 rounded-2xl border border-dashed border-brand-300 dark:border-brand-800 bg-brand-50/60 dark:bg-brand-950/30 p-6 flex flex-wrap items-center justify-between gap-4 fade-in-up">
       <div>

@@ -40,6 +40,34 @@ from .models import Profile
 
 
 class ProfileForm(forms.ModelForm):
+    # Stored on the user account; needed to receive password-reset emails.
+    email = forms.EmailField(
+        required=False,
+        help_text='Used for password reset emails.',
+        widget=forms.EmailInput(attrs={'autocomplete': 'email', 'placeholder': 'you@example.com'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].initial = self.instance.user.email
+        # Show email first so it's easy to find.
+        self.order_fields(['email'] + [name for name in self.fields if name != 'email'])
+
+    def clean_email(self):
+        from django.contrib.auth import get_user_model
+        email = self.cleaned_data['email'].strip().lower()
+        if email and get_user_model().objects.filter(email__iexact=email).exclude(pk=self.instance.user_id).exists():
+            raise forms.ValidationError('Another account already uses this email.')
+        return email
+
+    def save(self, commit=True):
+        profile = super().save(commit=commit)
+        user = profile.user
+        if user.email != self.cleaned_data['email']:
+            user.email = self.cleaned_data['email']
+            user.save(update_fields=['email'])
+        return profile
+
     class Meta:
         model = Profile
         fields = [

@@ -1,5 +1,5 @@
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command, CommandError
@@ -220,3 +220,64 @@ class PasswordResetFlowTests(TestCase):
         response = self.client.post(reverse('password_reset'), {'email': 'nobody@example.com'})
         self.assertRedirects(response, reverse('password_reset_done'))  # no account enumeration
         self.assertEqual(len(mail.outbox), 0)
+
+
+class EmailDeliveryTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('ada', email='ada@example.com', password='Old-pass-S7rong')
+
+    def test_reset_shows_error_instead_of_hanging_when_email_fails(self):
+        import smtplib
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=smtplib.SMTPServerDisconnected('blocked')):
+            response = self.client.post(reverse('password_reset'), {'email': 'ada@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "couldn&#x27;t send the reset email")
+
+    def test_reset_shows_error_on_timeout(self):
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=TimeoutError('timed out')):
+            response = self.client.post(reverse('password_reset'), {'email': 'ada@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['email_failed'])
+
+    def test_brevo_backend_sends_expected_payload_and_raises_on_rejection(self):
+        from django.core.mail import EmailMessage
+        from django.test import override_settings
+        from studyflow.email_backends import BrevoEmailBackend, EmailSendError
+        ok = MagicMock(status_code=201, text='{}')
+        with override_settings(BREVO_API_KEY='test-key', DEFAULT_FROM_EMAIL='StudyFlow <me@example.com>'), \
+                patch('studyflow.email_backends.requests.post', return_value=ok) as post:
+            sent = BrevoEmailBackend().send_messages([EmailMessage('Reset', 'Body text', None, ['ada@example.com'])])
+        self.assertEqual(sent, 1)
+        payload = post.call_args.kwargs['json']
+        self.assertEqual(payload['to'], [{'email': 'ada@example.com'}])
+        self.assertEqual(payload['sender'], {'email': 'me@example.com', 'name': 'StudyFlow'})
+        self.assertEqual(post.call_args.kwargs['headers']['api-key'], 'test-key')
+
+        rejected = MagicMock(status_code=401, text='unauthorized')
+        with override_settings(BREVO_API_KEY='bad'), patch('studyflow.email_backends.requests.post', return_value=rejected):
+            with self.assertRaises(EmailSendError):
+                BrevoEmailBackend().send_messages([EmailMessage('Reset', 'Body', 'me@example.com', ['ada@example.com'])])
+
+
+class AccountEmailTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('sam', password='S7rong-pass-99')  # old account: no email
+        self.client.login(username='sam', password='S7rong-pass-99')
+
+    def test_dashboard_asks_users_without_email_to_add_one(self):
+        self.assertContains(self.client.get(reverse('dashboard')), 'Add your email')
+        self.user.email = 'sam@example.com'
+        self.user.save()
+        self.assertNotContains(self.client.get(reverse('dashboard')), 'Add your email')
+
+    def test_email_can_be_added_in_settings_and_must_be_unique(self):
+        User.objects.create_user('other', email='taken@example.com', password='S7rong-pass-99')
+        base = {'reading_goal': 12, 'avatar_color': 0, 'weekly_study_goal_hours': 8, 'preferred_study_time': 'flexible'}
+        response = self.client.post(reverse('edit_profile'), {**base, 'email': 'TAKEN@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, '')
+        response = self.client.post(reverse('edit_profile'), {**base, 'email': 'Sam@Example.com'})
+        self.assertRedirects(response, reverse('profile'), fetch_redirect_response=False)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, 'sam@example.com')
