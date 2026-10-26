@@ -280,3 +280,22 @@ class AccountEmailTests(TestCase):
         self.assertRedirects(response, reverse('profile'), fetch_redirect_response=False)
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, 'sam@example.com')
+
+
+class PasswordResetEmailDesignTests(TestCase):
+    def test_reset_email_has_branded_html_and_plain_text_versions(self):
+        import re
+        from django.core import mail
+        User.objects.create_user('ada', email='ada@example.com', password='Old-pass-S7rong')
+        self.client.post(reverse('password_reset'), {'email': 'ada@example.com'})
+        email = mail.outbox[0]
+        self.assertEqual(email.subject, 'Reset your StudyFlow password')
+        self.assertIn('Your username: ada', email.body)
+        self.assertIn('expires in 3 days', email.body)
+        html, mimetype = email.alternatives[0]
+        self.assertEqual(mimetype, 'text/html')
+        self.assertIn('Choose a new password', html)
+        self.assertIn('ada', html)
+        # The button and the fallback text link both carry the real reset link.
+        link = re.search(r'(https?://[^\s<]+/reset/[^\s<]+/)', email.body).group(1)
+        self.assertEqual(html.count(f'href="{link}"'), 2)
