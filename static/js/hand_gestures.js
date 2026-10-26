@@ -35,6 +35,8 @@
   let gestureHandled = false;
   let gestureCooldownUntil = 0;
   let trackingState = '';
+  let handEverSeen = false;
+  let cameraStartedAt = 0;
 
   function report(message) {
     status.textContent = message;
@@ -117,13 +119,21 @@
       heldFrames = 0;
       gestureHandled = false;
       handXHistory = [];
-      if (active && trackingState !== 'no-hand') {
+      if (active && trackingState !== 'no-hand' && trackingState !== 'no-hand-hint') {
         trackingState = 'no-hand';
         report('Camera active; no hand detected. Move your hand into the preview.');
+      }
+      // A grey preview with a camera icon means the laptop's camera key/privacy shutter is off;
+      // after a while with no hand ever seen, say so instead of leaving people guessing.
+      if (active && !handEverSeen && cameraStartedAt && performance.now() - cameraStartedAt > 8000 &&
+          trackingState !== 'no-hand-hint') {
+        trackingState = 'no-hand-hint';
+        report("Still no hand detected. If the preview is grey or shows a camera icon, your laptop's camera is switched off — press the camera key (often F8/F10/F12) or open the privacy shutter.");
       }
       return;
     }
 
+    handEverSeen = true;
     if (trackingState !== 'hand') {
       trackingState = 'hand';
       report('Hand detected. Try an open palm, fist, swipe, or thumbs up/down.');
@@ -259,6 +269,8 @@
       debug('model loaded: MediaPipe Hands');
       active = true;
       trackingState = '';
+      handEverSeen = false;
+      cameraStartedAt = performance.now();
       enableButton.classList.add('hidden');
       enableButton.setAttribute('aria-pressed', 'true');
       stopButton.classList.remove('hidden');
