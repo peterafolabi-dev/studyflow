@@ -265,7 +265,9 @@
       needsRest = true;
       restFrames = 0;
       palmTrack = [];
-      heldGesture = '';
+      // The hand shape used to swipe (usually an open palm) counts as already used, so holding
+      // it still afterwards doesn't flip the card; a pose fires only when the hand changes to it.
+      heldGesture = detectPose(landmarks) || '';
       heldFrames = 0;
       gestureHandled = true;
       if (isReturnStroke) {
