@@ -479,7 +479,7 @@ class SessionHistoryTests(BaseCase):
 
     def test_stop_messages_say_what_happened(self):
         self.assertTrue(self.save(duration='12', mode='timer', planned='25')['message'].startswith('⏹ Session stopped: 12 min'))
-        self.assertTrue(self.save(duration='40', mode='stopwatch')['message'].startswith('⏱ Session saved: 40 min'))
+        self.assertTrue(self.save(duration='40', mode='stopwatch')['message'].startswith('⏱ Stopwatch session: 40 min saved.'))
 
     def test_stopwatch_allows_long_sessions_but_not_unlimited(self):
         self.assertTrue(self.save(duration='150', mode='stopwatch')['ok'])

@@ -661,7 +661,7 @@ def log_study(request):
         if earned_xp:
             _award_xp(request.user, 'pomodoro', points=20)
         streak_days = _today_recap(request.user)['streak']
-        label = {'completed': '✅ Session complete', 'stopped': '⏹ Session stopped', 'stopwatch': '⏱ Session saved'}[ended]
+        label = {'completed': '✅ Session complete', 'stopped': '⏹ Session stopped', 'stopwatch': '⏱ Stopwatch session'}[ended]
         message = f"{label}: {duration} min{f' of {course.name}' if course else ''} saved."
         if earned_xp:
             message += ' +20 XP.'

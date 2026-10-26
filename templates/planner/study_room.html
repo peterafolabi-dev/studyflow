@@ -474,7 +474,7 @@
         li.append(left, time);
         historyList.appendChild(li);
       });
-      historySummary.textContent = items.length ? `${plural(recapData.minutes, 'min')} · ${plural(items.length, 'session')}` : '';
+      historySummary.textContent = items.length ? `${recapData.minutes} min · ${plural(items.length, 'session')}` : '';
       historyEmpty.classList.toggle('hidden', items.length > 0);
     }
 
