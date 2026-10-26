@@ -3,7 +3,7 @@
 {% block content %}
   <div class="mb-8 fade-in-up">
     <h1 class="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
-      Welcome back, {{ user.username }}
+      {% if is_new_user %}Welcome to StudyFlow, {{ user.username }} 🎉{% else %}Welcome back, {{ user.username }}{% endif %}
     </h1>
     <p class="text-lg text-slate-500 dark:text-slate-400">
       You have <strong class="text-brand-600 dark:text-brand-400">{{ open_count }} open task{{ open_count|pluralize }}</strong> across {{ course_count }} course{{ course_count|pluralize }}. Let's get to work.

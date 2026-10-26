@@ -316,3 +316,16 @@ class GoogleAccountResetTests(TestCase):
         User.objects.create_user('gone', email='gone@example.com', password='S7rong-pass-99', is_active=False)
         self.client.post(reverse('password_reset'), {'email': 'gone@example.com'})
         self.assertEqual(len(mail.outbox), 0)
+
+
+class DashboardGreetingTests(TestCase):
+    def test_first_login_says_welcome_then_welcome_back(self):
+        User.objects.create_user('newbie', password='S7rong-pass-99')
+        creds = {'username': 'newbie', 'password': 'S7rong-pass-99'}
+        first = self.client.post(reverse('login'), creds, follow=True)
+        self.assertContains(first, 'Welcome to StudyFlow, newbie')
+        self.assertNotContains(first, 'Welcome back, newbie')
+        self.client.post(reverse('logout'))
+        second = self.client.post(reverse('login'), creds, follow=True)
+        self.assertContains(second, 'Welcome back, newbie')
+        self.assertNotContains(second, 'Welcome to StudyFlow, newbie')

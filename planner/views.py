@@ -74,7 +74,10 @@ def dashboard(request):
     except Exception:
         pass
 
+    from accounts.models import LoginRecord
     context = {
+        # First session (only the login that just happened) → greet as a new student.
+        'is_new_user': LoginRecord.objects.filter(user=request.user).count() <= 1,
         'overdue': open_tasks.filter(due_date__lt=today),
         'due_soon': open_tasks.filter(due_date__gte=today, due_date__lte=week_end),
         'course_count': Course.objects.filter(user=request.user).count(),
