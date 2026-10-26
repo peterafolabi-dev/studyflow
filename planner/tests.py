@@ -432,3 +432,32 @@ class SpotifyLinkTests(BaseCase):
     def test_short_spotify_link_gets_a_helpful_message(self):
         response = self.client.post(reverse('study_room'), {'action': 'save_spotify_url', 'spotify_url': 'https://spotify.link/AbCdEf'})
         self.assertContains(response, 'Short spotify.link links hide the real address')
+
+
+class StudySessionSaveTests(BaseCase):
+    def test_saving_shows_confirmation_and_updates_recap(self):
+        response = self.client.post(reverse('log_study'), {'duration': '25', 'course_id': self.alice_course.pk}, follow=True)
+        msgs = [str(m) for m in response.context['messages']]
+        self.assertTrue(any(m.startswith('✅ Session saved: 25 min of Maths.') and '+20 XP' in m for m in msgs), msgs)
+        self.assertEqual(response.context['recap']['minutes'], 25)
+        self.assertEqual(response.context['recap']['sessions'], 1)
+        self.assertEqual(response.context['recap']['course'], 'Maths')
+
+    def test_in_page_save_returns_json_with_fresh_totals(self):
+        response = self.client.post(reverse('log_study'), {'duration': '12'}, HTTP_ACCEPT='application/json')
+        data = response.json()
+        self.assertTrue(data['ok'])
+        self.assertIn('12 min', data['message'])
+        self.assertNotIn('XP', data['message'])  # under 15 min: time logged, no XP
+        self.assertEqual(data['recap']['minutes'], 12)
+
+    def test_in_page_save_rejects_bad_duration_with_json_error(self):
+        response = self.client.post(reverse('log_study'), {'duration': '0'}, HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()['ok'])
+
+    def test_study_room_page_has_session_flow_hooks(self):
+        response = self.client.get(reverse('study_room'))
+        for hook in ('id="course-select"', 'id="session-saved"', 'id="recap-data"', 'studyflow-focus-timer'):
+            self.assertContains(response, hook)
+        self.assertNotContains(response, 'alert(')

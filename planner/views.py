@@ -546,6 +546,21 @@ def _spotify_embed_path(url):
     return None
 
 
+def _today_recap(user):
+    """Today's saved focus totals; used by the study room page and its recap card."""
+    from .models import StudyStreak
+    sessions = list(
+        StudySession.objects.filter(user=user, date=timezone.localdate()).select_related('course').order_by('-id')
+    )
+    streak = StudyStreak.objects.filter(user=user).first()
+    return {
+        'minutes': sum(s.duration_minutes for s in sessions),
+        'sessions': len(sessions),
+        'streak': streak.current_streak if streak else 0,
+        'course': next((s.course.name for s in sessions if s.course), ''),
+    }
+
+
 @login_required
 def study_room(request):
     from accounts.models import Profile
@@ -572,17 +587,7 @@ def study_room(request):
         spotify_embed_url = f'https://open.spotify.com/embed/{embed[0]}/{embed[1]}'
     courses = Course.objects.filter(user=request.user)
     # Today's saved sessions power the optional recap card (drawn in the browser, never uploaded).
-    today_sessions = list(
-        StudySession.objects.filter(user=request.user, date=timezone.localdate())
-        .select_related('course').order_by('-id')
-    )
-    last_course = next((s.course.name for s in today_sessions if s.course), '')
-    recap = {
-        'minutes': sum(s.duration_minutes for s in today_sessions),
-        'sessions': len(today_sessions),
-        'streak': streak.current_streak,
-        'course': last_course,
-    }
+    recap = _today_recap(request.user)
     return render(request, 'planner/study_room.html', {
         'courses': courses,
         'spotify_error': spotify_error,
@@ -595,15 +600,25 @@ def study_room(request):
 @login_required
 @require_POST
 def log_study(request):
+    # The study room saves in-page (fetch, JSON); a plain form post still works without JavaScript.
+    wants_json = 'application/json' in request.headers.get('Accept', '')
+
+    def reply(ok, message):
+        if wants_json:
+            return JsonResponse({'ok': ok, 'message': message, 'recap': _today_recap(request.user)},
+                                status=200 if ok else 400)
+        (messages.success if ok else messages.error)(request, message)
+        return redirect('study_room')
+
     duration = int_or(request.POST.get('duration'), 0)
     course_id = request.POST.get('course_id')
     logged_today = StudySession.objects.filter(
         user=request.user, date=timezone.localdate()
     ).aggregate(total=Sum('duration_minutes'))['total'] or 0
     if not 0 < duration <= MAX_SESSION_MINUTES:
-        messages.error(request, f'Sessions must be between 1 and {MAX_SESSION_MINUTES} minutes.')
+        return reply(False, f'Sessions must be between 1 and {MAX_SESSION_MINUTES} minutes.')
     elif logged_today + duration > MAX_DAILY_STUDY_MINUTES:
-        messages.error(request, "That's more focus time than fits in one day — take a break! 🌙")
+        return reply(False, "That's more focus time than fits in one day — take a break! 🌙")
     else:
         course = Course.objects.filter(id=course_id, user=request.user).first() if course_id else None
         session = StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
@@ -620,9 +635,16 @@ def log_study(request):
             'focused_minutes',
             max(0, focused_minutes // 10 - already_earned),
         )
-        if duration >= MIN_XP_SESSION_MINUTES:
+        earned_xp = duration >= MIN_XP_SESSION_MINUTES
+        if earned_xp:
             _award_xp(request.user, 'pomodoro', points=20)
-    return redirect('study_room')
+        streak_days = _today_recap(request.user)['streak']
+        message = f"✅ Session saved: {duration} min{f' of {course.name}' if course else ''}."
+        if earned_xp:
+            message += ' +20 XP.'
+        if streak_days:
+            message += f" 🔥 {streak_days}-day streak."
+        return reply(True, message)
 
 
 @login_required
