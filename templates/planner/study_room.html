@@ -140,72 +140,127 @@
     </div>
 
 
+
+    <!-- Calculator (safe parser in static/js/calculator.js — nothing typed is run as code) -->
+    <section data-calculator class="rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-xl" aria-labelledby="calc-heading">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 id="calc-heading" class="font-display text-lg font-bold text-white">🧮 Calculator</h2>
+        <button type="button" data-key="ANGLE" class="rounded-lg border border-slate-700 px-2.5 py-1 text-xs font-bold text-slate-300 hover:bg-slate-800" title="Switch between degrees and radians">
+          <span data-calc-angle>DEG</span>
+        </button>
+      </div>
+      <label for="calc-input" class="sr-only">Calculation</label>
+      <input id="calc-input" data-calc-input type="text" autocomplete="off" spellcheck="false" placeholder="e.g. 2(3+4)^2 or sin(30)"
+             class="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-right font-mono text-2xl text-white placeholder:text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500">
+      <p data-calc-preview class="mt-1 h-5 text-right font-mono text-sm text-slate-400" aria-live="polite"></p>
+      <div class="mt-2 grid grid-cols-5 gap-1.5">
+        <button type="button" data-key="sin(" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">sin</button>
+        <button type="button" data-key="cos(" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">cos</button>
+        <button type="button" data-key="tan(" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">tan</button>
+        <button type="button" data-key="ln(" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">ln</button>
+        <button type="button" data-key="log(" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">log</button>
+        <button type="button" data-key="√(" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">√</button>
+        <button type="button" data-key="^2" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">x²</button>
+        <button type="button" data-key="^" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">xʸ</button>
+        <button type="button" data-key="(" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">(</button>
+        <button type="button" data-key=")" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">)</button>
+        <button type="button" data-key="π" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">π</button>
+        <button type="button" data-key="e" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">e</button>
+        <button type="button" data-key="!" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">n!</button>
+        <button type="button" data-key="ans" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">ANS</button>
+        <button type="button" data-key="%" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-950 text-slate-300 hover:bg-slate-800 text-xs ">%</button>
+        <button type="button" data-key="7" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">7</button>
+        <button type="button" data-key="8" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">8</button>
+        <button type="button" data-key="9" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">9</button>
+        <button type="button" data-key="÷" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800/60 text-brand-200 hover:bg-slate-700 ">÷</button>
+        <button type="button" data-key="AC" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800/60 text-brand-200 hover:bg-slate-700 text-rose-300">AC</button>
+        <button type="button" data-key="4" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">4</button>
+        <button type="button" data-key="5" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">5</button>
+        <button type="button" data-key="6" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">6</button>
+        <button type="button" data-key="×" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800/60 text-brand-200 hover:bg-slate-700 ">×</button>
+        <button type="button" data-key="DEL" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800/60 text-brand-200 hover:bg-slate-700 ">⌫</button>
+        <button type="button" data-key="1" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">1</button>
+        <button type="button" data-key="2" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">2</button>
+        <button type="button" data-key="3" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">3</button>
+        <button type="button" data-key="−" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800/60 text-brand-200 hover:bg-slate-700 ">−</button>
+        <button type="button" data-key="+" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800/60 text-brand-200 hover:bg-slate-700 ">+</button>
+        <button type="button" data-key="0" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 col-span-2">0</button>
+        <button type="button" data-key="." class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 bg-slate-800 text-white hover:bg-slate-700 ">.</button>
+        <button type="button" data-key="=" class="rounded-lg py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-brand-500 col-span-2 bg-brand-600 text-white hover:bg-brand-500">=</button>
+      </div>
+      <div class="mt-3 hidden">
+        <p class="mb-1 text-[11px] uppercase tracking-wider text-slate-500">Recent</p>
+        <ol data-calc-history class="font-mono text-xs text-slate-300"></ol>
+      </div>
+    </section>
   </div>
 
-  <!-- Right Column: Pomodoro Focus Timer -->
-  <div class="w-full mx-auto relative overflow-hidden bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center fade-in-up" style="animation-delay: 0.1s">
-    
-    <div class="flex items-center gap-2 mb-1">
-      <span class="text-xl">⏱️</span>
-      <h2 class="font-display text-2xl font-bold text-white">Pomodoro Timer</h2>
-    </div>
-    <p class="text-xs text-slate-400 mb-4 text-center">Focus blocks help you study deeper with zero burnout.</p>
-    
-    <!-- Duration Presets -->
-    <div class="flex items-center gap-2 my-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
-      <button type="button" onclick="setDuration(15)" data-mins="15" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">15m</button>
-      <button type="button" onclick="setDuration(25)" data-mins="25" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition">25m</button>
-      <button type="button" onclick="setDuration(45)" data-mins="45" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">45m</button>
-      <button type="button" onclick="setDuration(60)" data-mins="60" class="duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">60m</button>
+  <!-- Right Column: Focus Session (countdown timer or stopwatch) -->
+  <div class="w-full relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-xl fade-in-up" style="animation-delay: 0.1s">
+    <div class="mb-4">
+      <h2 class="flex items-center gap-2 font-display text-2xl font-bold text-white"><span aria-hidden="true">⏱️</span> Focus Session</h2>
+      <p class="text-xs text-slate-400">Count down a Pomodoro, or run a stopwatch for open-ended study.</p>
     </div>
 
-    <!-- Timer Countdown Display -->
-    <div class="text-5xl font-mono font-bold tracking-wider my-4 text-white" id="timer-display">
-        25:00
+    <div class="mb-4 grid grid-cols-2 gap-1 rounded-xl border border-slate-800 bg-slate-950/60 p-1" role="tablist" aria-label="Session type">
+      <button type="button" role="tab" data-mode="timer" aria-selected="true" class="mode-tab rounded-lg py-2 text-sm font-semibold transition">⏳ Timer</button>
+      <button type="button" role="tab" data-mode="stopwatch" aria-selected="false" class="mode-tab rounded-lg py-2 text-sm font-semibold transition">⏱ Stopwatch</button>
     </div>
 
-    <!-- Timer Actions: Start / Pause / Reset -->
-    <div class="flex w-full gap-3 mb-6">
-        <button id="start-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl w-full transition-all flex items-center justify-center gap-2">
-            <span id="timer-btn-icon">▶</span>
-            <span id="timer-btn-text">Start Focus</span>
-        </button>
-        <button id="reset-btn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-3 rounded-xl font-semibold text-sm transition-all hidden items-center justify-center gap-1.5">
-            <span>🔄</span>
-        </button>
+    <div id="timer-presets" class="flex justify-center gap-1 rounded-xl border border-slate-800 bg-slate-950/40 p-1">
+      <button type="button" data-mins="15" class="duration-preset-btn rounded-lg px-4 py-1.5 text-xs font-semibold transition">15m</button>
+      <button type="button" data-mins="25" class="duration-preset-btn rounded-lg px-4 py-1.5 text-xs font-semibold transition">25m</button>
+      <button type="button" data-mins="45" class="duration-preset-btn rounded-lg px-4 py-1.5 text-xs font-semibold transition">45m</button>
+      <button type="button" data-mins="60" class="duration-preset-btn rounded-lg px-4 py-1.5 text-xs font-semibold transition">60m</button>
     </div>
 
-    <hr class="w-full border-slate-800 mb-6">
+    <div class="my-6 text-center">
+      <div id="timer-display" class="font-mono text-6xl font-bold tabular-nums tracking-wider text-white">25:00</div>
+      <p id="timer-state" class="mt-2 text-xs font-semibold uppercase tracking-widest text-slate-400" aria-live="polite">Ready</p>
+      <div class="mx-auto mt-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+        <div id="timer-progress" class="h-full rounded-full bg-brand-500" style="width: 0%"></div>
+      </div>
+    </div>
 
-    <!-- Log Focus Session Form -->
     <form method="post" action="{% url 'log_study' %}" id="log-form" class="w-full">
-        {% csrf_token %}
-        <input type="hidden" name="duration" id="duration-input" value="25">
-        <div class="text-left mb-4">
-            <div class="flex items-center justify-between mb-2">
-                <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Log Focus Time To:</label>
-                <a href="{% url 'course_create' %}" class="text-xs text-blue-400 font-semibold hover:underline flex items-center gap-1">
-                    <span>+</span> Add Course
-                </a>
-            </div>
-            <select name="course_id" id="course-select" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-200">
-                <option value="">🎯 General Study (No specific course)</option>
-                {% for c in courses %}
-                <option value="{{ c.id }}">📖 {{ c.name }}{% if c.code %} ({{ c.code }}){% endif %}</option>
-                {% endfor %}
-            </select>
-            {% if not courses %}
-            <p class="text-xs text-slate-400 mt-2 bg-slate-800 p-2.5 rounded-xl border border-slate-700">
-              💡 <strong>Only General Study is shown</strong> because you haven't added any courses yet.
-            </p>
-            {% endif %}
-        </div>
-        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white px-4 py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50" id="log-btn">
-            <span>💾</span> <span>Save Session</span>
+      {% csrf_token %}
+      <input type="hidden" name="duration" id="duration-input" value="25">
+      <input type="hidden" name="mode" id="mode-input" value="timer">
+      <input type="hidden" name="planned" id="planned-input" value="25">
+      <div class="mb-2 flex items-center justify-between">
+        <label for="course-select" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Studying</label>
+        <a href="{% url 'course_create' %}" class="text-xs font-semibold text-brand-300 hover:underline">+ Add course</a>
+      </div>
+      <select name="course_id" id="course-select" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <option value="">🎯 General study</option>
+        {% for c in courses %}
+        <option value="{{ c.id }}">📖 {{ c.name }}{% if c.code %} ({{ c.code }}){% endif %}</option>
+        {% endfor %}
+      </select>
+      {% if not courses %}
+      <p class="mt-2 text-xs text-slate-500">Add a course to see your study time per subject.</p>
+      {% endif %}
+
+      <div class="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
+        <button type="button" id="start-btn" class="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50">
+          <span id="timer-btn-icon" aria-hidden="true">▶</span><span id="timer-btn-text">Start</span>
         </button>
-        <p id="session-saved" class="mt-3 hidden rounded-xl border px-3 py-2 text-sm" role="status" aria-live="polite"></p>
-        <p class="mt-2 text-[11px] text-slate-500">Finished sessions save automatically. Stopping early? Save the minutes you've done.</p>
+        <button type="submit" id="stop-btn" disabled class="flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500">
+          <span aria-hidden="true">⏹</span><span id="stop-btn-text">Stop &amp; save</span>
+        </button>
+        <button type="button" id="reset-btn" disabled title="Discard this session" aria-label="Discard this session" class="rounded-xl bg-slate-800 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40">↺</button>
+      </div>
+      <p id="session-saved" class="mt-3 hidden rounded-xl border px-3 py-2 text-sm" role="status" aria-live="polite"></p>
     </form>
+
+    <section class="mt-6 border-t border-slate-800 pt-5" aria-labelledby="history-heading">
+      <div class="flex items-baseline justify-between gap-2">
+        <h3 id="history-heading" class="text-sm font-bold text-white">Today's sessions</h3>
+        <span id="history-summary" class="text-xs text-slate-400"></span>
+      </div>
+      <p id="history-empty" class="mt-2 text-xs text-slate-500">No sessions yet today — press Start when you're ready.</p>
+      <ol id="session-history" class="mt-3 space-y-2"></ol>
+    </section>
 
     {{ recap|json_script:"recap-data" }}
     <section class="mt-6 border-t border-slate-800 pt-5" aria-labelledby="recap-heading">
@@ -280,58 +335,315 @@
 
 
 
-    // ── Pomodoro Timer Controls ──────────────────────────────────────────────
+    // ── Focus session: countdown timer or stopwatch ──────────────────────────
+    // One model for both modes: time banked from earlier runs + the current run.
+    const STORAGE_KEY = 'studyflow-focus-timer';
+    const MODE_KEY = 'studyflow-focus-mode';
+    const PRESETS = [15, 25, 45, 60];
+    const STOPWATCH_MAX_MINUTES = 180;
+    const byId = (id) => document.getElementById(id);
+    const display = byId('timer-display');
+    const stateLabel = byId('timer-state');
+    const progressBar = byId('timer-progress');
+    const startBtn = byId('start-btn');
+    const startIcon = byId('timer-btn-icon');
+    const startText = byId('timer-btn-text');
+    const stopBtn = byId('stop-btn');
+    const stopText = byId('stop-btn-text');
+    const resetBtn = byId('reset-btn');
+    const logForm = byId('log-form');
+    const courseSelect = byId('course-select');
+    const savedBanner = byId('session-saved');
+    const presetBox = byId('timer-presets');
+    const historyList = byId('session-history');
+    const historySummary = byId('history-summary');
+    const historyEmpty = byId('history-empty');
+    const recapCanvas = byId('session-recap');
+    const recapStatus = byId('recap-status');
+    const recapDownload = byId('download-recap');
+    const recapCopy = byId('copy-recap');
+    const recapGenerate = byId('make-recap');
+    const recapData = JSON.parse(byId('recap-data').textContent);
+    const baseTitle = document.title;
+
+    let mode = 'timer';
     let selectedDuration = 25;
-    let timeLeft = 25 * 60;
+    let accumulatedMs = 0;   // time banked from earlier runs of this session
+    let runStartedAt = 0;    // Date.now() when the current run began; 0 = not running
+    let finished = false;    // countdown reached zero but isn't saved yet
+    let saving = false;
     let timerId = null;
-    let isRunning = false;
-    
-    const display = document.getElementById('timer-display');
-    const startBtn = document.getElementById('start-btn');
-    const timerBtnIcon = document.getElementById('timer-btn-icon');
-    const timerBtnText = document.getElementById('timer-btn-text');
-    const resetBtn = document.getElementById('reset-btn');
-    const durationInput = document.getElementById('duration-input');
-    const logBtn = document.getElementById('log-btn');
 
-    const recapCanvas = document.getElementById('session-recap');
-    const recapStatus = document.getElementById('recap-status');
-    const recapDownload = document.getElementById('download-recap');
-    const recapCopy = document.getElementById('copy-recap');
-    const recapGenerate = document.getElementById('make-recap');
+    const isRunning = () => runStartedAt > 0;
+    const elapsedMs = () => accumulatedMs + (isRunning() ? Date.now() - runStartedAt : 0);
+    const elapsedMinutes = () => Math.floor(elapsedMs() / 60000);
+    const hasStarted = () => isRunning() || elapsedMs() > 0 || finished;
+    const plannedMs = () => selectedDuration * 60000;
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
-    const recapData = JSON.parse(document.getElementById('recap-data').textContent);
-    // Minutes in the current session that haven't been saved yet (running, paused, or just finished).
+    function clock(totalSeconds) {
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      const mmss = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return h ? `${h}:${mmss}` : mmss;
+    }
+
+    // ── storage: a running session survives reloads and tab switches ──
+    function storeState() {
+      try {
+        if (!hasStarted()) { localStorage.removeItem(STORAGE_KEY); return; }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          mode, duration: selectedDuration, accumulatedMs, runStartedAt, finished, courseId: courseSelect.value,
+        }));
+      } catch (e) { /* private mode: still works, just not across reloads */ }
+    }
+
+    // ── rendering ──
+    function render() {
+      const elapsed = finished ? plannedMs() : elapsedMs();
+      let text;
+      if (mode === 'timer') {
+        text = clock(Math.ceil(Math.max(0, plannedMs() - elapsed) / 1000));
+        progressBar.style.width = `${Math.min(100, (elapsed / plannedMs()) * 100)}%`;
+      } else {
+        text = clock(Math.floor(elapsed / 1000));
+        progressBar.style.width = `${Math.min(100, (elapsed / (STOPWATCH_MAX_MINUTES * 60000)) * 100)}%`;
+      }
+      display.textContent = text;
+      document.title = isRunning() ? `${text} · ${mode === 'timer' ? 'Focus' : 'Stopwatch'} · StudyFlow` : baseTitle;
+
+      stateLabel.textContent = saving ? 'Saving…'
+        : finished ? "Time's up!"
+        : isRunning() ? (mode === 'timer' ? 'Focusing…' : 'Stopwatch running…')
+        : hasStarted() ? 'Paused' : 'Ready';
+
+      startBtn.disabled = saving || finished;
+      startIcon.textContent = isRunning() ? '⏸' : '▶';
+      startText.textContent = isRunning() ? 'Pause' : (hasStarted() && !finished ? 'Resume' : 'Start');
+      startBtn.classList.toggle('bg-amber-600', isRunning());
+      startBtn.classList.toggle('hover:bg-amber-500', isRunning());
+      startBtn.classList.toggle('bg-brand-600', !isRunning());
+      startBtn.classList.toggle('hover:bg-brand-500', !isRunning());
+
+      const minutes = finished ? selectedDuration : elapsedMinutes();
+      stopBtn.disabled = saving || !hasStarted();
+      stopText.textContent = minutes >= 1 ? `Stop & save · ${minutes} min` : 'Stop';
+      resetBtn.disabled = saving || !hasStarted();
+
+      // Type and length can only change before a session starts.
+      document.querySelectorAll('.mode-tab').forEach((tab) => {
+        const active = tab.dataset.mode === mode;
+        tab.setAttribute('aria-selected', String(active));
+        tab.disabled = hasStarted() && !active;
+        tab.className = 'mode-tab rounded-lg py-2 text-sm font-semibold transition ' + (active
+          ? 'bg-slate-800 text-white shadow-sm'
+          : 'text-slate-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40');
+      });
+      presetBox.classList.toggle('hidden', mode !== 'timer');
+      presetBox.querySelectorAll('[data-mins]').forEach((btn) => {
+        const active = Number(btn.dataset.mins) === selectedDuration;
+        btn.disabled = hasStarted() && !active;
+        btn.className = 'duration-preset-btn rounded-lg px-4 py-1.5 text-xs font-semibold transition ' + (active
+          ? 'bg-slate-800 text-white shadow-sm'
+          : 'text-slate-400 hover:bg-slate-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-40');
+      });
+      refreshRecapAvailability();
+    }
+
+    function renderHistory() {
+      const items = recapData.history || [];
+      historyList.textContent = '';
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2';
+        const left = document.createElement('div');
+        left.className = 'min-w-0';
+        const kind = document.createElement('p');
+        kind.className = 'text-sm font-semibold ' + (item.ended === 'stopped' ? 'text-amber-300' : item.ended === 'stopwatch' ? 'text-sky-300' : 'text-emerald-300');
+        kind.textContent = item.ended === 'stopped'
+          ? `⏹ Stopped early · ${item.minutes} of ${item.planned} min`
+          : item.ended === 'stopwatch' ? `⏱ Stopwatch · ${item.minutes} min` : `✅ Completed · ${item.minutes} min`;
+        const course = document.createElement('p');
+        course.className = 'truncate text-xs text-slate-400';
+        course.textContent = item.course || 'General study';
+        left.append(kind, course);
+        const time = document.createElement('span');
+        time.className = 'shrink-0 font-mono text-xs text-slate-500';
+        time.textContent = item.time;
+        li.append(left, time);
+        historyList.appendChild(li);
+      });
+      historySummary.textContent = items.length ? `${plural(recapData.minutes, 'min')} · ${plural(items.length, 'session')}` : '';
+      historyEmpty.classList.toggle('hidden', items.length > 0);
+    }
+
+    // ── controls ──
+    function tick() {
+      if (mode === 'timer' && elapsedMs() >= plannedMs()) { finishTimer(); return; }
+      if (mode === 'stopwatch' && elapsedMinutes() >= STOPWATCH_MAX_MINUTES) { stopAndSave(); return; }
+      render();
+    }
+
+    function startRun() {
+      if (finished || saving) return;
+      runStartedAt = Date.now();
+      clearInterval(timerId);
+      timerId = setInterval(tick, 250);  // reads the real clock, so background tabs can't drift
+      storeState();
+      render();
+    }
+
+    function pauseRun() {
+      if (!isRunning()) return;
+      accumulatedMs = elapsedMs();
+      runStartedAt = 0;
+      clearInterval(timerId);
+      storeState();
+      render();
+    }
+
+    function resetSession() {
+      clearInterval(timerId);
+      accumulatedMs = 0;
+      runStartedAt = 0;
+      finished = false;
+      storeState();
+      render();
+    }
+
+    function playChime() {
+      try {
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        [0, 0.28].forEach((delay, i) => {
+          const osc = audio.createOscillator();
+          const gain = audio.createGain();
+          osc.frequency.value = i ? 1046 : 784;
+          gain.gain.setValueAtTime(0.0001, audio.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + delay + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + delay + 0.5);
+          osc.connect(gain).connect(audio.destination);
+          osc.start(audio.currentTime + delay);
+          osc.stop(audio.currentTime + delay + 0.55);
+        });
+      } catch (e) { /* sound is optional */ }
+    }
+
+    function showBanner(message, tone) {
+      const tones = {
+        success: 'border-emerald-800 bg-emerald-950/40 text-emerald-200',
+        error: 'border-rose-800 bg-rose-950/40 text-rose-200',
+        info: 'border-slate-700 bg-slate-800/60 text-slate-200',
+      };
+      savedBanner.className = 'mt-3 rounded-xl border px-3 py-2 text-sm ' + tones[tone];
+      savedBanner.textContent = message + ' ';
+      if (tone === 'success') {
+        const breakLink = document.createElement('a');
+        breakLink.href = '{% url "break_room" %}';
+        breakLink.className = 'font-semibold underline';
+        breakLink.textContent = 'Take a 5-min break →';
+        savedBanner.appendChild(breakLink);
+      }
+    }
+
+    async function saveSession(minutes) {
+      if (saving) return;
+      saving = true;
+      render();
+      const data = new FormData(logForm);
+      data.set('duration', String(Math.min(minutes, STOPWATCH_MAX_MINUTES)));
+      data.set('mode', mode);
+      data.set('planned', mode === 'timer' ? String(selectedDuration) : '');
+      try {
+        const response = await fetch(logForm.action, {
+          method: 'POST', body: data, credentials: 'same-origin', headers: { Accept: 'application/json' },
+        });
+        let result = {};
+        try { result = await response.json(); } catch (e) { /* non-JSON error page */ }
+        if (!response.ok || !result.ok) throw new Error(result.message || "Couldn't save your session.");
+        Object.assign(recapData, result.recap);
+        saving = false;
+        resetSession();
+        showBanner(result.message, 'success');
+        renderHistory();
+      } catch (error) {
+        const offline = error instanceof TypeError;  // network failure
+        showBanner(offline ? "Couldn't reach StudyFlow. Check your connection, then press Stop & save again." : error.message, 'error');
+      } finally {
+        saving = false;
+        render();
+      }
+    }
+
+    function finishTimer() {
+      clearInterval(timerId);
+      accumulatedMs = plannedMs();
+      runStartedAt = 0;
+      finished = true;
+      storeState();
+      playChime();
+      render();
+      saveSession(selectedDuration);  // a finished countdown saves itself
+    }
+
+    function stopAndSave() {
+      pauseRun();
+      const minutes = finished ? selectedDuration : elapsedMinutes();
+      if (minutes < 1) {
+        resetSession();
+        showBanner("Stopped. Sessions under a minute aren't saved.", 'info');
+        return;
+      }
+      saveSession(minutes);
+    }
+
+    startBtn.addEventListener('click', () => (isRunning() ? pauseRun() : startRun()));
+    logForm.addEventListener('submit', (event) => { event.preventDefault(); stopAndSave(); });
+    resetBtn.addEventListener('click', () => {
+      const minutes = elapsedMinutes();
+      if (minutes >= 1 && !finished && !window.confirm(`Discard ${plural(minutes, 'minute')} without saving?`)) return;
+      resetSession();
+      showBanner('Session discarded.', 'info');
+    });
+    document.querySelectorAll('.mode-tab').forEach((tab) => tab.addEventListener('click', () => {
+      if (hasStarted()) return;
+      mode = tab.dataset.mode;
+      try { localStorage.setItem(MODE_KEY, mode); } catch (e) { /* optional */ }
+      render();
+    }));
+    presetBox.querySelectorAll('[data-mins]').forEach((btn) => btn.addEventListener('click', () => {
+      if (hasStarted()) return;
+      selectedDuration = Number(btn.dataset.mins);
+      render();
+    }));
+    courseSelect.addEventListener('change', storeState);
+
+    // ── recap card: today's saved time plus the session on screen right now ──
     function unsavedMinutes() {
-      return timeLeft === 0 ? selectedDuration : elapsedMinutes();
+      return finished ? selectedDuration : elapsedMinutes();
     }
     function currentCourseName() {
-      const option = document.getElementById('course-select').selectedOptions[0];
+      const option = courseSelect.selectedOptions[0];
       return option && option.value ? option.text.replace(/^\S+\s+/, '').trim() : '';
     }
-
     function refreshRecapAvailability() {
       const minutes = recapData.minutes + unsavedMinutes();
       recapGenerate.disabled = minutes <= 0;
       if (minutes <= 0) {
-        recapStatus.textContent = 'Finish a focus session (or save one) to unlock your recap card.';
-      } else if (!recapStatus.textContent || recapStatus.dataset.auto === '1') {
-        recapStatus.textContent = `Ready: ${minutes} minute${minutes === 1 ? '' : 's'} of focus today.`;
+        recapStatus.textContent = 'Study for at least a minute to unlock your recap card.';
+        recapStatus.dataset.auto = '1';
+      } else if (recapStatus.dataset.auto !== '0') {
+        recapStatus.textContent = `Ready: ${plural(minutes, 'minute')} of focus today.`;
+        recapStatus.dataset.auto = '1';
       }
-      recapStatus.dataset.auto = '1';
-    }
-
-    function plural(count, word) {
-      return `${count} ${word}${count === 1 ? '' : 's'}`;
     }
 
     async function generateSessionRecap() {
       try { await document.fonts.ready; } catch (e) { /* fall back to system fonts */ }
       const W = 1200, H = 630;
       const ctx = recapCanvas.getContext('2d');
-      // Include the session on screen right now, so pausing and downloading shows THIS session.
       const unsaved = unsavedMinutes();
-      const inProgress = unsaved > 0 && timeLeft > 0;
+      const inProgress = unsaved > 0 && !finished;
       const minutes = recapData.minutes + unsaved;
       const sessions = recapData.sessions + (unsaved > 0 ? 1 : 0);
       const display = '"Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif';
@@ -343,7 +655,6 @@
       bg.addColorStop(1, '#0f172a');
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
-      // soft glow
       const glow = ctx.createRadialGradient(980, 120, 20, 980, 120, 420);
       glow.addColorStop(0, 'rgba(167,139,250,0.45)');
       glow.addColorStop(1, 'rgba(167,139,250,0)');
@@ -366,8 +677,8 @@
       ctx.fillText(minutes === 1 ? 'minute focused today' : 'minutes focused today', 72 + numberWidth + 22, 330);
 
       const facts = [plural(sessions, 'session')];
-      if (recapData.streak > 0) facts.push(`${plural(recapData.streak, 'day')} streak 🔥`);
       if (inProgress) facts.push('session in progress');
+      if (recapData.streak > 0) facts.push(`${plural(recapData.streak, 'day')} streak 🔥`);
       const course = (unsaved > 0 && currentCourseName()) || recapData.course;
       if (course) facts.push(course);
       ctx.fillStyle = '#e9d5ff';
@@ -403,8 +714,7 @@
         document.body.appendChild(link);
         link.click();
         link.remove();
-        // Revoking immediately can cancel the download in some browsers.
-        setTimeout(() => URL.revokeObjectURL(link.href), 4000);
+        setTimeout(() => URL.revokeObjectURL(link.href), 4000);  // revoking at once can cancel the download
       }, 'image/png');
     });
     recapCopy.addEventListener('click', async () => {
@@ -413,242 +723,36 @@
         return;
       }
       try {
-        // Pass a promise (not a blob from a callback) so Safari keeps the click's permission.
-        const blob = new Promise((resolve) => recapCanvas.toBlob(resolve, 'image/png'));
+        const blob = new Promise((resolve) => recapCanvas.toBlob(resolve, 'image/png'));  // promise keeps Safari's permission
         await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         recapStatus.textContent = 'Recap image copied. Paste it into WhatsApp or anywhere you like.';
       } catch (error) {
         recapStatus.textContent = 'Clipboard access was blocked. Use Download instead.';
       }
     });
-    refreshRecapAvailability();
 
-    // ── Focus session: survives reloads; finished sessions save themselves ──
-    const STORAGE_KEY = 'studyflow-focus-timer';
-    const PRESETS = [15, 25, 45, 60];
-    const logForm = document.getElementById('log-form');
-    const courseSelect = document.getElementById('course-select');
-    const savedBanner = document.getElementById('session-saved');
-    const baseTitle = document.title;
-    let endsAt = 0;
-    let saving = false;
-
-    function storeTimerState() {
+    // ── restore: pick up a session that was running before a reload ──
+    (function restore() {
       try {
-        if (!isRunning && timeLeft === selectedDuration * 60) { localStorage.removeItem(STORAGE_KEY); return; }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          duration: selectedDuration, running: isRunning, endsAt, remaining: timeLeft, courseId: courseSelect.value,
-        }));
-      } catch (e) { /* private mode: the timer still works, it just won't survive a reload */ }
-    }
-    function clearTimerState() {
-      try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
-    }
-
-    function elapsedMinutes() {
-      return Math.floor((selectedDuration * 60 - timeLeft) / 60);
-    }
-
-    function updateSaveButton() {
-      const minutes = elapsedMinutes();
-      if (saving) {
-        logBtn.disabled = true;
-        logBtn.innerHTML = '<span>⏳</span> <span>Saving…</span>';
-      } else if (timeLeft === 0) {
-        logBtn.disabled = false;
-        logBtn.innerHTML = `<span>💾</span> <span>Save ${selectedDuration}-min session</span>`;
-      } else if (minutes >= 1) {
-        logBtn.disabled = false;
-        logBtn.innerHTML = `<span>💾</span> <span>Save ${minutes} min so far</span>`;
-      } else {
-        logBtn.disabled = true;
-        logBtn.innerHTML = '<span>💾</span> <span>Start the timer to log a session</span>';
-      }
-    }
-
-    function updateDisplay() {
-      const m = Math.floor(timeLeft / 60);
-      const s = timeLeft % 60;
-      const text = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      display.textContent = text;
-      document.title = isRunning ? `${text} · Focus · StudyFlow` : baseTitle;
-      updateSaveButton();
-      refreshRecapAvailability();
-    }
-
-    function styleStartButton(icon, label, running) {
-      startBtn.classList.replace(running ? 'bg-blue-600' : 'bg-amber-600', running ? 'bg-amber-600' : 'bg-blue-600');
-      startBtn.classList.replace(running ? 'hover:bg-blue-500' : 'hover:bg-amber-500', running ? 'hover:bg-amber-500' : 'hover:bg-blue-500');
-      timerBtnIcon.textContent = icon;
-      timerBtnText.textContent = label;
-    }
-
-    function showResetButton(show) {
-      resetBtn.classList.toggle('hidden', !show);
-      resetBtn.classList.toggle('flex', show);
-    }
-
-    function setDuration(mins) {
-      // Only while idle, so a running or paused session can't be changed underneath you.
-      if (isRunning || timeLeft !== selectedDuration * 60 || saving) return;
-      selectedDuration = mins;
-      timeLeft = mins * 60;
-      durationInput.value = mins;
-      document.querySelectorAll('.duration-preset-btn').forEach(btn => {
-        const isMatch = parseInt(btn.dataset.mins, 10) === mins;
-        btn.className = isMatch
-          ? 'duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white shadow-sm transition'
-          : 'duration-preset-btn px-4 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition';
-      });
-      updateDisplay();
-    }
-
-    function tick() {
-      // Count down against the real clock: browsers slow timers in background tabs.
-      timeLeft = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-      updateDisplay();
-      if (timeLeft === 0) completeSession();
-    }
-
-    function startTimer() {
-      isRunning = true;
-      endsAt = Date.now() + timeLeft * 1000;
-      clearInterval(timerId);
-      timerId = setInterval(tick, 250);
-      styleStartButton('⏸', 'Pause Focus', true);
-      showResetButton(true);
-      storeTimerState();
-      updateDisplay();
-    }
-
-    function pauseTimer() {
-      isRunning = false;
-      clearInterval(timerId);
-      timeLeft = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
-      styleStartButton('▶', 'Resume Focus', false);
-      storeTimerState();
-      updateDisplay();
-    }
-
-    function resetTimer() {
-      isRunning = false;
-      clearInterval(timerId);
-      timeLeft = selectedDuration * 60;
-      startBtn.disabled = false;
-      styleStartButton('▶', 'Start Focus', false);
-      showResetButton(false);
-      clearTimerState();
-      updateDisplay();
-    }
-
-    function playChime() {
-      try {
-        const audio = new (window.AudioContext || window.webkitAudioContext)();
-        [0, 0.28].forEach((delay, i) => {
-          const osc = audio.createOscillator();
-          const gain = audio.createGain();
-          osc.frequency.value = i ? 1046 : 784;
-          gain.gain.setValueAtTime(0.0001, audio.currentTime + delay);
-          gain.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + delay + 0.02);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + delay + 0.5);
-          osc.connect(gain).connect(audio.destination);
-          osc.start(audio.currentTime + delay);
-          osc.stop(audio.currentTime + delay + 0.55);
-        });
-      } catch (e) { /* sound is optional */ }
-    }
-
-    function showSaved(message, isError) {
-      savedBanner.className = 'mt-3 rounded-xl border px-3 py-2 text-sm ' + (isError
-        ? 'border-rose-800 bg-rose-950/40 text-rose-200'
-        : 'border-emerald-800 bg-emerald-950/40 text-emerald-200');
-      savedBanner.textContent = message + ' ';
-      if (!isError) {
-        const breakLink = document.createElement('a');
-        breakLink.href = '{% url "break_room" %}';
-        breakLink.className = 'font-semibold underline';
-        breakLink.textContent = 'Take a 5-min break →';
-        savedBanner.appendChild(breakLink);
-      }
-    }
-
-    async function saveSession(minutes) {
-      if (saving || minutes < 1) return;
-      saving = true;
-      updateSaveButton();
-      const data = new FormData(logForm);
-      data.set('duration', String(Math.min(minutes, 60)));
-      try {
-        const response = await fetch(logForm.action, {
-          method: 'POST', body: data, credentials: 'same-origin', headers: { Accept: 'application/json' },
-        });
-        let result = {};
-        try { result = await response.json(); } catch (e) { /* non-JSON error page */ }
-        if (!response.ok || !result.ok) throw new Error(result.message || "Couldn't save your session.");
-        Object.assign(recapData, result.recap);
-        saving = false;
-        resetTimer();
-        showSaved(result.message, false);
-        refreshRecapAvailability();
-      } catch (error) {
-        const offline = error instanceof TypeError;  // fetch network failure
-        showSaved(offline ? "Couldn't reach StudyFlow. Check your connection, then tap Save again." : error.message, true);
-      } finally {
-        saving = false;
-        updateSaveButton();
-      }
-    }
-
-    function completeSession() {
-      clearInterval(timerId);
-      isRunning = false;
-      timeLeft = 0;
-      startBtn.disabled = true;
-      styleStartButton('🎉', 'Done!', false);
-      playChime();
-      refreshRecapAvailability();
-      updateDisplay();
-      saveSession(selectedDuration);
-    }
-
-    startBtn.addEventListener('click', () => {
-      if (timeLeft === 0 || saving) return;
-      if (isRunning) pauseTimer(); else startTimer();
-    });
-
-    resetBtn.addEventListener('click', () => {
-      const minutes = elapsedMinutes();
-      if (minutes >= 1 && timeLeft > 0 && !window.confirm(`Discard ${minutes} min of focus without saving?`)) return;
-      resetTimer();
-    });
-
-    logForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      if (isRunning) pauseTimer();
-      saveSession(timeLeft === 0 ? selectedDuration : elapsedMinutes());
-    });
-
-    courseSelect.addEventListener('change', storeTimerState);
-
-    // Restore a session that was running when the page was reloaded or left.
-    (function restoreTimer() {
+        const preferred = localStorage.getItem(MODE_KEY);
+        if (preferred === 'timer' || preferred === 'stopwatch') mode = preferred;
+      } catch (e) { /* optional */ }
       let saved = null;
       try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { saved = null; }
-      if (!saved || !PRESETS.includes(saved.duration)) { updateDisplay(); return; }
-      setDuration(saved.duration);
-      if (saved.courseId && [...courseSelect.options].some(o => o.value === saved.courseId)) {
-        courseSelect.value = saved.courseId;
+      if (saved && (saved.mode === 'timer' || saved.mode === 'stopwatch') && PRESETS.includes(saved.duration)) {
+        mode = saved.mode;
+        selectedDuration = saved.duration;
+        accumulatedMs = Math.max(0, Number(saved.accumulatedMs) || 0);
+        runStartedAt = Number(saved.runStartedAt) || 0;
+        finished = Boolean(saved.finished);
+        if (saved.courseId && [...courseSelect.options].some((o) => o.value === saved.courseId)) courseSelect.value = saved.courseId;
       }
-      if (saved.running) {
-        timeLeft = Math.max(0, Math.ceil((saved.endsAt - Date.now()) / 1000));
-        if (timeLeft === 0) completeSession(); else startTimer();
-      } else {
-        timeLeft = Math.max(0, Math.min(saved.remaining, saved.duration * 60));
-        styleStartButton('▶', 'Resume Focus', false);
-        showResetButton(true);
-        updateDisplay();
-      }
+      renderHistory();
+      render();
+      if (finished) saveSession(selectedDuration);  // finished while away, but never saved
+      else if (isRunning()) { timerId = setInterval(tick, 250); tick(); }
     })();
 
 </script>
+<script src="{% static 'js/calculator.js' %}" defer></script>
 {% endblock %}
