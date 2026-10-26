@@ -438,7 +438,7 @@ class StudySessionSaveTests(BaseCase):
     def test_saving_shows_confirmation_and_updates_recap(self):
         response = self.client.post(reverse('log_study'), {'duration': '25', 'course_id': self.alice_course.pk}, follow=True)
         msgs = [str(m) for m in response.context['messages']]
-        self.assertTrue(any(m.startswith('✅ Session saved: 25 min of Maths.') and '+20 XP' in m for m in msgs), msgs)
+        self.assertTrue(any(m.startswith('✅ Session complete: 25 min of Maths saved.') and '+20 XP' in m for m in msgs), msgs)
         self.assertEqual(response.context['recap']['minutes'], 25)
         self.assertEqual(response.context['recap']['sessions'], 1)
         self.assertEqual(response.context['recap']['course'], 'Maths')
@@ -461,3 +461,37 @@ class StudySessionSaveTests(BaseCase):
         for hook in ('id="course-select"', 'id="session-saved"', 'id="recap-data"', 'studyflow-focus-timer'):
             self.assertContains(response, hook)
         self.assertNotContains(response, 'Focus session complete!')  # the old blocking popup
+
+
+class SessionHistoryTests(BaseCase):
+    def save(self, **data):
+        return self.client.post(reverse('log_study'), data, HTTP_ACCEPT='application/json').json()
+
+    def test_each_session_records_how_it_ended(self):
+        self.save(duration='25', mode='timer', planned='25')            # countdown reached zero
+        self.save(duration='12', mode='timer', planned='25')            # stopped early
+        data = self.save(duration='95', mode='stopwatch', planned='')   # open-ended
+        history = data['recap']['history']
+        self.assertEqual([h['ended'] for h in history], ['stopwatch', 'stopped', 'completed'])  # newest first
+        self.assertEqual([(h['minutes'], h['planned']) for h in history], [(95, None), (12, 25), (25, 25)])
+        self.assertTrue(all(h['time'] for h in history))
+        self.assertEqual(data['recap']['minutes'], 132)
+
+    def test_stop_messages_say_what_happened(self):
+        self.assertTrue(self.save(duration='12', mode='timer', planned='25')['message'].startswith('⏹ Session stopped: 12 min'))
+        self.assertTrue(self.save(duration='40', mode='stopwatch')['message'].startswith('⏱ Session saved: 40 min'))
+
+    def test_stopwatch_allows_long_sessions_but_not_unlimited(self):
+        self.assertTrue(self.save(duration='150', mode='stopwatch')['ok'])
+        response = self.client.post(reverse('log_study'), {'duration': '181', 'mode': 'stopwatch'}, HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_forged_planned_length_is_ignored(self):
+        data = self.save(duration='20', mode='timer', planned='999')
+        self.assertEqual(data['recap']['history'][0]['planned'], None)
+        self.assertEqual(data['recap']['history'][0]['ended'], 'completed')
+
+    def test_page_has_stopwatch_controls_history_and_calculator(self):
+        response = self.client.get(reverse('study_room'))
+        for hook in ('data-mode="stopwatch"', 'id="stop-btn"', 'id="session-history"', 'data-calculator', 'js/calculator.js'):
+            self.assertContains(response, hook)
