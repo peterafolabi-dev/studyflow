@@ -90,7 +90,7 @@
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
     ctx.clearRect(0, 0, w, h);
     if (!landmarks) return;
-    // selfieMode landmarks are already mirror-image, matching the mirrored preview.
+    // Landmarks are mirrored in onResults, so they line up with the mirrored preview.
     ctx.strokeStyle = needsRest ? 'rgba(148,163,184,0.9)' : 'rgba(167,139,250,0.95)';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -233,7 +233,9 @@
       report('Hand detected. Try an open palm, fist, swipe, or thumbs up/down.');
     }
 
-    const landmarks = results.multiHandLandmarks[0];
+    // MediaPipe reports raw camera coordinates. Mirror x once here so everything below —
+    // swipe direction and the drawn outline — matches the mirrored preview the user sees.
+    const landmarks = results.multiHandLandmarks[0].map((p) => ({ x: 1 - p.x, y: p.y, z: p.z }));
     const now = performance.now();
     const center = palmCenter(landmarks);
     drawHand(landmarks, center);
@@ -254,7 +256,7 @@
     }
 
     const first = palmTrack[0];
-    const dx = center.x - first.x;   // + = the user's own right (selfieMode mirrors the image)
+    const dx = center.x - first.x;   // + = the user's own right (landmarks are mirrored in onResults)
     const dy = center.y - first.y;
     const isSwipe = palmTrack.length >= 3 && now - first.t >= 80 &&
       Math.abs(dx) >= SWIPE_MIN_DX && Math.abs(dx) >= SWIPE_STRAIGHTNESS * Math.abs(dy) &&
@@ -383,7 +385,7 @@
         locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@${MEDIAPIPE_HANDS_VERSION}/${file}`,
       });
       tracker.setOptions({
-        selfieMode: true, // mirror like the preview, so "swipe right" means the user's right
+        selfieMode: false, // raw camera coordinates; onResults mirrors them itself (deterministic)
         maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.65, minTrackingConfidence: 0.65,
       });
       tracker.onResults(onResults);
