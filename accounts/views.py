@@ -1,8 +1,4 @@
-import logging
-import smtplib
-
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
@@ -17,8 +13,6 @@ from studyflow.http import redirect_next
 
 from .forms import LoginForm, SignUpForm
 from .presence import mark_offline, touch_presence
-
-logger = logging.getLogger(__name__)
 
 
 def signup(request):
@@ -73,21 +67,6 @@ def login_view(request):
         form = LoginForm()
 
     return render(request, 'accounts/login.html', {'form': form, 'error': error})
-
-
-class SafePasswordResetView(auth_views.PasswordResetView):
-    """Password reset that reports email failures instead of hanging or showing a 500 page."""
-
-    def form_valid(self, form):
-        try:
-            return super().form_valid(form)
-        except (smtplib.SMTPException, OSError):  # includes timeouts and the Brevo API backend
-            logger.exception('Password reset email could not be sent')
-            messages.error(
-                self.request,
-                "We couldn't send the reset email right now. Please try again in a few minutes.",
-            )
-            return self.render_to_response(self.get_context_data(form=form, email_failed=True))
 
 
 @require_POST

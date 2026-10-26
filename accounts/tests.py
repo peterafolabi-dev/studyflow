@@ -226,18 +226,17 @@ class EmailDeliveryTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('ada', email='ada@example.com', password='Old-pass-S7rong')
 
-    def test_reset_shows_error_instead_of_hanging_when_email_fails(self):
-        import smtplib
-        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=smtplib.SMTPServerDisconnected('blocked')):
+    def test_failed_email_send_is_logged_not_a_crash_or_hang(self):
+        # Django logs send failures and still shows the generic "check your inbox" page
+        # (so the form can't be used to discover which emails have accounts).
+        from django.conf import settings
+        self.assertEqual(settings.EMAIL_TIMEOUT, 15)  # a blocked mail server can't hang the request
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=TimeoutError('blocked')),                 self.assertLogs('django.contrib.auth', level='ERROR'):
             response = self.client.post(reverse('password_reset'), {'email': 'ada@example.com'})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "couldn&#x27;t send the reset email")
+        self.assertRedirects(response, reverse('password_reset_done'))
 
-    def test_reset_shows_error_on_timeout(self):
-        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=TimeoutError('timed out')):
-            response = self.client.post(reverse('password_reset'), {'email': 'ada@example.com'})
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['email_failed'])
+    def test_reset_button_shows_sending_state(self):
+        self.assertContains(self.client.get(reverse('password_reset')), 'Sending…')
 
     def test_brevo_backend_sends_expected_payload_and_raises_on_rejection(self):
         from django.core.mail import EmailMessage
