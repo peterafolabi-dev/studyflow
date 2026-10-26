@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.db.models import Q
 from django.db.models import Sum
 from django.views.decorators.http import require_POST
@@ -22,7 +23,8 @@ from accounts.models import Profile
 from .forms import CourseForm, TaskForm, TimetableEntryForm
 from .models import Course, Task, TimetableEntry, FlashcardDeck, Flashcard, StudySession
 
-MAX_SESSION_MINUTES = 60          # longest Pomodoro preset in the study room
+MAX_SESSION_MINUTES = 180         # stopwatch sessions can run up to 3 hours
+TIMER_PRESETS = {15, 25, 45, 60}  # countdown lengths offered in the study room
 MAX_DAILY_STUDY_MINUTES = 12 * 60
 MIN_XP_SESSION_MINUTES = 15       # shortest preset; tiny sessions log time but don't earn XP
 
@@ -550,7 +552,7 @@ def _today_recap(user):
     """Today's saved focus totals; used by the study room page and its recap card."""
     from .models import StudyStreak
     sessions = list(
-        StudySession.objects.filter(user=user, date=timezone.localdate()).select_related('course').order_by('-id')
+        StudySession.objects.filter(user=user, date=timezone.localdate()).select_related('course').order_by('-created_at', '-id')
     )
     streak = StudyStreak.objects.filter(user=user).first()
     return {
@@ -558,6 +560,17 @@ def _today_recap(user):
         'sessions': len(sessions),
         'streak': streak.current_streak if streak else 0,
         'course': next((s.course.name for s in sessions if s.course), ''),
+        # Newest first, like a stopwatch's lap list.
+        'history': [
+            {
+                'time': date_format(timezone.localtime(s.created_at), 'g:i A'),
+                'minutes': s.duration_minutes,
+                'planned': s.planned_minutes,
+                'ended': s.ended,
+                'course': s.course.name if s.course else '',
+            }
+            for s in sessions
+        ],
     }
 
 
@@ -621,7 +634,16 @@ def log_study(request):
         return reply(False, "That's more focus time than fits in one day — take a break! 🌙")
     else:
         course = Course.objects.filter(id=course_id, user=request.user).first() if course_id else None
-        session = StudySession.objects.create(user=request.user, course=course, duration_minutes=duration)
+        mode = request.POST.get('mode', 'timer')
+        planned = int_or(request.POST.get('planned'), 0)
+        if mode == 'stopwatch':
+            ended, planned = 'stopwatch', None
+        else:
+            planned = planned if planned in TIMER_PRESETS else None
+            ended = 'stopped' if planned and duration < planned else 'completed'
+        session = StudySession.objects.create(
+            user=request.user, course=course, duration_minutes=duration, ended=ended, planned_minutes=planned,
+        )
         from campus_life.services import earn_credits
         focused_minutes = StudySession.objects.filter(user=request.user).aggregate(
             total=Sum('duration_minutes')
@@ -639,7 +661,8 @@ def log_study(request):
         if earned_xp:
             _award_xp(request.user, 'pomodoro', points=20)
         streak_days = _today_recap(request.user)['streak']
-        message = f"✅ Session saved: {duration} min{f' of {course.name}' if course else ''}."
+        label = {'completed': '✅ Session complete', 'stopped': '⏹ Session stopped', 'stopwatch': '⏱ Session saved'}[ended]
+        message = f"{label}: {duration} min{f' of {course.name}' if course else ''} saved."
         if earned_xp:
             message += ' +20 XP.'
         if streak_days:
