@@ -301,10 +301,17 @@
     const recapGenerate = document.getElementById('make-recap');
 
     const recapData = JSON.parse(document.getElementById('recap-data').textContent);
-    let pendingMinutes = 0;  // a finished timer that hasn't been saved yet
+    // Minutes in the current session that haven't been saved yet (running, paused, or just finished).
+    function unsavedMinutes() {
+      return timeLeft === 0 ? selectedDuration : elapsedMinutes();
+    }
+    function currentCourseName() {
+      const option = document.getElementById('course-select').selectedOptions[0];
+      return option && option.value ? option.text.replace(/^\S+\s+/, '').trim() : '';
+    }
 
     function refreshRecapAvailability() {
-      const minutes = recapData.minutes + pendingMinutes;
+      const minutes = recapData.minutes + unsavedMinutes();
       recapGenerate.disabled = minutes <= 0;
       if (minutes <= 0) {
         recapStatus.textContent = 'Finish a focus session (or save one) to unlock your recap card.';
@@ -322,8 +329,11 @@
       try { await document.fonts.ready; } catch (e) { /* fall back to system fonts */ }
       const W = 1200, H = 630;
       const ctx = recapCanvas.getContext('2d');
-      const minutes = recapData.minutes + pendingMinutes;
-      const sessions = recapData.sessions + (pendingMinutes ? 1 : 0);
+      // Include the session on screen right now, so pausing and downloading shows THIS session.
+      const unsaved = unsavedMinutes();
+      const inProgress = unsaved > 0 && timeLeft > 0;
+      const minutes = recapData.minutes + unsaved;
+      const sessions = recapData.sessions + (unsaved > 0 ? 1 : 0);
       const display = '"Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif';
       const body = '"Instrument Sans", system-ui, sans-serif';
 
@@ -357,7 +367,9 @@
 
       const facts = [plural(sessions, 'session')];
       if (recapData.streak > 0) facts.push(`${plural(recapData.streak, 'day')} streak 🔥`);
-      if (recapData.course) facts.push(recapData.course);
+      if (inProgress) facts.push('session in progress');
+      const course = (unsaved > 0 && currentCourseName()) || recapData.course;
+      if (course) facts.push(course);
       ctx.fillStyle = '#e9d5ff';
       ctx.font = `500 32px ${body}`;
       let line = facts.join('  ·  ');
@@ -461,6 +473,7 @@
       display.textContent = text;
       document.title = isRunning ? `${text} · Focus · StudyFlow` : baseTitle;
       updateSaveButton();
+      refreshRecapAvailability();
     }
 
     function styleStartButton(icon, label, running) {
@@ -573,7 +586,6 @@
         try { result = await response.json(); } catch (e) { /* non-JSON error page */ }
         if (!response.ok || !result.ok) throw new Error(result.message || "Couldn't save your session.");
         Object.assign(recapData, result.recap);
-        pendingMinutes = 0;
         saving = false;
         resetTimer();
         showSaved(result.message, false);
@@ -594,7 +606,6 @@
       startBtn.disabled = true;
       styleStartButton('🎉', 'Done!', false);
       playChime();
-      pendingMinutes = selectedDuration;  // lets the recap card include it even if saving fails
       refreshRecapAvailability();
       updateDisplay();
       saveSession(selectedDuration);
