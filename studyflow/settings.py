@@ -115,7 +115,9 @@ if not DEBUG and not os.environ.get('DATABASE_URL'):
 DATABASES = {
     'default': dj_database_url.config(
         default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
+        conn_max_age=600,
+        # Hosted Postgres can drop idle connections; check before reusing one.
+        conn_health_checks=True,
     )
 }
 
