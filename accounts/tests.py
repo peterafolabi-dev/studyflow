@@ -184,3 +184,38 @@ class AdminBootstrapTests(TestCase):
     def test_command_requires_password(self):
         with self.assertRaises(CommandError):
             call_command('create_or_update_admin')
+
+
+class PasswordResetFlowTests(TestCase):
+    def test_full_reset_flow_sends_email_and_changes_password(self):
+        import re
+        from django.core import mail
+        User.objects.create_user('ada', email='ada@example.com', password='Old-pass-S7rong')
+
+        response = self.client.post(reverse('password_reset'), {'email': 'ADA@example.com'})
+        self.assertRedirects(response, reverse('password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        email = mail.outbox[0]
+        self.assertEqual(email.to, ['ada@example.com'])
+        self.assertIn('StudyFlow', email.body)
+
+        link = re.search(r'https?://[^/\s]+(/reset/\S+/)', email.body).group(1)
+        form_page = self.client.get(link, follow=True)   # Django swaps the token into the session
+        self.assertEqual(form_page.status_code, 200)
+        set_password_url = form_page.redirect_chain[-1][0] if form_page.redirect_chain else link
+        done = self.client.post(set_password_url, {
+            'new_password1': 'Brand-new-S7rong-99', 'new_password2': 'Brand-new-S7rong-99',
+        })
+        self.assertRedirects(done, reverse('password_reset_complete'))
+        self.assertTrue(self.client.login(username='ada', password='Brand-new-S7rong-99'))
+
+        # The link is single-use.
+        self.client.logout()
+        reused = self.client.get(link, follow=True)
+        self.assertNotIn('new_password1', reused.content.decode())
+
+    def test_unknown_email_sends_nothing_but_looks_the_same(self):
+        from django.core import mail
+        response = self.client.post(reverse('password_reset'), {'email': 'nobody@example.com'})
+        self.assertRedirects(response, reverse('password_reset_done'))  # no account enumeration
+        self.assertEqual(len(mail.outbox), 0)
