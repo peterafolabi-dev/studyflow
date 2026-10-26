@@ -1,0 +1,46 @@
+# Runs the test suite on every push/PR to main. Render's Auto-Deploy can be set to
+# "After CI Checks Pass" so only commits that pass these checks go live.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Throwaway values for CI only; the tests use a temporary SQLite database.
+      SECRET_KEY: ci-only-not-a-real-secret
+      DEBUG: 'True'
+      GROQ_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'   # same as Render (render.yaml PYTHON_VERSION)
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: No missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run tests
+        run: python manage.py test --noinput
