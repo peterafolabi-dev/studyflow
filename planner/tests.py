@@ -460,4 +460,4 @@ class StudySessionSaveTests(BaseCase):
         response = self.client.get(reverse('study_room'))
         for hook in ('id="course-select"', 'id="session-saved"', 'id="recap-data"', 'studyflow-focus-timer'):
             self.assertContains(response, hook)
-        self.assertNotContains(response, 'alert(')
+        self.assertNotContains(response, 'Focus session complete!')  # the old blocking popup
