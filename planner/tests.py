@@ -402,3 +402,33 @@ class GlobalSearchTests(BaseCase):
         response = self.search('zzqqxx')
         self.assertEqual(response.context['total'], 0)
         self.assertContains(response, 'Try a course code')
+
+
+class SpotifyLinkTests(BaseCase):
+    PLAYLIST = '37i9dQZF1DWWQRwui0ExPn'
+
+    def test_links_copied_from_the_app_are_accepted(self):
+        from .views import _spotify_embed_path
+        for url in [
+            f'https://open.spotify.com/playlist/{self.PLAYLIST}',
+            f'https://open.spotify.com/intl-en/playlist/{self.PLAYLIST}?si=abc123',   # language prefix + tracking
+            f'https://open.spotify.com/intl-fr/album/{self.PLAYLIST}',
+            f'https://open.spotify.com/show/{self.PLAYLIST}',                         # podcast
+        ]:
+            self.assertIsNotNone(_spotify_embed_path(url), url)
+
+    def test_non_spotify_and_malformed_links_are_rejected(self):
+        from .views import _spotify_embed_path
+        for url in ['', 'https://evil.example/playlist/' + self.PLAYLIST, 'javascript:alert(1)',
+                    'https://open.spotify.com/playlist/short', 'https://open.spotify.com/user/someone']:
+            self.assertIsNone(_spotify_embed_path(url), url)
+
+    def test_saving_an_intl_link_embeds_the_right_player(self):
+        url = f'https://open.spotify.com/intl-en/playlist/{self.PLAYLIST}?si=xyz'
+        self.client.post(reverse('study_room'), {'action': 'save_spotify_url', 'spotify_url': url})
+        response = self.client.get(reverse('study_room'))
+        self.assertEqual(response.context['spotify_embed_url'], f'https://open.spotify.com/embed/playlist/{self.PLAYLIST}')
+
+    def test_short_spotify_link_gets_a_helpful_message(self):
+        response = self.client.post(reverse('study_room'), {'action': 'save_spotify_url', 'spotify_url': 'https://spotify.link/AbCdEf'})
+        self.assertContains(response, 'Short spotify.link links hide the real address')

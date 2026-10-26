@@ -526,6 +526,26 @@ def global_search(request):
 
 from .models import StudySession, FlashcardDeck, Flashcard
 
+SPOTIFY_EMBED_TYPES = {'playlist', 'album', 'track', 'artist', 'show', 'episode'}
+
+
+def _spotify_embed_path(url):
+    """Return (type, id) for a public open.spotify.com link, else None.
+
+    Accepts links copied from the Spotify app, including the language prefix
+    (open.spotify.com/intl-en/playlist/...) and tracking query strings (?si=...).
+    """
+    parts = urlsplit((url or '').strip())
+    if parts.scheme not in {'http', 'https'} or parts.hostname not in {'open.spotify.com', 'www.open.spotify.com'}:
+        return None
+    path = [segment for segment in parts.path.split('/') if segment]
+    if path and path[0].startswith('intl-'):
+        path = path[1:]
+    if len(path) == 2 and path[0] in SPOTIFY_EMBED_TYPES and path[1].isalnum() and len(path[1]) == 22:
+        return path[0], path[1]
+    return None
+
+
 @login_required
 def study_room(request):
     from accounts.models import Profile
@@ -535,24 +555,21 @@ def study_room(request):
     streak, _ = StudyStreak.objects.get_or_create(user=request.user)
     spotify_error = ''
     if request.method == 'POST' and request.POST.get('action') == 'save_spotify_url':
-        submitted_url = request.POST.get('spotify_url', '').strip()
-        parts = urlsplit(submitted_url)
-        path_parts = parts.path.strip('/').split('/')
-        valid_types = {'playlist', 'album', 'track'}
-        valid_id = len(path_parts) == 2 and path_parts[1].isalnum() and len(path_parts[1]) == 22
-        if (parts.scheme in {'http', 'https'} and parts.hostname in {'open.spotify.com', 'www.open.spotify.com'}
-                and len(path_parts) == 2 and path_parts[0] in valid_types and valid_id):
+        submitted_url = request.POST.get('spotify_url', '').strip()[:300]
+        if _spotify_embed_path(submitted_url):
             profile.spotify_playlist_url = submitted_url
             profile.save(update_fields=['spotify_playlist_url'])
             return redirect('study_room')
-        spotify_error = 'That does not look like a public Spotify playlist, album, or track link.'
+        if 'spotify.link' in submitted_url:
+            spotify_error = ('Short spotify.link links hide the real address. Open the link in your browser, '
+                             'then copy the full open.spotify.com address and paste it here.')
+        else:
+            spotify_error = 'That does not look like a public Spotify playlist, album, track, artist or podcast link.'
 
     spotify_embed_url = ''
-    if profile.spotify_playlist_url:
-        saved_parts = urlsplit(profile.spotify_playlist_url)
-        saved_path = saved_parts.path.strip('/').split('/')
-        if len(saved_path) == 2 and saved_path[0] in {'playlist', 'album', 'track'}:
-            spotify_embed_url = f'https://open.spotify.com/embed/{saved_path[0]}/{saved_path[1]}'
+    embed = _spotify_embed_path(profile.spotify_playlist_url)
+    if embed:
+        spotify_embed_url = f'https://open.spotify.com/embed/{embed[0]}/{embed[1]}'
     courses = Course.objects.filter(user=request.user)
     return render(request, 'planner/study_room.html', {
         'courses': courses,
