@@ -299,3 +299,20 @@ class PasswordResetEmailDesignTests(TestCase):
         # The button and the fallback text link both carry the real reset link.
         link = re.search(r'(https?://[^\s<]+/reset/[^\s<]+/)', email.body).group(1)
         self.assertEqual(html.count(f'href="{link}"'), 2)
+
+
+class GoogleAccountResetTests(TestCase):
+    def test_google_signup_without_password_still_gets_reset_email(self):
+        from django.core import mail
+        user = User.objects.create_user('googler', email='googler@gmail.com')
+        user.set_unusable_password()
+        user.save()
+        response = self.client.post(reverse('password_reset'), {'email': 'Googler@Gmail.com'})
+        self.assertRedirects(response, reverse('password_reset_done'))
+        self.assertEqual([m.to for m in mail.outbox], [['googler@gmail.com']])
+
+    def test_inactive_accounts_get_nothing(self):
+        from django.core import mail
+        User.objects.create_user('gone', email='gone@example.com', password='S7rong-pass-99', is_active=False)
+        self.client.post(reverse('password_reset'), {'email': 'gone@example.com'})
+        self.assertEqual(len(mail.outbox), 0)

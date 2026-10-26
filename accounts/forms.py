@@ -1,5 +1,27 @@
+import unicodedata
+
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import PasswordResetForm, UserCreationForm
+
+
+class StudyFlowPasswordResetForm(PasswordResetForm):
+    """Also emails accounts created with Google, which have no password yet.
+
+    Django skips users without a usable password, so Google sign-ups silently got no
+    reset email. Following the emailed link proves they own the address, so letting
+    them set a password is safe.
+    """
+
+    def get_users(self, email):
+        user_model = get_user_model()
+        email_field = user_model.get_email_field_name()
+        wanted = unicodedata.normalize('NFKC', email).casefold()
+        users = user_model._default_manager.filter(**{f'{email_field}__iexact': email, 'is_active': True})
+        return (
+            user for user in users
+            if unicodedata.normalize('NFKC', getattr(user, email_field) or '').casefold() == wanted
+        )
 
 
 class LoginForm(forms.Form):

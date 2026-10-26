@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
 from . import views
+from .forms import StudyFlowPasswordResetForm
 
 urlpatterns = [
     path('signup/', views.signup, name='signup'),
@@ -11,6 +12,7 @@ urlpatterns = [
         template_name='accounts/password_reset.html',
         email_template_name='accounts/password_reset_email.html',  # plain-text part
         html_email_template_name='accounts/password_reset_email_html.html',
+        form_class=StudyFlowPasswordResetForm,
         subject_template_name='accounts/password_reset_subject.txt',
         extra_email_context={'expiry_days': settings.PASSWORD_RESET_TIMEOUT // 86400},
         success_url=reverse_lazy('password_reset_done'),
