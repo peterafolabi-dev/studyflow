@@ -130,8 +130,7 @@
                   class="yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700 transition hover:bg-slate-700 hover:text-white">
             💤 Deep Sleep
           </button>
-          <!-- Channel live embed: always plays Chillhop's current stream, so it can't go stale. -->
-          <button type="button" onclick="setYoutubeStream('live_stream?channel=UCOxqgCwgOqC2lMqC5PYz_Dg', this)"
+          <button type="button" onclick="setYoutubeStream('5yx6BWlEVcY', this)"
                   class="yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700 transition hover:bg-slate-700 hover:text-white">
             ☕ Chillhop Radio
           </button>
@@ -321,9 +320,7 @@
         const iframe = document.getElementById('lofigirl-iframe');
         if (iframe) {
             const origin = window.location.origin;
-            const separator = streamId.includes('?') ? '&' : '?';
-            const host = streamId.startsWith('live_stream') ? 'www.youtube.com' : 'www.youtube-nocookie.com';
-            iframe.src = `https://${host}/embed/${streamId}${separator}enablejsapi=1&origin=${encodeURIComponent(origin)}`;
+            iframe.src = `https://www.youtube-nocookie.com/embed/${streamId}?enablejsapi=1&origin=${encodeURIComponent(origin)}`;
         }
         document.querySelectorAll('.yt-stream-btn').forEach(b => {
             b.className = 'yt-stream-btn px-3 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition hover:bg-brand-50 dark:hover:bg-slate-700';
