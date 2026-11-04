@@ -20,8 +20,9 @@
   <script>
     (function () {
       var saved = localStorage.getItem('studyflow-theme');
-      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (saved === 'dark' || (!saved && prefersDark)) {
+      // The app shell (header, body, footer) is designed dark, so dark is the default.
+      // Before, a phone set to light mode got light-mode text on the dark body and headings vanished.
+      if (saved !== 'light') {
         document.documentElement.classList.add('dark');
       }
     })();

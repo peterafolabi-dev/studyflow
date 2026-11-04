@@ -6,7 +6,7 @@
       {% if is_new_user %}Welcome to StudyFlow, {{ user.username }} 🎉{% else %}Welcome back, {{ user.username }}{% endif %}
     </h1>
     <p class="text-lg text-slate-500 dark:text-slate-400">
-      You have <strong class="text-brand-600 dark:text-brand-400">{{ open_count }} open task{{ open_count|pluralize }}</strong> across {{ course_count }} course{{ course_count|pluralize }}. Let's get to work.
+      You have <a href="{% if only_task %}{% url 'task_list' %}?focus={{ only_task.pk }}#task-{{ only_task.pk }}{% else %}{% url 'task_list' %}{% endif %}" class="font-bold text-brand-600 dark:text-brand-400 underline decoration-brand-300 decoration-2 underline-offset-4 hover:decoration-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded">{{ open_count }} open task{{ open_count|pluralize }}</a> across {{ course_count }} course{{ course_count|pluralize }}. Let's get to work.
     </p>
   </div>
 

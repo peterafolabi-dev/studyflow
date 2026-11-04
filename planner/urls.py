@@ -12,6 +12,7 @@ urlpatterns = [
     path('courses/<int:pk>/edit/', views.course_update, name='course_update'),
     path('courses/<int:pk>/delete/', views.course_delete, name='course_delete'),
     path('courses/<int:course_pk>/tasks/new/', views.task_create, name='task_create'),
+    path('tasks/', views.task_list, name='task_list'),
     path('tasks/<int:pk>/edit/', views.task_update, name='task_update'),
     path('tasks/<int:pk>/delete/', views.task_delete, name='task_delete'),
     path('tasks/<int:pk>/toggle/', views.task_toggle, name='task_toggle'),

@@ -44,6 +44,28 @@ def _user_task(request, pk):
 
 
 @login_required
+def task_list(request):
+    """Every open task in one place, so the dashboard's "N open tasks" can link somewhere.
+
+    ?focus=<id> highlights one task (the dashboard links straight to it when there is only one).
+    """
+    today = timezone.localdate()
+    week_end = today + timedelta(days=7)
+    open_tasks = Task.objects.filter(course__user=request.user, is_done=False).select_related('course')
+    try:
+        focus = int(request.GET.get('focus', ''))
+    except ValueError:
+        focus = None
+    return render(request, 'planner/task_list.html', {
+        'overdue': open_tasks.filter(due_date__lt=today),
+        'due_soon': open_tasks.filter(due_date__gte=today, due_date__lte=week_end),
+        'later': open_tasks.filter(due_date__gt=week_end),
+        'open_count': open_tasks.count(),
+        'focus': focus,
+    })
+
+
+@login_required
 def dashboard(request):
     today = timezone.localdate()
     week_end = today + timedelta(days=7)
@@ -84,6 +106,7 @@ def dashboard(request):
         'due_soon': open_tasks.filter(due_date__gte=today, due_date__lte=week_end),
         'course_count': Course.objects.filter(user=request.user).count(),
         'open_count': open_tasks.count(),
+        'only_task': open_tasks.first() if open_tasks.count() == 1 else None,
         'done_count': Task.objects.filter(course__user=request.user, is_done=True).count(),
         'due_flashcards_count': due_flashcards_count,
         'has_reviewed_flashcards': has_reviewed_flashcards,

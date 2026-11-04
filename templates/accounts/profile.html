@@ -39,10 +39,10 @@
         <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ course_count }}</div>
         <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Courses</div>
       </div>
-      <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-center">
+      <a href="{% url 'task_list' %}" class="block rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-center hover:border-brand-400 transition">
         <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ open_task_count }}</div>
         <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Open tasks</div>
-      </div>
+      </a>
       <div class="rounded-xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-center">
         <div class="text-2xl font-bold text-brand-700 dark:text-brand-300">{{ reading_count }}</div>
         <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">Reading now</div>

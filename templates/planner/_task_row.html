@@ -1,5 +1,5 @@
 {% load planner_extras %}
-<li class="group flex items-center gap-3.5 p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-brand-100 dark:border-slate-700/60 hover:border-brand-300 dark:hover:border-brand-500/50 transition-all shadow-sm {% if task.is_done %}opacity-65 bg-slate-50/70 dark:bg-slate-900/40{% endif %}">
+<li id="task-{{ task.pk }}" class="scroll-mt-24 group flex items-center gap-3.5 p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border border-brand-100 dark:border-slate-700/60 hover:border-brand-300 dark:hover:border-brand-500/50 transition-all shadow-sm {% if focus and focus == task.pk %}ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-slate-900{% endif %} {% if task.is_done %}opacity-65 bg-slate-50/70 dark:bg-slate-900/40{% endif %}">
   <form method="post" action="{% url 'task_toggle' task.pk %}" class="m-0 flex items-center shrink-0">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">

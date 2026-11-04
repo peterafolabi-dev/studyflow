@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Open tasks · StudyFlow{% endblock %}
+{% block content %}
+  <div class="mb-8 fade-in-up">
+    <a href="{% url 'dashboard' %}" class="text-sm text-brand-600 dark:text-brand-400 hover:underline">&larr; Dashboard</a>
+    <h1 class="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white mt-2 mb-2">Open tasks</h1>
+    <p class="text-lg text-slate-500 dark:text-slate-400">
+      {% if open_count %}{{ open_count }} task{{ open_count|pluralize }} to finish. Tick one off when it's done.{% else %}Nothing open. Enjoy the free time, or add a task to a course.{% endif %}
+    </p>
+  </div>
+
+  {% if overdue %}
+    <section class="mb-8" aria-labelledby="overdue-h">
+      <h2 id="overdue-h" class="font-display text-lg font-bold text-rose-600 dark:text-rose-400 mb-3">Overdue</h2>
+      <ul class="space-y-2.5">
+        {% for task in overdue %}{% include 'planner/_task_row.html' with next=request.get_full_path show_course=True show_actions=True %}{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  {% if due_soon %}
+    <section class="mb-8" aria-labelledby="soon-h">
+      <h2 id="soon-h" class="font-display text-lg font-bold text-slate-900 dark:text-white mb-3">Due in the next 7 days</h2>
+      <ul class="space-y-2.5">
+        {% for task in due_soon %}{% include 'planner/_task_row.html' with next=request.get_full_path show_course=True show_actions=True %}{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  {% if later %}
+    <section class="mb-8" aria-labelledby="later-h">
+      <h2 id="later-h" class="font-display text-lg font-bold text-slate-900 dark:text-white mb-3">Later</h2>
+      <ul class="space-y-2.5">
+        {% for task in later %}{% include 'planner/_task_row.html' with next=request.get_full_path show_course=True show_actions=True %}{% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  {% if not open_count %}
+    <a href="{% url 'course_list' %}" class="inline-flex rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-5 py-2.5 shadow-sm transition">Go to my courses</a>
+  {% endif %}
+{% endblock %}

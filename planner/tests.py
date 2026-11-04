@@ -495,3 +495,34 @@ class SessionHistoryTests(BaseCase):
         response = self.client.get(reverse('study_room'))
         for hook in ('data-mode="stopwatch"', 'id="stop-btn"', 'id="session-history"', 'data-calculator', 'js/calculator.js'):
             self.assertContains(response, hook)
+
+
+class TaskListTests(BaseCase):
+    """The dashboard's "N open tasks" must lead to those tasks."""
+
+    def test_task_list_shows_only_my_open_tasks(self):
+        Task.objects.create(course=self.alice_course, title='Finished one', due_date=self.today, is_done=True)
+        response = self.client.get(reverse('task_list'))
+        self.assertContains(response, 'Alice task')
+        self.assertNotContains(response, 'Bob task')
+        self.assertNotContains(response, 'Finished one')
+
+    def test_dashboard_count_links_straight_to_a_single_task(self):
+        Task.objects.filter(course__user=self.alice).exclude(pk=self.alice_task.pk).delete()
+        response = self.client.get(reverse('dashboard'))
+        self.assertContains(response, f'{reverse("task_list")}?focus={self.alice_task.pk}#task-{self.alice_task.pk}')
+        page = self.client.get(reverse('task_list'), {'focus': self.alice_task.pk})
+        self.assertContains(page, f'id="task-{self.alice_task.pk}"')
+        self.assertContains(page, 'ring-2 ring-brand-500')
+
+    def test_dashboard_count_links_to_list_when_several(self):
+        Task.objects.create(course=self.alice_course, title='Second', due_date=self.today + timedelta(days=20))
+        response = self.client.get(reverse('dashboard'))
+        self.assertContains(response, f'href="{reverse("task_list")}"')
+
+    def test_task_list_requires_login(self):
+        self.client.logout()
+        self.assertEqual(self.client.get(reverse('task_list')).status_code, 302)
+
+    def test_bad_focus_value_is_ignored(self):
+        self.assertEqual(self.client.get(reverse('task_list'), {'focus': 'abc'}).status_code, 200)
