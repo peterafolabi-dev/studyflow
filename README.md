@@ -1,8 +1,27 @@
 # 📚 StudyFlow
 
-**A full-stack student productivity web app built for university students — built with Django, deployed on Render.**
+[![Tests](https://github.com/peterafolabi-dev/studyflow/actions/workflows/tests.yml/badge.svg)](https://github.com/peterafolabi-dev/studyflow/actions/workflows/tests.yml)
+![Django tests](https://img.shields.io/badge/django%20tests-108%20passing-1F8A4C)
+![Python](https://img.shields.io/badge/python-3.12-3776AB)
+![AI](https://img.shields.io/badge/AI-Groq%20LLM-F55036)
 
-StudyFlow is an all-in-one study companion that combines smart planning, AI assistance, resource sharing, and focus tools in a single clean, responsive interface. Built for the students of FUT Minna (and any student who wants to study smarter).
+**A study platform for university students, with a 24/7 AI study coach that renders maths properly. Built with Django, deployed on Render.**
+
+**Live:** [studyflow-xt1x.onrender.com](https://studyflow-xt1x.onrender.com) (free tier, so the first load can take ~30 seconds to wake up)
+
+StudyFlow combines planning, AI help, resource sharing and focus tools in one responsive app. Built for students at FUT Minna, and any student who wants to study smarter.
+
+<p><img src="screenshots/01-landing-mobile.png" width="260" alt="StudyFlow on a phone"> <img src="screenshots/03-research.png" width="520" alt="StudyFlow research page"></p>
+
+---
+
+## Engineering decisions
+
+- **Uploads are judged by their bytes, not their names.** A file renamed from `.exe` to `.pdf` is rejected because the server checks its magic bytes (`%PDF-`), not just the extension or the browser's MIME type. Files are stored under a random UUID, so a crafted filename can never reach the filesystem.
+- **AI output is treated as untrusted.** Model replies can contain HTML, so they're sanitised with DOMPurify before they touch the page. LaTeX is rendered with KaTeX instead of being trusted as markup.
+- **AI cost and abuse are capped.** Expensive AI features (like asking questions about a PDF) have a per-user rate limit, so one user or script can't run up the API bill.
+- **Two layers of validation.** The browser gives instant feedback on file type and size, and the server repeats every check, because client-side checks are a convenience, not security.
+- **Deploys only after green tests.** GitHub Actions runs `manage.py check`, a missing-migrations check and all 108 tests on every push, and Render can wait for CI before going live.
 
 ---
 
