@@ -379,3 +379,77 @@ class WelcomeEmailTests(TestCase):
         user_signed_up.send(sender=None, request=RequestFactory().get('/'), user=user)
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ['gina@example.com'])
+
+
+from django.test import override_settings as _override_settings  # noqa: E402
+
+
+@_override_settings(CRON_SECRET='cron-test-secret')
+class DailyDigestTests(TestCase):
+    """Morning study email: only when something is due, once a day, easy to stop."""
+
+    def setUp(self):
+        from datetime import timedelta
+        from django.contrib.auth import get_user_model
+        from django.utils import timezone
+        from planner.models import Course, Task
+        User = get_user_model()
+        today = timezone.localdate()
+        self.busy = User.objects.create_user('busy', email='busy@example.com', password='x')
+        self.idle = User.objects.create_user('idle', email='idle@example.com', password='x')
+        self.optout = User.objects.create_user('optout', email='optout@example.com', password='x')
+        for u in (self.busy, self.idle, self.optout):
+            Course.objects.filter(user=u).delete()  # drop onboarding demo content
+        c = Course.objects.create(user=self.busy, name='Signals')
+        Task.objects.create(course=c, title='Fourier assignment', due_date=today + timedelta(days=1))
+        Task.objects.create(course=c, title='Lab report', due_date=today - timedelta(days=2))
+        c2 = Course.objects.create(user=self.optout, name='Maths')
+        Task.objects.create(course=c2, title='Quiz', due_date=today)
+        self.optout.profile.daily_digest = False
+        self.optout.profile.save()
+
+    def test_only_students_with_something_due_get_it(self):
+        from django.core import mail
+        from .digest import send_daily_digest
+        result = send_daily_digest()
+        self.assertEqual(result['sent'], 1)
+        self.assertEqual([m.to for m in mail.outbox], [['busy@example.com']])
+        msg = mail.outbox[0]
+        self.assertIn('2 tasks due', msg.subject)
+        html = msg.alternatives[0][0]
+        self.assertIn('Fourier assignment', html)
+        self.assertIn('Lab report', html)
+        self.assertIn('Overdue', html)
+
+    def test_never_twice_in_one_day(self):
+        from django.core import mail
+        from .digest import send_daily_digest
+        send_daily_digest()
+        self.assertEqual(send_daily_digest()['sent'], 0)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_one_click_unsubscribe(self):
+        from django.core import mail
+        from django.urls import reverse
+        from .digest import send_daily_digest
+        send_daily_digest()
+        self.busy.profile.refresh_from_db()
+        url = reverse('digest_unsubscribe', args=[self.busy.profile.digest_token])
+        self.assertIn(url, mail.outbox[0].alternatives[0][0])
+        self.client.post(url)
+        self.busy.profile.refresh_from_db()
+        self.assertFalse(self.busy.profile.daily_digest)
+        self.assertEqual(self.client.get(reverse('digest_unsubscribe', args=['nope'])).status_code, 404)
+
+    def test_cron_endpoint_needs_the_secret(self):
+        from django.urls import reverse
+        url = reverse('cron_daily_digest')
+        self.assertEqual(self.client.get(url).status_code, 401)
+        self.assertEqual(self.client.get(url, HTTP_AUTHORIZATION='Bearer wrong').status_code, 401)
+        ok = self.client.get(url, HTTP_AUTHORIZATION='Bearer cron-test-secret')
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(ok.json()['sent'], 1)
+
+    def test_students_can_turn_it_off_in_their_profile(self):
+        from accounts.forms import ProfileForm
+        self.assertIn('daily_digest', ProfileForm.Meta.fields)

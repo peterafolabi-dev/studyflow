@@ -94,7 +94,7 @@ class ProfileForm(forms.ModelForm):
         model = Profile
         fields = [
             'bio', 'department', 'level', 'reading_goal', 'avatar_color',
-            'weekly_study_goal_hours', 'preferred_study_time',
+            'weekly_study_goal_hours', 'preferred_study_time', 'daily_digest',
         ]
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Tell us about your academic interests...'}),
@@ -105,5 +105,6 @@ class ProfileForm(forms.ModelForm):
             'avatar_color': 'Choose a number from 0 to 5 to set your theme color.',
             'weekly_study_goal_hours': 'Used by the study buddy matcher and weekly plan.',
             'preferred_study_time': 'Used to place suggested study blocks at a time that suits you.',
+            'daily_digest': 'A short email each morning with your deadlines and flashcards due. Only sent on days you have something due.',
         }
 

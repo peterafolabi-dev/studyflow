@@ -7,6 +7,8 @@ from .forms import StudyFlowPasswordResetForm
 
 urlpatterns = [
     path('signup/', views.signup, name='signup'),
+    path('emails/daily/stop/<str:token>/', views.digest_unsubscribe, name='digest_unsubscribe'),
+    path('cron/daily-digest/', views.cron_daily_digest, name='cron_daily_digest'),
     path('login/', views.login_view, name='login'),
     path('password-reset/', auth_views.PasswordResetView.as_view(
         template_name='accounts/password_reset.html',

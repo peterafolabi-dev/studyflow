@@ -247,3 +247,34 @@ def notifications_view(request):
     notifs.update(is_read=True)
     return render(request, 'accounts/notifications.html', {'notifications': notifs})
 
+
+
+from django.views.decorators.csrf import csrf_exempt  # noqa: E402
+
+
+@csrf_exempt  # mail apps' one-click unsubscribe POSTs without a CSRF token
+def digest_unsubscribe(request, token):
+    from .models import Profile
+    profile = Profile.objects.filter(digest_token=token).select_related('user').first() if token else None
+    if profile is None:
+        return render(request, 'accounts/digest_unsubscribe.html', {'invalid': True}, status=404)
+    if request.method == 'POST':
+        if profile.daily_digest:
+            profile.daily_digest = False
+            profile.save(update_fields=['daily_digest'])
+        return render(request, 'accounts/digest_unsubscribe.html', {'done': True})
+    return render(request, 'accounts/digest_unsubscribe.html', {'email': profile.user.email})
+
+
+def cron_daily_digest(request):
+    """Called each morning by the GitHub Actions workflow with `Authorization: Bearer <CRON_SECRET>`."""
+    import hmac
+    from django.conf import settings
+    from django.http import JsonResponse
+    from .digest import send_daily_digest
+    secret = getattr(settings, 'CRON_SECRET', '')
+    if not secret:
+        return JsonResponse({'error': 'CRON_SECRET is not configured'}, status=503)
+    if not hmac.compare_digest(request.headers.get('Authorization', '').encode(), f'Bearer {secret}'.encode()):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
+    return JsonResponse(send_daily_digest(request=request))

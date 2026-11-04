@@ -1,0 +1,21 @@
+Good morning {{ name }},
+
+Here's your StudyFlow plan for {{ today|date:"l j F" }}.
+{% if overdue %}
+OVERDUE
+{% for t in overdue %}- {{ t.title }} ({{ t.course.name }}), was due {{ t.due_date|date:"j M" }}
+{% endfor %}{% endif %}{% if upcoming %}
+COMING UP
+{% for t in upcoming %}- {{ t.title }} ({{ t.course.name }}), due {% if t.due_date == today %}today{% else %}{{ t.due_date|date:"D j M" }}{% endif %}
+{% endfor %}{% endif %}{% if cards_due %}
+FLASHCARDS
+{{ cards_due }} card{{ cards_due|pluralize }} ready for review: {{ flashcards_url }}
+{% endif %}
+Your tasks: {{ tasks_url }}
+
+Tip of the day: {{ tip }}
+
+Study well,
+StudyFlow
+
+Don't want this email? Turn it off with one click: {{ unsubscribe_url }}

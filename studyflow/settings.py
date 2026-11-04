@@ -204,6 +204,9 @@ BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
 if BREVO_API_KEY and 'test' not in sys.argv:
     EMAIL_BACKEND = 'studyflow.email_backends.BrevoEmailBackend'
 
+# Shared secret for scheduled jobs (the daily-digest GitHub Action sends it as a Bearer token).
+CRON_SECRET = os.environ.get('CRON_SECRET', '')
+
 # Used to build links in emails sent outside a request.
 SITE_URL = os.environ.get('SITE_URL', 'https://studyflow-xt1x.onrender.com')
 

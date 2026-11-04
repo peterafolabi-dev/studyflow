@@ -1,0 +1,90 @@
+{% autoescape on %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Your StudyFlow plan for today</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f2fb;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">{% if overdue %}{{ overdue|length }} overdue. {% endif %}{% if upcoming %}{{ upcoming|length }} coming up. {% endif %}{% if cards_due %}{{ cards_due }} flashcard{{ cards_due|pluralize }} to review.{% endif %}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f2fb;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+          <tr>
+            <td align="center" style="padding:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#6d28d9;">📚 StudyFlow</td>
+          </tr>
+          <tr>
+            <td style="background-color:#ffffff;border-radius:16px;border:1px solid #e9e5f5;padding:32px;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+              <p style="margin:0 0 4px;font-size:13px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#7c3aed;">{{ today|date:"l j F" }}</p>
+              <h1 style="margin:0 0 20px;font-size:24px;line-height:1.3;color:#111827;">Good morning, {{ name }} ☀️</h1>
+
+              {% if overdue %}
+              <p style="margin:0 0 8px;font-size:15px;font-weight:bold;color:#be123c;">Overdue</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;">
+                {% for t in overdue %}
+                <tr>
+                  <td style="padding:9px 12px;border-left:3px solid #f43f5e;background-color:#fff1f2;font-size:15px;line-height:1.4;">
+                    <strong style="color:#111827;">{{ t.title }}</strong><br>
+                    <span style="font-size:13px;color:#6b7280;">{{ t.course.name }} · was due {{ t.due_date|date:"D j M" }}</span>
+                  </td>
+                </tr>
+                <tr><td style="height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr>
+                {% endfor %}
+              </table>
+              {% endif %}
+
+              {% if upcoming %}
+              <p style="margin:0 0 8px;font-size:15px;font-weight:bold;color:#111827;">Coming up</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;">
+                {% for t in upcoming %}
+                <tr>
+                  <td style="padding:9px 12px;border-left:3px solid #8b5cf6;background-color:#f8f7fd;font-size:15px;line-height:1.4;">
+                    <strong style="color:#111827;">{{ t.title }}</strong><br>
+                    <span style="font-size:13px;color:#6b7280;">{{ t.course.name }} · due {% if t.due_date == today %}<strong style="color:#7c3aed;">today</strong>{% else %}{{ t.due_date|date:"D j M" }}{% endif %}</span>
+                  </td>
+                </tr>
+                <tr><td style="height:6px;line-height:6px;font-size:0;">&nbsp;</td></tr>
+                {% endfor %}
+              </table>
+              {% endif %}
+
+              {% if cards_due %}
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;background-color:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:15px;line-height:1.5;color:#78350f;">
+                    🃏 <strong>{{ cards_due }} flashcard{{ cards_due|pluralize }}</strong> ready for review. A few minutes now saves hours before the exam.
+                    <a href="{{ flashcards_url }}" style="color:#b45309;font-weight:bold;">Review now</a>
+                  </td>
+                </tr>
+              </table>
+              {% endif %}
+
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 24px;">
+                <tr>
+                  <td align="center" bgcolor="#7c3aed" style="border-radius:10px;">
+                    <a href="{{ tasks_url }}" style="display:inline-block;padding:14px 26px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">Open my tasks</a>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f7fd;border-radius:10px;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:14px;line-height:1.6;color:#4b5563;"><strong style="color:#111827;">Tip of the day:</strong> {{ tip }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:20px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#9ca3af;">
+              You get this on mornings when something is due. <a href="{{ unsubscribe_url }}" style="color:#9ca3af;">Turn off daily emails</a><br>
+              StudyFlow · <a href="{{ site }}/" style="color:#9ca3af;">{{ domain }}</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>{% endautoescape %}

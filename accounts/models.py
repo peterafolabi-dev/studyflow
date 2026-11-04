@@ -39,6 +39,17 @@ class Profile(models.Model):
     )
     university = models.CharField(max_length=60, choices=UNIVERSITY_CHOICES, default='FUT Minna')
     spotify_playlist_url = models.URLField(max_length=300, blank=True)
+    # Morning email with the day's deadlines and due flashcards (one-click unsubscribe in every email).
+    daily_digest = models.BooleanField(default=True, verbose_name='Daily study email')
+    digest_token = models.CharField(max_length=40, blank=True, default='', db_index=True)
+    last_digest_at = models.DateTimeField(null=True, blank=True)
+
+    def ensure_digest_token(self):
+        if not self.digest_token:
+            import secrets
+            self.digest_token = secrets.token_urlsafe(24)
+            self.save(update_fields=['digest_token'])
+        return self.digest_token
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

@@ -1,0 +1,42 @@
+# Sends the morning study email (tasks due + flashcards to review) every day at
+# 07:00 Lagos time (06:00 UTC).
+#
+# Setup (once):
+#   1. Pick a long random string, e.g. from https://www.random.org/strings/
+#   2. Render → studyflow → Environment → add CRON_SECRET = <that string>
+#   3. GitHub → this repo → Settings → Secrets and variables → Actions →
+#      New repository secret: CRON_SECRET = <the same string>
+# Until both are set, this job does nothing harmful (the site answers 503/401).
+name: Daily study email
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: daily-digest
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Send today's emails
+        env:
+          SITE: https://studyflow-xt1x.onrender.com
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "CRON_SECRET repo secret is not set; skipping."; exit 0; fi
+          # Wake the free Render service first (can take ~60s).
+          curl -fsS --retry 5 --retry-delay 15 --retry-all-errors --max-time 120 -o /dev/null "$SITE/healthz/" || true
+          # Each call sends for up to ~45s; keep calling until nobody is left.
+          for i in 1 2 3 4 5 6; do
+            out=$(curl -fsS --retry 3 --retry-delay 10 --retry-all-errors --max-time 120 \
+                    -H "Authorization: Bearer $CRON_SECRET" "$SITE/cron/daily-digest/")
+            echo "run $i: $out"
+            echo "$out" | grep -q '"more_to_send": true' || break
+          done
