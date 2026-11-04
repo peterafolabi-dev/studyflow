@@ -1,0 +1,104 @@
+{% autoescape on %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Welcome to StudyFlow</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f2fb;">
+  <!-- Inbox preview text -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Your account is ready, {{ name }}. Here are three things to do first.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f2fb;">
+    <tr>
+      <td align="center" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+          <!-- Brand -->
+          <tr>
+            <td align="center" style="padding:0 0 20px;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#6d28d9;">
+              📚 StudyFlow
+            </td>
+          </tr>
+          <!-- Hero -->
+          <tr>
+            <td style="background-color:#3b1d8f;background-image:linear-gradient(135deg,#4c1d95,#7c3aed);border-radius:16px 16px 0 0;padding:36px 32px 30px;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+              <p style="margin:0 0 6px;font-size:13px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#ddd6fe;">Welcome aboard</p>
+              <h1 style="margin:0 0 12px;font-size:28px;line-height:1.25;color:#ffffff;">Hi {{ name }}, your study space is ready 🎉</h1>
+              <p style="margin:0;font-size:16px;line-height:1.6;color:#ede9fe;">Courses, deadlines, flashcards and a 24/7 AI study coach, all in one place.</p>
+            </td>
+          </tr>
+          <!-- Card -->
+          <tr>
+            <td style="background-color:#ffffff;border-radius:0 0 16px 16px;border:1px solid #e9e5f5;border-top:0;padding:30px 32px;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+              <p style="margin:0 0 18px;font-size:16px;font-weight:bold;color:#111827;">Three things to do first</p>
+
+              <!-- Step 1 -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;">
+                <tr>
+                  <td width="44" valign="top"><div style="width:32px;height:32px;border-radius:16px;background-color:#ede9fe;color:#6d28d9;font-weight:bold;font-size:15px;line-height:32px;text-align:center;">1</div></td>
+                  <td valign="top" style="font-size:15px;line-height:1.55;color:#374151;">
+                    <a href="{{ courses_url }}" style="color:#111827;font-weight:bold;text-decoration:none;">Add your courses</a><br>
+                    Each course holds its tasks, flashcards and study time.
+                  </td>
+                </tr>
+              </table>
+              <!-- Step 2 -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;">
+                <tr>
+                  <td width="44" valign="top"><div style="width:32px;height:32px;border-radius:16px;background-color:#ede9fe;color:#6d28d9;font-weight:bold;font-size:15px;line-height:32px;text-align:center;">2</div></td>
+                  <td valign="top" style="font-size:15px;line-height:1.55;color:#374151;">
+                    <strong style="color:#111827;">Ask the AI coach anything</strong><br>
+                    Tap the chat bubble on any page. It explains maths and engineering step by step.
+                  </td>
+                </tr>
+              </table>
+              <!-- Step 3 -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px;">
+                <tr>
+                  <td width="44" valign="top"><div style="width:32px;height:32px;border-radius:16px;background-color:#ede9fe;color:#6d28d9;font-weight:bold;font-size:15px;line-height:32px;text-align:center;">3</div></td>
+                  <td valign="top" style="font-size:15px;line-height:1.55;color:#374151;">
+                    <a href="{{ study_url }}" style="color:#111827;font-weight:bold;text-decoration:none;">Start a focus session</a><br>
+                    Run a Pomodoro in the Study Room to log your study time.
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Button (table-based so it renders in Outlook too) -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 24px;">
+                <tr>
+                  <td align="center" bgcolor="#7c3aed" style="border-radius:10px;">
+                    <a href="{{ dashboard_url }}" style="display:inline-block;padding:14px 28px;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">
+                      Open my dashboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8f7fd;border-radius:10px;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:14px;line-height:1.6;color:#4b5563;">
+                    <strong style="color:#111827;">Your username:</strong> {{ user.get_username }}<br>
+                    <strong style="color:#111827;">Tip:</strong> on your phone, open StudyFlow and choose “Add to Home screen” so it opens like an app.
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:24px 0 0;font-size:15px;line-height:1.6;color:#374151;">Study well,<br><strong style="color:#111827;">Peter</strong>, StudyFlow</p>
+              <p style="margin:20px 0 0;padding-top:18px;border-top:1px solid #eeeaf7;font-size:12.5px;line-height:1.6;color:#6b7280;">
+                You're getting this because you just created a StudyFlow account. If that wasn't you, you can ignore this email.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:20px 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#9ca3af;">
+              StudyFlow · Your student planner, library and campus life hub<br>
+              <a href="{{ site }}/" style="color:#9ca3af;">{{ domain }}</a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>{% endautoescape %}

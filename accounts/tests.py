@@ -27,7 +27,7 @@ class AuthTests(TestCase):
         self.assertEqual(response.redirect_chain, [(reverse('login'), 302)])
         self.assertEqual(User.objects.get(username='newstudent').email, 'new@example.com')
         self.assertNotIn('_auth_user_id', self.client.session)
-        self.assertContains(response, 'You&#x27;ve signed up successfully! Please log in.')
+        self.assertContains(response, 'You&#x27;ve signed up successfully! We&#x27;ve sent a welcome email. Please log in.')
         self.assertEqual(self.client.get(reverse('dashboard')).status_code, 302)
 
     def test_signup_rejects_mismatched_passwords(self):
@@ -329,3 +329,53 @@ class DashboardGreetingTests(TestCase):
         second = self.client.post(reverse('login'), creds, follow=True)
         self.assertContains(second, 'Welcome back, newbie')
         self.assertNotContains(second, 'Welcome to StudyFlow, newbie')
+
+
+class WelcomeEmailTests(TestCase):
+    """New students get a welcome email with working links; email trouble never blocks sign-up."""
+
+    def _signup(self, email='ada@example.com'):
+        from django.urls import reverse
+        return self.client.post(reverse('signup'), {
+            'username': 'ada', 'email': email,
+            'password1': 'Str0ng-pass-2026!', 'password2': 'Str0ng-pass-2026!',
+        })
+
+    def test_signup_sends_one_welcome_email(self):
+        from django.core import mail
+        self._signup()
+        self.assertEqual(len(mail.outbox), 1)
+        msg = mail.outbox[0]
+        self.assertEqual(msg.to, ['ada@example.com'])
+        self.assertIn('Welcome to StudyFlow', msg.subject)
+        self.assertIn('Hi ada', msg.body)
+        html = msg.alternatives[0][0]
+        self.assertIn('Open my dashboard', html)
+        self.assertIn('http://testserver/', html)  # absolute links, not relative ones
+
+    def test_email_failure_does_not_break_signup(self):
+        from unittest.mock import patch
+        from django.contrib.auth import get_user_model
+        with patch('django.core.mail.EmailMultiAlternatives.send', side_effect=OSError('mail down')), \
+                self.assertLogs('accounts.emails', level='ERROR'):
+            response = self._signup()
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(get_user_model().objects.filter(username='ada').exists())
+
+    def test_no_email_address_means_no_email(self):
+        from django.contrib.auth import get_user_model
+        from django.core import mail
+        from .emails import send_welcome_email
+        user = get_user_model().objects.create_user('noemail', password='x')
+        self.assertFalse(send_welcome_email(user))
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_google_signup_also_gets_welcome_email(self):
+        from allauth.account.signals import user_signed_up
+        from django.contrib.auth import get_user_model
+        from django.core import mail
+        from django.test import RequestFactory
+        user = get_user_model().objects.create_user('gina', email='gina@example.com', password='x')
+        user_signed_up.send(sender=None, request=RequestFactory().get('/'), user=user)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['gina@example.com'])

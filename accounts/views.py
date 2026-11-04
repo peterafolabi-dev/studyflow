@@ -22,8 +22,10 @@ def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, "You've signed up successfully! Please log in.")
+            user = form.save()
+            from .emails import send_welcome_email
+            send_welcome_email(user, request)
+            messages.success(request, "You've signed up successfully! We've sent a welcome email. Please log in.")
             return redirect('login')
         messages.error(request, 'Sign-up failed. Check that the username is available, the email is valid and unused, and both passwords match.')
     else:

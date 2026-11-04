@@ -1,0 +1,30 @@
+Hi {{ name }},
+
+Welcome to StudyFlow! Your account is ready.
+
+StudyFlow keeps your courses, deadlines, flashcards and a 24/7 AI study coach in one place, built for FUT Minna students.
+
+Three things to do first:
+
+1. Add your courses
+   Each course holds its tasks, flashcards and study time.
+   {{ courses_url }}
+
+2. Ask the AI coach anything
+   Tap the chat bubble on any page. It explains maths and engineering step by step.
+
+3. Start a focus session
+   Run a Pomodoro in the Study Room to log your study time.
+   {{ study_url }}
+
+Open your dashboard: {{ dashboard_url }}
+
+Your username: {{ user.get_username }}
+Forgot your password later? Use "Forgot password?" on the login page.
+
+Tip: on your phone, open StudyFlow in your browser and choose "Add to Home screen" so it opens like an app.
+
+Study well,
+Peter, StudyFlow
+
+You're getting this because you just created a StudyFlow account at {{ domain }}. If that wasn't you, you can ignore this email.
