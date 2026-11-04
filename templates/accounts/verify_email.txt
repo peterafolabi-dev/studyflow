@@ -1,0 +1,13 @@
+Hi {{ name }},
+
+Thanks for signing up to StudyFlow. Please confirm this is your email address by opening the link below:
+
+{{ link }}
+
+The link works once and expires in {{ expiry_days }} day{{ expiry_days|pluralize }}.
+
+Your username: {{ user.get_username }}
+
+Didn't sign up? You can ignore this email and no account will be activated.
+
+StudyFlow · {{ domain }}

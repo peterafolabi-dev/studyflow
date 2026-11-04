@@ -207,11 +207,18 @@ if BREVO_API_KEY and 'test' not in sys.argv:
 # Shared secret for scheduled jobs (the daily-digest GitHub Action sends it as a Bearer token).
 CRON_SECRET = os.environ.get('CRON_SECRET', '')
 
+# Email sign-ups must click a link before they can log in. Only enforced when email can actually
+# be delivered (Brevo or SMTP configured), so a missing email setup never locks students out.
+_can_send_email = bool(BREVO_API_KEY or EMAIL_HOST_USER)
+EMAIL_VERIFICATION_REQUIRED = str(os.environ.get('EMAIL_VERIFICATION_REQUIRED', 'auto')).lower()
+EMAIL_VERIFICATION_REQUIRED = _can_send_email if EMAIL_VERIFICATION_REQUIRED == 'auto' else EMAIL_VERIFICATION_REQUIRED in {'1', 'true', 'yes', 'on'}
+
 # Used to build links in emails sent outside a request.
 SITE_URL = os.environ.get('SITE_URL', 'https://studyflow-xt1x.onrender.com')
 
 if 'test' in sys.argv:
     WELCOME_EMAIL_SYNC = True  # send inline so tests can inspect mail.outbox
+    EMAIL_VERIFICATION_REQUIRED = True
     # Real hashing is deliberately slow; tests create many users, so use a fast hasher there only.
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 

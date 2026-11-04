@@ -23,6 +23,14 @@ def signup(request):
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
+            from .verification import send_verification_email, verification_required
+            if verification_required():
+                user.profile.email_verified = False
+                user.profile.save(update_fields=['email_verified'])
+                if not send_verification_email(user, request):
+                    messages.error(request, "Your account was created, but we couldn't send the confirmation email. Use “Send a new link” below.")
+                request.session['verify_login'] = user.email
+                return redirect('verify_email_sent')
             from .emails import send_welcome_email
             send_welcome_email(user, request)
             messages.success(request, "You've signed up successfully! We've sent a welcome email. Please log in.")
@@ -56,6 +64,12 @@ def login_view(request):
                 return render(request, 'accounts/login.html', {'form': form, 'error': error}, status=429)
             user = authenticate(request, username=username, password=password,
                                 backend='django.contrib.auth.backends.ModelBackend')
+            from .verification import needs_verification
+            if user is not None and needs_verification(user):
+                request.session['verify_login'] = user.email
+                error = 'Please confirm your email first. We sent you a link when you signed up.'
+                messages.error(request, error)
+                return redirect('verify_email_sent')
             if user is not None:
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
                 return redirect_next(request, 'dashboard', url=request.GET.get('next', ''))
@@ -278,3 +292,57 @@ def cron_daily_digest(request):
     if not hmac.compare_digest(request.headers.get('Authorization', '').encode(), f'Bearer {secret}'.encode()):
         return JsonResponse({'error': 'unauthorized'}, status=401)
     return JsonResponse(send_daily_digest(request=request))
+
+
+def verify_email_sent(request):
+    """'Check your email' page, with a form to send a new link."""
+    login_hint = request.session.get('verify_login', '')
+    return render(request, 'accounts/verify_email.html', {'state': 'sent', 'email': login_hint, 'login': login_hint})
+
+
+def verify_email(request, uidb64, token):
+    from django.contrib.auth import get_user_model
+    from django.utils.encoding import force_str
+    from django.utils.http import urlsafe_base64_decode
+    from .emails import send_welcome_email
+    from .verification import email_verification_token
+
+    try:
+        user = get_user_model().objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
+    except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+        user = None
+    if user is None or not email_verification_token.check_token(user, token):
+        return render(request, 'accounts/verify_email.html', {'state': 'invalid'}, status=400)
+
+    first_time = not user.profile.email_verified
+    if first_time:
+        user.profile.email_verified = True
+        user.profile.save(update_fields=['email_verified'])
+        send_welcome_email(user, request)
+    request.session.pop('verify_login', None)
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    messages.success(request, 'Email confirmed. Welcome to StudyFlow! 🎉')
+    return redirect('dashboard')
+
+
+@require_POST
+def resend_verification(request):
+    """Sends a fresh link. Always shows the same message, so it can't be used to discover accounts."""
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from resources.ai_service import RateLimitExceeded, check_and_increment_rate_limit
+    from .verification import send_verification_email
+
+    login_value = request.POST.get('login', '').strip()
+    if login_value:
+        try:
+            check_and_increment_rate_limit(login_value.lower(), bucket='verify_resend', max_requests=3, window=3600)
+            user = get_user_model().objects.filter(Q(username__iexact=login_value) | Q(email__iexact=login_value)).select_related('profile').first()
+            if user and user.email and not user.profile.email_verified:
+                send_verification_email(user, request)
+        except RateLimitExceeded:
+            messages.error(request, 'Too many requests. Please wait an hour and try again.')
+            return redirect('verify_email_sent')
+    request.session['verify_login'] = login_value
+    messages.success(request, "If that account is waiting for confirmation, we've sent a new link.")
+    return redirect('verify_email_sent')

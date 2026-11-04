@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from django.contrib.auth import get_user_model
 from django.core.management import call_command, CommandError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 User = get_user_model()
@@ -19,6 +19,7 @@ class AuthTests(TestCase):
     def test_public_admin_setup_route_is_not_exposed(self):
         self.assertEqual(self.client.get('/setup-admin-777/').status_code, 404)
 
+    @override_settings(EMAIL_VERIFICATION_REQUIRED=False)
     def test_signup_creates_user_redirects_to_login_without_logging_in(self):
         response = self.client.post(reverse('signup'), {
             'username': 'newstudent', 'email': 'New@Example.com',
@@ -331,6 +332,7 @@ class DashboardGreetingTests(TestCase):
         self.assertNotContains(second, 'Welcome to StudyFlow, newbie')
 
 
+@override_settings(EMAIL_VERIFICATION_REQUIRED=False)
 class WelcomeEmailTests(TestCase):
     """New students get a welcome email with working links; email trouble never blocks sign-up."""
 
@@ -453,3 +455,75 @@ class DailyDigestTests(TestCase):
     def test_students_can_turn_it_off_in_their_profile(self):
         from accounts.forms import ProfileForm
         self.assertIn('daily_digest', ProfileForm.Meta.fields)
+
+
+
+@override_settings(EMAIL_VERIFICATION_REQUIRED=True)
+class EmailVerificationTests(TestCase):
+    """Email sign-ups must confirm their address before they can log in."""
+
+    def _signup(self):
+        return self.client.post(reverse('signup'), {
+            'username': 'tolu', 'email': 'tolu@example.com',
+            'password1': 'S7rong-pass-99', 'password2': 'S7rong-pass-99',
+        })
+
+    def _link_path(self):
+        import re
+        from django.core import mail
+        body = mail.outbox[-1].body
+        return re.search(r'https?://[^/\s]+(/verify-email/[^\s]+/)', body).group(1)
+
+    def test_signup_sends_verification_not_welcome(self):
+        from django.core import mail
+        response = self._signup()
+        self.assertRedirects(response, reverse('verify_email_sent'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, 'Confirm your email for StudyFlow')
+        self.assertFalse(User.objects.get(username='tolu').profile.email_verified)
+        self.assertContains(self.client.get(reverse('verify_email_sent')), 'tolu@example.com')
+
+    def test_cannot_log_in_until_verified(self):
+        self._signup()
+        response = self.client.post(reverse('login'), {'username': 'tolu', 'password': 'S7rong-pass-99'})
+        self.assertRedirects(response, reverse('verify_email_sent'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_link_verifies_logs_in_and_sends_welcome(self):
+        from django.core import mail
+        self._signup()
+        response = self.client.get(self._link_path())
+        self.assertRedirects(response, reverse('dashboard'), fetch_redirect_response=False)
+        self.assertTrue(User.objects.get(username='tolu').profile.email_verified)
+        self.assertIn('_auth_user_id', self.client.session)
+        self.assertIn('Welcome to StudyFlow', mail.outbox[-1].subject)
+        # the same link can't be used twice
+        self.client.logout()
+        self.assertEqual(self.client.get(self._link_path_from(mail.outbox[0])).status_code, 400)
+
+    def _link_path_from(self, msg):
+        import re
+        return re.search(r'https?://[^/\s]+(/verify-email/[^\s]+/)', msg.body).group(1)
+
+    def test_bad_link_is_rejected(self):
+        self._signup()
+        self.assertEqual(self.client.get(reverse('verify_email', args=['MQ', 'bad-token'])).status_code, 400)
+        self.assertFalse(User.objects.get(username='tolu').profile.email_verified)
+
+    def test_resend_sends_a_new_link_without_revealing_accounts(self):
+        from django.core import mail
+        from django.core.cache import cache
+        cache.clear()
+        self._signup()
+        r1 = self.client.post(reverse('resend_verification'), {'login': 'tolu@example.com'}, follow=True)
+        self.assertEqual(len(mail.outbox), 2)
+        r2 = self.client.post(reverse('resend_verification'), {'login': 'nobody@example.com'}, follow=True)
+        self.assertEqual(len(mail.outbox), 2)
+        msg = "If that account is waiting for confirmation, we&#x27;ve sent a new link."
+        self.assertContains(r1, msg)
+        self.assertContains(r2, msg)
+
+    def test_existing_and_google_accounts_are_not_blocked(self):
+        User.objects.create_user('old', email='old@example.com', password='S7rong-pass-99')
+        response = self.client.post(reverse('login'), {'username': 'old', 'password': 'S7rong-pass-99'})
+        self.assertRedirects(response, reverse('dashboard'), fetch_redirect_response=False)

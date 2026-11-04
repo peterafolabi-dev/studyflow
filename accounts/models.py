@@ -40,6 +40,9 @@ class Profile(models.Model):
     university = models.CharField(max_length=60, choices=UNIVERSITY_CHOICES, default='FUT Minna')
     spotify_playlist_url = models.URLField(max_length=300, blank=True)
     # Morning email with the day's deadlines and due flashcards (one-click unsubscribe in every email).
+    # Email/password sign-ups start unverified until they click the link we email them.
+    # Everyone else (existing accounts, Google sign-ups, admin-created) counts as verified.
+    email_verified = models.BooleanField(default=True)
     daily_digest = models.BooleanField(default=True, verbose_name='Daily study email')
     digest_token = models.CharField(max_length=40, blank=True, default='', db_index=True)
     last_digest_at = models.DateTimeField(null=True, blank=True)

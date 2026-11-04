@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Confirm your email · StudyFlow{% endblock %}
+{% block content %}
+<main class="relative z-10 flex min-h-[calc(100vh-5rem)] items-center justify-center px-4 py-10 sm:px-6">
+  <section class="w-full max-w-md text-center">
+    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-500/20 bg-brand-500/10 text-brand-400" aria-hidden="true">
+      <svg class="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+    </div>
+    {% if state == 'invalid' %}
+      <h1 class="font-display text-3xl font-bold tracking-tight text-white">That link didn't work</h1>
+      <p class="mt-2 text-slate-400">It may have expired or already been used. Send yourself a new one below.</p>
+    {% else %}
+      <h1 class="font-display text-3xl font-bold tracking-tight text-white">Check your email</h1>
+      <p class="mt-2 text-slate-400">{% if email %}We sent a confirmation link to <strong class="text-slate-200">{{ email }}</strong>.{% else %}We sent you a confirmation link.{% endif %} Click it to open your account. It can take a minute; check spam or promotions too.</p>
+    {% endif %}
+
+    <form method="post" action="{% url 'resend_verification' %}" class="mt-8 rounded-2xl border border-white/10 bg-slate-900/80 p-6 text-left">
+      {% csrf_token %}
+      <label for="id_login" class="block text-sm font-semibold text-slate-300">Didn't get it? Enter your username or email</label>
+      <input id="id_login" name="login" value="{{ login }}" required autocomplete="username"
+             class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+             placeholder="Username or email">
+      <button class="mt-4 w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white transition hover:bg-brand-700">Send a new link</button>
+    </form>
+    <p class="mt-6 text-sm text-slate-400">Already confirmed? <a href="{% url 'login' %}" class="font-semibold text-brand-400 hover:underline">Log in</a></p>
+  </section>
+</main>
+{% endblock %}
