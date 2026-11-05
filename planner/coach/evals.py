@@ -31,16 +31,21 @@ class Scenario:
     setup: Callable = None
 
 
+def _text(r):
+    """Lower-case reply with the odd spaces models use (no-break, thin, narrow) made normal."""
+    return re.sub(r'[\u00a0\u2007\u2009\u202f]', ' ', r['reply']).lower()
+
+
 def _has(*words):
-    return lambda r: all(w.lower() in r['reply'].lower() for w in words)
+    return lambda r: all(w.lower() in _text(r) for w in words)
 
 
 def _any(*words):
-    return lambda r: any(w.lower() in r['reply'].lower() for w in words)
+    return lambda r: any(w.lower() in _text(r) for w in words)
 
 
 def _lacks(*words):
-    return lambda r: not any(w.lower() in r['reply'].lower() for w in words)
+    return lambda r: not any(w.lower() in _text(r) for w in words)
 
 
 def _short(limit):

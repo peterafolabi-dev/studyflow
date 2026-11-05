@@ -289,6 +289,9 @@ class EvalHarnessTests(TestCase):
         passed, total, _ = evals.run(bad, [evals.SCENARIOS[0]], verbose=None)
         self.assertEqual(passed, 0)
 
+    def test_marking_ignores_unusual_spaces(self):
+        self.assertTrue(evals._any('EEE 201')({'reply': 'EEE\u202f201 at 33\u00a0%'}))
+
     def test_scenarios_roll_back_their_data(self):
         evals.run(FakeGroq(['ok']), evals.SCENARIOS, verbose=None)
         self.assertFalse(User.objects.filter(username='coach-eval-student').exists())
