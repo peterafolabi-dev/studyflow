@@ -277,3 +277,73 @@ class CoachFeedback(models.Model):
 
     def __str__(self):
         return f'{"👍" if self.helpful else "👎"} {self.question[:50]}'
+
+
+# ── CGPA tracker ─────────────────────────────────────────────────────────────
+
+GRADE_POINTS = {'A': 5, 'B': 4, 'C': 3, 'D': 2, 'E': 1, 'F': 0}
+
+
+class Semester(models.Model):
+    """One semester of results, e.g. '100 Level · First Semester'."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='semesters')
+    name = models.CharField(max_length=80)
+    order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return self.name
+
+    def totals(self):
+        units = points = 0
+        for r in self.results.all():
+            units += r.units
+            points += r.units * r.grade_point
+        return units, points
+
+    @property
+    def gpa(self):
+        units, points = self.totals()
+        return round(points / units, 2) if units else None
+
+
+class CourseResult(models.Model):
+    GRADE_CHOICES = [(g, f'{g} ({p})') for g, p in GRADE_POINTS.items()]
+
+    semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='results')
+    code = models.CharField(max_length=20)
+    units = models.PositiveSmallIntegerField()
+    grade = models.CharField(max_length=1, choices=GRADE_CHOICES)
+
+    class Meta:
+        ordering = ['code']
+
+    def __str__(self):
+        return f'{self.code} {self.grade}'
+
+    @property
+    def grade_point(self):
+        return GRADE_POINTS.get(self.grade, 0)
+
+
+# ── Attendance tracker ───────────────────────────────────────────────────────
+
+class AttendanceRecord(models.Model):
+    """Did the student attend this course's class on this day? Most Nigerian
+    universities need 75% attendance before a student can sit the exam."""
+    REQUIRED_PERCENT = 75
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='attendance')
+    date = models.DateField(default=timezone.localdate)
+    attended = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        constraints = [models.UniqueConstraint(fields=['course', 'date'], name='one_attendance_mark_per_course_per_day')]
+
+    def __str__(self):
+        return f'{self.course} {self.date} {"✓" if self.attended else "✗"}'

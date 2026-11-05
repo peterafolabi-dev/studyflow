@@ -67,6 +67,14 @@ def _seed_resource(user):
                             uploaded_by=user)
 
 
+def _seed_low_attendance(user):
+    from planner.models import AttendanceRecord
+    course = Course.objects.create(user=user, name='Circuit Theory', code='EEE 201')
+    today = timezone.localdate()
+    for i, ok in enumerate([True, False, False, True, False, False]):
+        AttendanceRecord.objects.create(course=course, date=today - timedelta(days=i + 1), attended=ok)
+
+
 def _plan_tasks_ok(r):
     due = timezone.localdate() + timedelta(days=7)
     tasks = r['tasks']
@@ -99,6 +107,8 @@ SCENARIOS = [
              [('does not invent a page', lambda r: not re.search(r'\bpage\s+\d+', r['reply'], re.I)), ('points to a real source', _any('lecturer', 'course outline', 'table of contents', 'textbook', 'handbook', 'index'))]),
     Scenario('Uses the StudyFlow library', 'can you help me revise thermodynamics?',
              [('cites the past questions', _any('thermodynamics past questions', 'PHY 201'))], setup=_seed_resource),
+    Scenario('Warns about the 75% attendance rule', 'how am I doing this semester? anything I should worry about?',
+             [('flags EEE 201 attendance', _any('EEE 201', 'circuit')), ('mentions attendance', _any('attendance', '75'))], setup=_seed_low_attendance),
     Scenario('Code in a fenced block', 'show me a python function that reverses a string, explained simply',
              [('has code block', lambda r: '```' in r['reply'])], mode='explain'),
 ]

@@ -63,6 +63,21 @@ def student_context(user, now=None):
         effort.append(f"current streak {streak.current_streak} day(s)")
     lines.append('; '.join(effort) + '.')
 
+    from planner.academics import attendance_summary, cgpa_summary
+    cg = cgpa_summary(user)
+    if cg['cgpa'] is not None:
+        last = cg['rows'][-1]
+        lines.append(f"CGPA {cg['cgpa']:.2f} ({cg['class']}) over {cg['units']} units; last semester GPA "
+                     f"{last['gpa']:.2f} ({last['semester'].name})." if last['gpa'] is not None else f"CGPA {cg['cgpa']:.2f} ({cg['class']}).")
+    att = [a for a in attendance_summary(user) if a['total']]
+    if att:
+        low = [a for a in att if a['status'] == 'danger']
+        if low:
+            lines.append('ATTENDANCE BELOW 75% (exam eligibility at risk): ' + '; '.join(
+                f"{a['course'].code or a['course'].name} {a['percent']}% (must attend next {a['must_attend']})" for a in low) + '.')
+        else:
+            lines.append('Attendance: ' + ', '.join(f"{a['course'].code or a['course'].name} {a['percent']}%" for a in att[:8]) + ' (all at or above 75%).')
+
     classes = TimetableEntry.objects.filter(user=user, day_of_week=today.weekday()).order_by('start_time')[:6]
     if classes:
         lines.append('Classes today: ' + '; '.join(f"{c.title} {c.start_time:%H:%M}-{c.end_time:%H:%M}" for c in classes) + '.')

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import coach_views, views
+from . import academic_views, coach_views, views
 
 urlpatterns = [
     path('break-room/', views.break_room, name='break_room'),
@@ -23,6 +23,14 @@ urlpatterns = [
     path('tasks/<int:pk>/toggle/', views.task_toggle, name='task_toggle'),
     path('search/', views.global_search, name='global_search'),
     path('gpa-calculator/', views.gpa_calculator, name='gpa_calculator'),
+    path('cgpa/', academic_views.cgpa_tracker, name='cgpa_tracker'),
+    path('cgpa/semesters/new/', academic_views.semester_create, name='semester_create'),
+    path('cgpa/semesters/<int:pk>/delete/', academic_views.semester_delete, name='semester_delete'),
+    path('cgpa/semesters/<int:pk>/results/new/', academic_views.result_add, name='result_add'),
+    path('cgpa/results/<int:pk>/delete/', academic_views.result_delete, name='result_delete'),
+    path('attendance/', academic_views.attendance, name='attendance'),
+    path('attendance/<int:course_pk>/mark/', academic_views.attendance_mark, name='attendance_mark'),
+    path('attendance/records/<int:pk>/delete/', academic_views.attendance_delete, name='attendance_delete'),
     path('timetable/', views.timetable, name='timetable'),
     path('weekly-plan/', views.weekly_plan, name='weekly_plan'),
     path('study/', views.study_room, name='study_room'),

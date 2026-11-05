@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Attendance · StudyFlow{% endblock %}
+{% block content %}
+<div class="max-w-4xl">
+  <div class="mb-6">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Attendance</h1>
+    <p class="text-slate-500 dark:text-slate-400 mt-1">Most schools need {{ required }}% attendance before you can sit the exam. Tap after each class and StudyFlow keeps count.</p>
+  </div>
+
+  {% if at_risk %}
+    <div class="rounded-2xl border border-rose-300 dark:border-rose-700/60 bg-rose-50 dark:bg-rose-900/15 p-4 mb-5 text-sm text-rose-800 dark:text-rose-200" role="alert">
+      <b>Below {{ required }}%:</b>
+      {% for r in at_risk %}{{ r.course.code|default:r.course.name }} ({{ r.percent }}%, attend the next {{ r.must_attend }} class{{ r.must_attend|pluralize:"es" }} to recover){% if not forloop.last %}; {% endif %}{% endfor %}.
+    </div>
+  {% endif %}
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    {% for r in rows %}
+      <section class="rounded-2xl border bg-white dark:bg-slate-900 p-5 {% if r.status == 'danger' %}border-rose-300 dark:border-rose-700{% elif r.status == 'edge' %}border-amber-300 dark:border-amber-700{% else %}border-brand-100 dark:border-slate-700{% endif %}">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <h2 class="font-display font-bold text-slate-900 dark:text-white">{{ r.course.code|default:r.course.name }}</h2>
+            {% if r.course.code %}<p class="text-xs text-slate-500">{{ r.course.name }}</p>{% endif %}
+          </div>
+          <span class="font-display text-2xl font-bold {% if r.status == 'danger' %}text-rose-600{% elif r.status == 'edge' %}text-amber-600{% elif r.status == 'safe' %}text-emerald-600{% else %}text-slate-400{% endif %}">{% if r.percent is not None %}{{ r.percent }}%{% else %}–{% endif %}</span>
+        </div>
+        <div class="mt-3 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden" aria-hidden="true">
+          <div class="h-full rounded-full {% if r.status == 'danger' %}bg-rose-500{% elif r.status == 'edge' %}bg-amber-500{% else %}bg-emerald-500{% endif %}" style="width: {{ r.percent|default:0 }}%"></div>
+        </div>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mt-2">
+          {% if r.status == 'none' %}No classes marked yet.
+          {% elif r.status == 'danger' %}{{ r.attended }}/{{ r.total }} attended. Attend the next <b>{{ r.must_attend }}</b> to get back to {{ required }}%.
+          {% elif r.status == 'edge' %}{{ r.attended }}/{{ r.total }} attended. Exactly on the line: don't miss the next one.
+          {% else %}{{ r.attended }}/{{ r.total }} attended. You can miss <b>{{ r.can_miss }}</b> more and stay above {{ required }}%.{% endif %}
+        </p>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          {% if r.today %}
+            <span class="text-xs text-slate-500">Today: {% if r.today.attended %}✓ present{% else %}✗ absent{% endif %}</span>
+          {% endif %}
+          <form method="post" action="{% url 'attendance_mark' r.course.pk %}">{% csrf_token %}<input type="hidden" name="attended" value="1">
+            <button class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-3 py-1.5">✓ Attended today</button></form>
+          <form method="post" action="{% url 'attendance_mark' r.course.pk %}">{% csrf_token %}<input type="hidden" name="attended" value="0">
+            <button class="rounded-lg border border-rose-300 text-rose-600 dark:text-rose-300 text-sm font-medium px-3 py-1.5">✗ Missed</button></form>
+          <details class="text-xs">
+            <summary class="cursor-pointer text-slate-500 hover:underline">Another day</summary>
+            <form method="post" action="{% url 'attendance_mark' r.course.pk %}" class="mt-2 flex flex-wrap gap-2 items-center">{% csrf_token %}
+              <input type="date" name="date" max="{{ today|date:'Y-m-d' }}" required class="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1">
+              <select name="attended" class="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1"><option value="1">Attended</option><option value="0">Missed</option></select>
+              <button class="rounded-lg bg-brand-600 text-white px-3 py-1">Save</button>
+            </form>
+          </details>
+        </div>
+      </section>
+    {% empty %}
+      <p class="text-slate-500 dark:text-slate-400">Add your courses first, then mark attendance after each class. <a class="text-brand-600 underline" href="{% url 'course_create' %}">Add a course</a></p>
+    {% endfor %}
+  </div>
+
+  {% if recent %}
+    <h2 class="font-display font-bold text-slate-900 dark:text-white mt-8 mb-2">Recent marks</h2>
+    <ul class="divide-y divide-slate-100 dark:divide-slate-800 rounded-2xl border border-brand-100 dark:border-slate-700 bg-white dark:bg-slate-900">
+      {% for m in recent %}
+        <li class="flex items-center justify-between px-4 py-2 text-sm">
+          <span>{{ m.date|date:"D j M" }} · {{ m.course.code|default:m.course.name }} · {% if m.attended %}<span class="text-emerald-600">present</span>{% else %}<span class="text-rose-600">absent</span>{% endif %}</span>
+          <form method="post" action="{% url 'attendance_delete' m.pk %}">{% csrf_token %}<button class="text-slate-400 hover:text-rose-500 text-xs">undo</button></form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+{% endblock %}

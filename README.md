@@ -1,7 +1,7 @@
 # 📚 StudyFlow
 
 [![Tests](https://github.com/peterafolabi-dev/studyflow/actions/workflows/tests.yml/badge.svg)](https://github.com/peterafolabi-dev/studyflow/actions/workflows/tests.yml)
-![Django tests](https://img.shields.io/badge/django%20tests-155%20passing-1F8A4C)
+![Django tests](https://img.shields.io/badge/django%20tests-168%20passing-1F8A4C)
 ![Python](https://img.shields.io/badge/python-3.12-3776AB)
 ![AI](https://img.shields.io/badge/AI-Groq%20LLM-F55036)
 
@@ -21,7 +21,7 @@ StudyFlow combines planning, AI help, resource sharing and focus tools in one re
 - **AI output is treated as untrusted.** Model replies can contain HTML, so they're sanitised with DOMPurify before they touch the page. LaTeX is rendered with KaTeX instead of being trusted as markup.
 - **AI cost and abuse are capped.** Expensive AI features (like asking questions about a PDF) have a per-user rate limit, so one user or script can't run up the API bill.
 - **Two layers of validation.** The browser gives instant feedback on file type and size, and the server repeats every check, because client-side checks are a convenience, not security.
-- **Deploys only after green tests.** GitHub Actions runs `manage.py check`, a missing-migrations check and all 155 tests on every push, and Render can wait for CI before going live.
+- **Deploys only after green tests.** GitHub Actions runs `manage.py check`, a missing-migrations check and all 168 tests on every push, and Render can wait for CI before going live.
 
 ---
 
@@ -38,6 +38,8 @@ StudyFlow combines planning, AI help, resource sharing and focus tools in one re
 | 🃏 Flashcards | Create custom decks, flip cards with 3D animation, and quiz yourself with active recall |
 | 💬 Campus Chat & Groups | Live campus chat rooms and course-based study groups with 24/7 AI Coach answers |
 | 📊 GPA Calculator | 5.0 scale calculator with localStorage persistence |
+| 🎓 CGPA Tracker | Saved semester results, running CGPA and degree class, and a "what do I need" calculator for a target CGPA |
+| ✅ Attendance | One-tap marking after each class; warns below the 75% exam rule and says how many classes you can miss or must attend |
 | 🗓️ Timetable | Build and manage your weekly class timetable |
 | 🎮 Break Room | 2048 mini-game with persistent high score for 5-minute Pomodoro breaks |
 | 🔐 Google OAuth | 1-tap sign in with Google via django-allauth |
