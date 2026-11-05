@@ -60,7 +60,7 @@ Groq-hosted models can't be fine-tuned from here, so the coach is "trained" the 
 | **Modes** | Chat, Explain, Quiz me (one question at a time with a score), Exam plan, Check my work, Summarise. |
 | **Actions** (`actions.py`) | The coach proposes tasks and flashcards; the student taps to add them. Nothing is created without a tap. |
 | **Feedback loop** (`CoachFeedback`) | 👍/👎 on every reply, stored with the playbook version and model. Review in the admin; `python manage.py export_coach_feedback` writes chat-format JSONL of good and bad replies. |
-| **The exam** (`evals.py`) | `python manage.py coach_eval` runs 12 realistic student situations against the live model and marks them automatically (correct arithmetic, LaTeX, dated plan tasks, honesty about unknowns, integrity, care for a stressed student...). Run it after any prompt or model change. |
+| **The exam** (`evals.py`) | One click in GitHub: **Actions → Coach exam → Run workflow** (needs a `GROQ_API_KEY` repo secret), or locally `python manage.py coach_eval`. It runs 12 realistic student situations against the live model and marks them automatically (correct arithmetic, LaTeX, dated plan tasks, honesty about unknowns, integrity, care for a stressed student...). Run it after any prompt or model change. |
 | **Model fallback** (`engine.py`) | Uses `MODEL_NAME` (default `openai/gpt-oss-120b`) and falls back to other Groq models if one is missing or overloaded. |
 
 ---

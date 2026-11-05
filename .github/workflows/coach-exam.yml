@@ -1,0 +1,78 @@
+# Gives StudyFlow Coach its exam against the real Groq model.
+# Run it from the Actions tab: "Coach exam" -> "Run workflow".
+# Needs a repository secret named GROQ_API_KEY (Settings -> Secrets and variables -> Actions).
+name: Coach exam
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: 'Only run scenarios whose name contains this (leave empty for all)'
+        required: false
+        default: ''
+      min_score:
+        description: 'Fail the run below this pass rate (0 to 1)'
+        required: false
+        default: '0.8'
+
+permissions:
+  contents: read
+
+jobs:
+  exam:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SECRET_KEY: ci-only-not-a-real-secret
+      DEBUG: 'True'
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Check the Groq key is set
+        run: |
+          if [ -z "$GROQ_API_KEY" ]; then
+            echo "::error::Add a repository secret named GROQ_API_KEY (Settings > Secrets and variables > Actions), then run this again."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set up a throwaway database
+        run: python manage.py migrate --noinput
+
+      - name: Run the coach exam
+        env:
+          ONLY: ${{ inputs.only }}
+          MIN_SCORE: ${{ inputs.min_score }}
+        run: |
+          set -o pipefail
+          args=(--json coach-report.json --min-score "${MIN_SCORE:-0.8}")
+          if [ -n "$ONLY" ]; then args+=(--only "$ONLY"); fi
+          python manage.py coach_eval "${args[@]}" 2>&1 | tee coach-exam.txt
+
+      - name: Write the results to the run summary
+        if: always()
+        run: |
+          {
+            echo '## StudyFlow Coach exam'
+            echo '```'
+            cat coach-exam.txt 2>/dev/null || echo 'No output (see the logs).'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Keep the full report (every reply)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coach-exam-report
+          path: |
+            coach-report.json
+            coach-exam.txt
+          if-no-files-found: ignore
