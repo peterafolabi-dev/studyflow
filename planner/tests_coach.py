@@ -82,6 +82,13 @@ class ActionParsingTests(CoachBase):
         reply = '\n'.join(f'[[task: MTH 101 | Step {i} | {due}]]' for i in range(9))
         self.assertEqual(len(split_reply(reply)[1]), 5)
 
+    def test_maths_delimiters_are_normalised_outside_code(self):
+        reply = "Use \\(u=x^{3}\\) then\n\\[\\frac{d}{dx}(uv)=u'v+uv'\\]\n```latex\n\\(keep\\)\n```"
+        clean = split_reply(reply)[0]
+        self.assertIn("$u=x^{3}$", clean)
+        self.assertIn("$$\\frac{d}{dx}(uv)=u'v+uv'$$", clean)
+        self.assertIn("\\(keep\\)", clean)
+
     def test_flashcards_are_extracted(self):
         reply = ("**Card 1**\n**Front:** What is Ohm's law?\n**Back:** $V = IR$\n\n"
                  "**Card 2**\n**Front:** Unit of resistance?\n**Back:** The ohm ($\\Omega$)\n\nWant more?")

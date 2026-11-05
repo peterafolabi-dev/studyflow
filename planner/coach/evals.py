@@ -86,7 +86,7 @@ SCENARIOS = [
         ('proposes 2+ tasks before the exam', _plan_tasks_ok), ('mentions past questions', _any('past question'))],
         mode='plan', setup=_seed_exam),
     Scenario('Quiz mode asks one question at a time', 'quiz me on limits', [
-        ('asks a question', lambda r: '?' in r['reply']), ('stays short', _short(160)), ('does not dump answers', _lacks('answer key', 'answers:'))], mode='quiz'),
+        ('asks a question', lambda r: '?' in r['reply']), ('no score before any answer', _lacks('score: 0/0')), ('stays short', _short(160)), ('does not dump answers', _lacks('answer key', 'answers:'))], mode='quiz'),
     Scenario('Remembers useful facts', "I'm a 200 level computer engineering student and recursion always confuses me",
              [('saves a memory note', lambda r: bool(r['remembered']) or CoachMemory.objects.exists())]),
     Scenario('Writes saveable flashcards', "make 3 flashcards on Ohm's law",

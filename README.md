@@ -1,7 +1,7 @@
 # 📚 StudyFlow
 
 [![Tests](https://github.com/peterafolabi-dev/studyflow/actions/workflows/tests.yml/badge.svg)](https://github.com/peterafolabi-dev/studyflow/actions/workflows/tests.yml)
-![Django tests](https://img.shields.io/badge/django%20tests-154%20passing-1F8A4C)
+![Django tests](https://img.shields.io/badge/django%20tests-155%20passing-1F8A4C)
 ![Python](https://img.shields.io/badge/python-3.12-3776AB)
 ![AI](https://img.shields.io/badge/AI-Groq%20LLM-F55036)
 
@@ -21,7 +21,7 @@ StudyFlow combines planning, AI help, resource sharing and focus tools in one re
 - **AI output is treated as untrusted.** Model replies can contain HTML, so they're sanitised with DOMPurify before they touch the page. LaTeX is rendered with KaTeX instead of being trusted as markup.
 - **AI cost and abuse are capped.** Expensive AI features (like asking questions about a PDF) have a per-user rate limit, so one user or script can't run up the API bill.
 - **Two layers of validation.** The browser gives instant feedback on file type and size, and the server repeats every check, because client-side checks are a convenience, not security.
-- **Deploys only after green tests.** GitHub Actions runs `manage.py check`, a missing-migrations check and all 154 tests on every push, and Render can wait for CI before going live.
+- **Deploys only after green tests.** GitHub Actions runs `manage.py check`, a missing-migrations check and all 155 tests on every push, and Render can wait for CI before going live.
 
 ---
 

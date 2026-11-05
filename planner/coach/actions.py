@@ -18,6 +18,18 @@ CARD = re.compile(
 )
 SENSITIVE = re.compile(r'password|passcode|\bpin\b|bvn|\bnin\b|card number|account number|\+?\d[\d\s-]{8,}\d', re.IGNORECASE)
 MAX_TASKS = 5
+FENCE = re.compile(r'(```.*?```|`[^`\n]*`)', re.DOTALL)
+
+
+def normalize_math(text):
+    """Models sometimes write \\( \\) and \\[ \\] instead of $ and $$. Convert outside code blocks
+    so every surface (chat, study groups, saved flashcards) renders maths the same way."""
+    def fix(chunk):
+        chunk = re.sub(r'\\\[(.+?)\\\]', lambda m: '$$' + m.group(1).strip() + '$$', chunk, flags=re.DOTALL)
+        chunk = re.sub(r'\\\((.+?)\\\)', lambda m: '$' + m.group(1).strip() + '$', chunk, flags=re.DOTALL)
+        return chunk
+    parts = FENCE.split(text or '')
+    return ''.join(p if i % 2 else fix(p) for i, p in enumerate(parts))
 
 
 def split_reply(reply):
@@ -41,7 +53,7 @@ def split_reply(reply):
             note = body.strip()[:200]
             if note and not SENSITIVE.search(note):
                 notes.append(note)
-    clean = ACTION_LINE.sub('', reply or '').rstrip()
+    clean = normalize_math(ACTION_LINE.sub('', reply or '')).rstrip()
     clean = re.sub(r'\n{3,}', '\n\n', clean)
     return clean, tasks, notes
 
