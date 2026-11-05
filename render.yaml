@@ -6,6 +6,8 @@ services:
     # The build already provisions the admin account; keep each service boot lean.
     startCommand: gunicorn studyflow.wsgi --workers 2 --timeout 120 --preload
     plan: free
+    # Render restarts the service if this stops answering.
+    healthCheckPath: /healthz/
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0

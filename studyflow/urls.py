@@ -14,8 +14,21 @@ def healthz(request):
     return HttpResponse('ok', content_type='text/plain')
 
 
+@never_cache
+def healthz_db(request):
+    """Deeper check: can we reach the database? 200 'ok' or 503 'db down'."""
+    from django.db import connection
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+        return HttpResponse('ok', content_type='text/plain')
+    except Exception:  # noqa: BLE001 - any DB error means unhealthy
+        return HttpResponse('db down', content_type='text/plain', status=503)
+
+
 urlpatterns = [
     path('healthz/', healthz, name='healthz'),
+    path('healthz/db/', healthz_db, name='healthz_db'),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('manifest.webmanifest', pwa.manifest, name='pwa_manifest'),

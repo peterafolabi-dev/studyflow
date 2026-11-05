@@ -1,35 +1,47 @@
-# Keeps the Render free-tier web service from sleeping during the day.
-# Render sleeps after ~15 idle minutes, so we ping every 5 minutes (GitHub
-# sometimes delays or skips scheduled runs; 5 minutes leaves headroom).
+# Keeps StudyFlow on Render's free plan awake around the clock.
 #
-# Hours: 14:00–22:00 Lagos time (UTC+1) = 13:00–20:59 UTC, i.e. 8 hours a day
-# (~250 of Render's shared 750 free instance-hours per month). Outside these
-# hours the app may sleep and the first visitor waits ~30–60 seconds.
-# To change the hours, edit the "13-20" hour range below (it is in UTC).
+# Render puts a free web service to sleep after ~15 idle minutes, and the first
+# visitor then waits 30-60 seconds. GitHub's scheduler is unreliable for frequent
+# crons (a "*/5" schedule only fired a few times a day), so instead each run stays
+# alive for almost 6 hours and pings every 9 minutes itself. A new run is scheduled
+# every 2 hours; runs queue behind each other (never cancel), so if GitHub delays or
+# skips a few schedules the service still never goes 15 minutes without a visit.
+#
+# One service awake 24/7 uses ~744 of Render's 750 free instance-hours a month.
+# Public repo, so GitHub Actions minutes are free.
 name: Keep Render awake
 
 on:
   schedule:
-    - cron: '*/5 13-20 * * *'
+    - cron: '7 */2 * * *'
   workflow_dispatch: {}
 
 permissions: {}
 
 concurrency:
   group: keep-awake
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 355
     steps:
-      - name: Ping StudyFlow
+      - name: Ping StudyFlow every 9 minutes for ~5h50m
         env:
           SITE: https://studyflow-xt1x.onrender.com
         run: |
-          # /healthz/ is the cheap check; fall back to the login page if it isn't deployed yet.
-          curl -fsS --retry 3 --retry-delay 15 --retry-all-errors --max-time 90 \
-               -o /dev/null -w "healthz: HTTP %{http_code} in %{time_total}s\n" "$SITE/healthz/" \
-          || curl -fsS --retry 2 --retry-delay 15 --retry-all-errors --max-time 90 \
-               -o /dev/null -w "login: HTTP %{http_code} in %{time_total}s\n" "$SITE/login/"
+          for i in $(seq 1 39); do
+            if curl -fsS --retry 3 --retry-delay 15 --retry-all-errors --max-time 90 \
+                 -o /dev/null -w "$(date -u +%H:%M) healthz: HTTP %{http_code} in %{time_total}s\n" "$SITE/healthz/"; then
+              :
+            else
+              echo "::warning::StudyFlow did not answer /healthz/ at $(date -u +%H:%M) UTC"
+            fi
+            # once an hour, also check the database is reachable
+            if [ $((i % 7)) -eq 1 ]; then
+              curl -fsS --max-time 90 -o /dev/null -w "db: HTTP %{http_code}\n" "$SITE/healthz/db/" \
+                || echo "::warning::Database check failed at $(date -u +%H:%M) UTC"
+            fi
+            [ "$i" -lt 39 ] && sleep 540
+          done

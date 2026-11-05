@@ -527,3 +527,10 @@ class EmailVerificationTests(TestCase):
         User.objects.create_user('old', email='old@example.com', password='S7rong-pass-99')
         response = self.client.post(reverse('login'), {'username': 'old', 'password': 'S7rong-pass-99'})
         self.assertRedirects(response, reverse('dashboard'), fetch_redirect_response=False)
+
+
+class HealthzDbTests(TestCase):
+    def test_db_check_answers_ok(self):
+        response = self.client.get(reverse('healthz_db'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'ok')
