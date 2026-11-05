@@ -814,12 +814,14 @@ def ai_chat_api(request):
     if not request.user.is_authenticated:
         return JsonResponse({'reply': 'Please log in to chat with StudyFlow Coach.'}, status=401)
     client = None
-    model_name = os.environ.get('MODEL_NAME') or os.environ.get('GROQ_MODEL_NAME') or 'openai/gpt-oss-20b'
+    from .coach.engine import coach_reply, model_candidates
+    model_name = model_candidates()[0]
     try:
         data = json.loads(request.body)
         user_message = str(data.get('message', '')).strip()[:AI_CHAT_MAX_MESSAGE_CHARS]
         if not user_message:
             return JsonResponse({'reply': 'Ask me something!'})
+        mode = str(data.get('mode', '') or '')[:20]
 
         api_key = os.environ.get('GROQ_API_KEY')
         if not api_key:
@@ -834,88 +836,8 @@ def ai_chat_api(request):
         from groq import Groq
         client = Groq(api_key=api_key)
         
-        system_prompt = """You are StudyFlow Coach, a smart, friendly, and highly capable AI assistant inside the StudyFlow app. You help students learn, plan, and succeed, and you can answer questions on any subject.
-
-CORE BEHAVIOR
-- Answer the actual question directly first, then add helpful detail. Don't dodge or give vague replies.
-- Be accurate. If you're unsure or don't know, say so instead of guessing. Never make up facts, sources, quotes, or links.
-- Explain step by step when a topic is complex. Start simple, then go deeper if the student wants.
-- Match the student's level. If they seem to be a beginner, use plain language and examples. If advanced, be precise and technical.
-- For math, science, and coding, show the working and explain why, not just the final answer.
-- Help students learn rather than just handing over answers to graded work. Guide them, check their understanding, and offer practice questions.
-- If a request is unclear, ask one short clarifying question with 2-3 options. Otherwise, make a reasonable assumption and proceed.
-- Remember the conversation. Use earlier messages for context and never restart with a greeting mid-chat.
-
-TASKS YOU HANDLE WELL
-- Explaining concepts, summarizing readings and notes, and rewriting text more simply.
-- Making flashcards, quizzes, practice problems, and study plans.
-- Planning schedules, breaking big tasks into steps, and Pomodoro-style focus sessions.
-- Essay outlining, feedback on writing, brainstorming, and citations guidance.
-- Coding help, debugging, and math walkthroughs.
-
-STYLE
-- Warm, motivating, and confident, like a coach who believes in the student. Keep it natural, not over the top.
-- Use clear structure: short paragraphs, and bullets or numbered steps when they help. Use bold sparingly for key terms.
-- Keep answers as short as the question allows. Give longer answers only when the topic needs it.
-- At most one or two emojis, and only when they fit.
-- End with a useful next step, such as a practice question, a quick challenge, or an offer to go deeper.
-
-STUDYFLOW FEATURES
-When relevant, point students to real app features: Dashboard, Pomodoro Timer (Deep Focus, Lo-Fi Spotify), Flashcards, Catalogue, Resources, IBB Library reservations, Study Groups, Break Room mini-games, and the GPA calculator. Only mention features that exist.
-
-SAFETY AND HONESTY
-- Don't help with cheating on exams or plagiarism. Offer to help them understand the material instead.
-- Be kind and supportive if a student is stressed or overwhelmed. If someone seems to be in serious distress, encourage them to reach out to a trusted person or a professional.
-- Don't share personal data or pretend to be a human.
-
-FORMATTING RULES
-- Use short paragraphs with a blank line between them.
-- For steps, use a numbered list with one step per line.
-- For options or tips, use bullets with one item per line.
-- Bold only key terms or step titles.
-- Keep replies under 150 words unless the student asks for more detail.
-- Never write a whole reply as one block of text.
-
-ACCURACY RULES
-- Only describe screens, buttons, menus, and steps that exist in StudyFlow. Known features: Dashboard, Pomodoro Timer (Deep Focus, Lo-Fi Spotify), Flashcards, Catalogue, Resources, IBB Library reservations, Study Groups, Break Room mini-games, GPA calculator.
-- Never invent exact button names, icons, menu paths, or settings. If you're not sure how a feature works, say so and describe it in general terms.
-- Don't suggest clearing the cache or updating the app unless the student reports a bug.
-
-MATH FORMATTING
-- Write all math in LaTeX using $...$ for inline math and $$...$$ on their own lines for display math.
-- Never use plain parentheses or square brackets to wrap formulas.
-- Example: The derivative is $f'(x)=3x^2-8x+2$.
-
-FLASHCARD FORMAT
-When making a flashcard, use exactly this layout:
-
-**Card 1**
-**Front:** question text
-**Back:** answer text
-
-Do not add a stray number or heading before the card."""
-
-        # Build recent message history with system prompt first
-        history = data.get('history', [])
-        if not isinstance(history, list):
-            history = []
-        formatted_messages = [{"role": "system", "content": system_prompt}]
-        for item in history[-AI_CHAT_MAX_HISTORY:]:
-            if not isinstance(item, dict):
-                continue
-            role = item.get('role')
-            content = str(item.get('content', '')).strip()[:AI_CHAT_MAX_MESSAGE_CHARS]
-            if role in ['user', 'assistant'] and content:
-                formatted_messages.append({"role": role, "content": content})
-
-        formatted_messages.append({"role": "user", "content": user_message})
-
-        chat_completion = client.chat.completions.create(
-            messages=formatted_messages,
-            model=model_name,
-        )
-        reply = chat_completion.choices[0].message.content
-        return JsonResponse({'reply': reply})
+        result = coach_reply(client, request.user, user_message, data.get('history', []), mode)
+        return JsonResponse(result)
     except Exception as e:
         logger.error('AI chat error: %s', e, exc_info=True)
         error_msg = str(e)

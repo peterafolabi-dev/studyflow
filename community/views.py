@@ -48,7 +48,8 @@ def generate_ai_answer_for_thread(thread, question_context=''):
     try:
         from groq import Groq
         client = Groq(api_key=api_key)
-        model = os.environ.get('MODEL_NAME') or 'openai/gpt-oss-20b'
+        from planner.coach.engine import complete
+        from planner.coach.prompt import build_system_prompt
 
         prompt = (
             f"You are the StudyFlow AI Coach, an expert academic tutor for university students. "
@@ -61,16 +62,16 @@ def generate_ai_answer_for_thread(thread, question_context=''):
             f"Write math in LaTeX using $...$ for inline and $$...$$ for display formulas. Keep it motivating."
         )
 
-        completion = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "You are StudyFlow Coach, a legendary academic mentor and university tutor."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.4,
-            max_tokens=850
+        system = build_system_prompt() + (
+            "\n\nYou're answering in a public course discussion thread, so the whole group can read it. "
+            "Don't use action lines here, and don't refer to any one student's deadlines."
         )
-        return completion.choices[0].message.content
+        reply, _model = complete(client, [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ])
+        from planner.coach.actions import split_reply
+        return split_reply(reply)[0]
     except Exception:
         logger.exception('AI thread answer failed for thread %s', thread.pk)
         return "🤖 **StudyFlow AI Coach:** I couldn't generate an answer right now. Please try again shortly!"

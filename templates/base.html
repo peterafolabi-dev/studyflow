@@ -682,24 +682,37 @@
     </div>
 
     <!-- Chat Modal -->
-    <div id="ai-chat-modal" class="hidden absolute bottom-20 right-0 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-brand-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex-col" style="height: 450px;">
-        <div class="bg-brand-600 text-white p-4 flex justify-between items-center">
-            <div>
-                <h3 class="font-bold text-lg flex items-center gap-2">🤖 StudyFlow AI</h3>
-                <p class="text-xs text-brand-100">Your university study assistant</p>
+    <div id="ai-chat-modal" class="hidden absolute bottom-20 -right-2 sm:right-0 w-[calc(100vw-2rem)] max-w-[26rem] bg-white dark:bg-slate-900 border border-brand-200 dark:border-slate-700 rounded-2xl shadow-2xl overflow-hidden flex-col" style="height: min(560px, calc(100vh - 7rem));">
+        <div class="bg-brand-600 text-white p-4 flex justify-between items-center gap-2">
+            <div class="min-w-0">
+                <h3 class="font-bold text-lg flex items-center gap-2 whitespace-nowrap">🤖 StudyFlow Coach</h3>
+                <p class="text-xs text-brand-100 hidden sm:block">Knows your courses and deadlines</p>
             </div>
+            <div class="flex items-center gap-1">
+            <button id="ai-chat-memory-btn" type="button" title="What the coach remembers about you" class="text-brand-100 hover:text-white transition-colors text-xs font-semibold px-2 py-1 rounded-lg hover:bg-white/10 whitespace-nowrap">🧠 Memory</button>
+            <button id="ai-chat-new" type="button" title="Start a new chat" class="text-brand-100 hover:text-white transition-colors text-xs font-semibold px-2 py-1 rounded-lg hover:bg-white/10">New</button>
             <button id="ai-chat-close" class="text-brand-100 hover:text-white transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
+            </div>
         </div>
-        
+        <div id="ai-chat-memory" class="hidden border-b border-brand-100 dark:border-slate-800 bg-brand-50 dark:bg-slate-900 p-3 text-xs text-slate-700 dark:text-slate-300 max-h-40 overflow-y-auto"></div>
+
         <div id="ai-chat-messages" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 bg-slate-50 dark:bg-slate-950">
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-800 dark:text-slate-200 self-start max-w-[85%] shadow-sm chat-bubble-content">
-                Welcome to the arena. I'm your StudyFlow Coach. What are we conquering today? ⚔️
+                I'm your StudyFlow Coach. I can see your courses and deadlines, quiz you, check your working and build exam plans. Pick a mode below or just ask. 📚
             </div>
         </div>
 
         <form id="ai-chat-form" class="p-3 bg-white dark:bg-slate-900 border-t border-brand-100 dark:border-slate-800 flex flex-col gap-2">
+            <div id="ai-chat-modes" class="flex gap-1.5 overflow-x-auto pb-0.5 -mx-0.5 px-0.5" role="group" aria-label="Coach mode">
+                <button type="button" data-mode="" class="coach-mode is-on">💬 Chat</button>
+                <button type="button" data-mode="explain" class="coach-mode">💡 Explain</button>
+                <button type="button" data-mode="quiz" class="coach-mode">🎯 Quiz me</button>
+                <button type="button" data-mode="plan" class="coach-mode">🗓️ Exam plan</button>
+                <button type="button" data-mode="check" class="coach-mode">✅ Check my work</button>
+                <button type="button" data-mode="summarise" class="coach-mode">📝 Summarise</button>
+            </div>
             <div id="ai-chat-file-preview" class="hidden text-xs bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 p-2 rounded-lg justify-between items-center border border-brand-100 dark:border-slate-700">
                 <span class="truncate max-w-[200px] font-medium flex items-center gap-1">📎 <span id="ai-chat-file-name">file.pdf</span></span>
                 <button type="button" id="ai-chat-file-remove" class="text-brand-500 hover:text-rose-500 font-bold transition">✕</button>
@@ -709,8 +722,8 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
                 </label>
                 <input type="file" id="ai-chat-file" class="hidden" accept=".pdf,.txt,.md,.csv">
-                <input type="text" id="ai-chat-input" class="flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none placeholder-slate-400" required placeholder="Ask StudyFlow AI...">
-                <button type="submit" class="bg-brand-600 hover:bg-brand-700 text-white p-2.5 rounded-xl transition-colors shadow-sm">
+                <input type="text" id="ai-chat-input" class="flex-1 min-w-0 bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none placeholder-slate-400" required placeholder="Ask StudyFlow Coach...">
+                <button type="submit" aria-label="Send" class="flex-none bg-brand-600 hover:bg-brand-700 text-white p-2.5 rounded-xl transition-colors shadow-sm">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
             </div>
@@ -899,10 +912,173 @@
                 attachedFileContent = "";
                 aiChatFilePreview.classList.add('hidden');
                 aiChatFilePreview.classList.remove('flex');
-                chatInput.placeholder = "Ask StudyFlow AI...";
+                chatInput.placeholder = "Ask StudyFlow Coach...";
                 chatInput.required = true;
             });
         }
+
+        // ── StudyFlow Coach: modes, actions, feedback, memory, persistence ──
+        const STORE_KEY = 'sf-coach-v2';
+        const modeBar = document.getElementById('ai-chat-modes');
+        const memoryPanel = document.getElementById('ai-chat-memory');
+        let coachMode = '';
+
+        function csrfToken() {
+            const el = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (el && el.value) return el.value;
+            const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+            return m ? decodeURIComponent(m[1]) : '';
+        }
+        async function postJSON(url, body) {
+            const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() }, body: JSON.stringify(body) });
+            let data = {};
+            try { data = await r.json(); } catch (e) {}
+            return { ok: r.ok, data };
+        }
+        function saveChat() {
+            try { sessionStorage.setItem(STORE_KEY, JSON.stringify({ history: chatHistory.slice(-40), html: chatMessages.innerHTML, mode: coachMode })); } catch (e) {}
+        }
+        function restoreChat() {
+            try {
+                const saved = JSON.parse(sessionStorage.getItem(STORE_KEY) || 'null');
+                if (saved && Array.isArray(saved.history) && saved.history.length) {
+                    chatHistory = saved.history;
+                    chatMessages.innerHTML = saved.html || chatMessages.innerHTML;
+                    setMode(saved.mode || '');
+                }
+            } catch (e) {}
+        }
+        function setMode(m) {
+            coachMode = m;
+            if (!modeBar) return;
+            modeBar.querySelectorAll('.coach-mode').forEach(b => b.classList.toggle('is-on', (b.dataset.mode || '') === m));
+            const hints = { '': 'Ask StudyFlow Coach...', explain: 'What topic should I explain?', quiz: 'Quiz me on... (e.g. MTH 101 limits)', plan: 'Which exam, and when is it?', check: 'Paste your working or answer...', summarise: 'Paste notes or attach a file...' };
+            if (chatInput) chatInput.placeholder = hints[m] || hints[''];
+        }
+        if (modeBar) modeBar.addEventListener('click', (e) => {
+            const b = e.target.closest('.coach-mode');
+            if (!b) return;
+            setMode(b.dataset.mode || '');
+            saveChat();
+            chatInput && chatInput.focus();
+        });
+
+        function bubble(html, who) {
+            const wrap = document.createElement('div');
+            wrap.className = who === 'user'
+                ? 'bg-brand-600 text-white rounded-xl rounded-tr-none p-3 text-sm self-end max-w-[85%] shadow-sm whitespace-pre-wrap leading-relaxed'
+                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-800 dark:text-slate-200 self-start max-w-[92%] shadow-sm chat-bubble-content';
+            wrap.innerHTML = html;
+            chatMessages.appendChild(wrap);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return wrap;
+        }
+
+        function extrasFor(data, question) {
+            const box = document.createElement('div');
+            box.className = 'coach-extras';
+            if (Array.isArray(data.sources) && data.sources.length) {
+                const s = document.createElement('div');
+                s.className = 'coach-sources';
+                s.innerHTML = '<span>From StudyFlow:</span> ' + data.sources.map(x => `<a href="${escapeHtml(x.url)}">${escapeHtml(x.kind)} · ${escapeHtml(x.title)}</a>`).join('');
+                box.appendChild(s);
+            }
+            (data.tasks || []).forEach(t => {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'coach-action';
+                b.dataset.task = JSON.stringify(t);
+                b.textContent = `➕ Add task: ${t.title} · ${t.course} · ${t.due}`;
+                box.appendChild(b);
+            });
+            if (Array.isArray(data.cards) && data.cards.length) {
+                const b = document.createElement('button');
+                b.type = 'button'; b.className = 'coach-action';
+                b.dataset.cards = JSON.stringify(data.cards);
+                const code = (question.match(/\b[A-Za-z]{3}\s?\d{3}\b/) || chatHistory.map(h => h.content).join(' ').match(/\b[A-Za-z]{3}\s?\d{3}\b/) || [''])[0];
+                b.dataset.course = code;
+                b.textContent = `🗂️ Save ${data.cards.length} flashcard${data.cards.length === 1 ? '' : 's'} for review`;
+                box.appendChild(b);
+            }
+            (data.remembered || []).forEach(n => {
+                const m = document.createElement('div');
+                m.className = 'coach-remembered';
+                m.textContent = `🧠 I'll remember: ${n}`;
+                box.appendChild(m);
+            });
+            const fb = document.createElement('div');
+            fb.className = 'coach-feedback';
+            fb.dataset.q = question.slice(0, 8000);
+            fb.dataset.model = data.model || '';
+            fb.dataset.playbook = data.playbook || '';
+            fb.dataset.mode = coachMode;
+            fb.innerHTML = '<span>Helpful?</span><button type="button" data-helpful="1" aria-label="Helpful">👍</button><button type="button" data-helpful="0" aria-label="Not helpful">👎</button>';
+            box.appendChild(fb);
+            return box;
+        }
+
+        chatMessages.addEventListener('click', async (e) => {
+            const act = e.target.closest('.coach-action');
+            if (act && !act.disabled) {
+                act.disabled = true;
+                if (act.dataset.task) {
+                    const { ok, data } = await postJSON('{% url "coach_add_task" %}', JSON.parse(act.dataset.task));
+                    act.textContent = ok ? `✓ ${data.message}` : `⚠️ ${data.error || 'Could not add task.'}`;
+                } else if (act.dataset.cards) {
+                    const course = act.dataset.course || '';
+                    const deck = 'From StudyFlow Coach · ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    const { ok, data } = await postJSON('{% url "coach_save_cards" %}', { cards: JSON.parse(act.dataset.cards), course, deck });
+                    act.textContent = ok ? `✓ ${data.message}` : `⚠️ ${data.error || 'Could not save cards.'}`;
+                }
+                act.classList.add('is-done');
+                saveChat();
+                return;
+            }
+            const vote = e.target.closest('.coach-feedback button');
+            if (vote) {
+                const fb = vote.closest('.coach-feedback');
+                const replyEl = fb.closest('.coach-extras').previousElementSibling;
+                const helpful = vote.dataset.helpful === '1';
+                fb.innerHTML = helpful ? '<span>Thanks! 🙌</span>' : '<span>Thanks, that helps me improve.</span>';
+                postJSON('{% url "coach_feedback" %}', { helpful, question: fb.dataset.q, reply: replyEl ? replyEl.innerText : '', model: fb.dataset.model, playbook: fb.dataset.playbook, mode: fb.dataset.mode });
+                saveChat();
+            }
+        });
+
+        async function showMemory() {
+            if (!memoryPanel) return;
+            if (!memoryPanel.classList.contains('hidden')) { memoryPanel.classList.add('hidden'); return; }
+            memoryPanel.classList.remove('hidden');
+            memoryPanel.textContent = 'Loading...';
+            try {
+                const r = await fetch('{% url "coach_memory" %}');
+                const data = await r.json();
+                if (!data.notes || !data.notes.length) {
+                    memoryPanel.innerHTML = '<p>I haven\'t saved anything about you yet. Tell me your level, weak topics or exam dates and I\'ll remember them.</p>';
+                    return;
+                }
+                memoryPanel.innerHTML = '<p class="font-semibold mb-1">What I remember about you</p>' +
+                    data.notes.map(n => `<div class="flex justify-between gap-2 py-0.5"><span>${escapeHtml(n.note)}</span><button type="button" class="coach-forget text-rose-500 hover:underline" data-id="${n.id}">forget</button></div>`).join('') +
+                    '<button type="button" class="coach-forget mt-1 text-rose-600 font-semibold hover:underline" data-id="">Forget everything</button>';
+            } catch (e) { memoryPanel.textContent = 'Could not load memory.'; }
+        }
+        const memBtn = document.getElementById('ai-chat-memory-btn');
+        if (memBtn) memBtn.addEventListener('click', showMemory);
+        if (memoryPanel) memoryPanel.addEventListener('click', async (e) => {
+            const f = e.target.closest('.coach-forget');
+            if (!f) return;
+            await postJSON('{% url "coach_forget" %}', f.dataset.id ? { id: Number(f.dataset.id) } : {});
+            memoryPanel.classList.add('hidden');
+            showMemory();
+        });
+        const newBtn = document.getElementById('ai-chat-new');
+        if (newBtn) newBtn.addEventListener('click', () => {
+            chatHistory = [];
+            chatMessages.innerHTML = '';
+            bubble('New chat. What are we working on?', 'ai');
+            try { sessionStorage.removeItem(STORE_KEY); } catch (e) {}
+        });
+
+        restoreChat();
 
         if(chatForm) {
             chatForm.addEventListener('submit', async (e) => {
@@ -914,11 +1090,7 @@
                 const displayMsg = msg;
                 const fullPrompt = msg + attachedFileContent;
 
-                chatMessages.innerHTML += `
-                    <div class="bg-brand-600 text-white rounded-xl rounded-tr-none p-3 text-sm self-end max-w-[85%] shadow-sm whitespace-pre-wrap leading-relaxed">
-                        ${escapeHtml(displayMsg)}
-                    </div>
-                `;
+                bubble(escapeHtml(displayMsg), 'user');
                 chatInput.value = '';
                 if(aiChatFileInput) aiChatFileInput.value = '';
                 attachedFileContent = '';
@@ -926,55 +1098,56 @@
                   aiChatFilePreview.classList.add('hidden');
                   aiChatFilePreview.classList.remove('flex');
                 }
-                chatInput.placeholder = "Ask StudyFlow AI...";
                 chatInput.required = true;
+                setMode(coachMode);
 
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                const typingId = 'typing-' + Date.now();
-                chatMessages.innerHTML += `
-                    <div id="${typingId}" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-500 self-start max-w-[85%] shadow-sm">
-                        Thinking...
-                    </div>
-                `;
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+                const typing = bubble('<span class="coach-typing"><i></i><i></i><i></i></span>', 'ai');
 
                 try {
-                    let csrf = '';
-                    const tokenEl = document.querySelector('[name=csrfmiddlewaretoken]');
-                    if (tokenEl) csrf = tokenEl.value;
-
                     const response = await fetch('/ai-chat/', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': csrf
-                        },
-                        body: JSON.stringify({ message: fullPrompt, history: chatHistory })
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+                        body: JSON.stringify({ message: fullPrompt, history: chatHistory, mode: coachMode })
                     });
                     const data = await response.json();
-                    
-                    const t = document.getElementById(typingId);
-                    if (t) t.remove();
-                    
-                    chatMessages.innerHTML += `
-                        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl rounded-tl-none p-3 text-sm text-slate-800 dark:text-slate-200 self-start max-w-[85%] shadow-sm chat-bubble-content">
-                            ${renderMarkdown(data.reply)}
-                        </div>
-                    `;
+                    typing.remove();
+                    bubble(renderMarkdown(data.reply), 'ai');
+                    if (response.ok && data.model) chatMessages.appendChild(extrasFor(data, fullPrompt));
                     chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                    // Append turn to history
-                    chatHistory.push({ role: 'user', content: fullPrompt });
-                    chatHistory.push({ role: 'assistant', content: data.reply });
-        } catch (error) {
-                    const t = document.getElementById(typingId);
-                    if (t) t.innerHTML = "Sorry, I'm offline right now! Did you set the API key in .env?";
+                    if (response.ok) {
+                        chatHistory.push({ role: 'user', content: fullPrompt });
+                        chatHistory.push({ role: 'assistant', content: data.reply });
+                    }
+                    saveChat();
+                } catch (error) {
+                    typing.innerHTML = "Sorry, I can't reach the server right now. Check your connection and try again.";
                 }
             });
         }
     }
 </script>
+<style>
+  .coach-mode{flex:none;font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid rgb(203 213 225);color:rgb(71 85 105);background:transparent;white-space:nowrap;transition:all .15s}
+  .dark .coach-mode{border-color:rgb(51 65 85);color:rgb(203 213 225)}
+  .coach-mode:hover{border-color:rgb(99 102 241)}
+  .coach-mode.is-on{background:rgb(79 70 229);border-color:rgb(79 70 229);color:#fff}
+  .coach-extras{align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:6px;margin-top:-4px}
+  .coach-sources{font-size:11px;color:rgb(100 116 139);display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+  .coach-sources a{color:rgb(79 70 229);text-decoration:underline;text-underline-offset:2px}
+  .coach-action{text-align:left;font-size:12px;font-weight:600;padding:7px 10px;border-radius:10px;border:1px dashed rgb(129 140 248);color:rgb(67 56 202);background:rgb(238 242 255);transition:transform .15s}
+  .dark .coach-action{background:rgb(30 27 75);color:rgb(199 210 254);border-color:rgb(99 102 241)}
+  .coach-action:hover:not(:disabled){transform:translateY(-1px)}
+  .coach-action.is-done{border-style:solid;opacity:.85}
+  .coach-remembered{font-size:11px;color:rgb(100 116 139)}
+  .coach-feedback{display:flex;gap:6px;align-items:center;font-size:11px;color:rgb(148 163 184)}
+  .coach-feedback button{padding:2px 6px;border-radius:8px;transition:background .15s}
+  .coach-feedback button:hover{background:rgb(226 232 240)}
+  .dark .coach-feedback button:hover{background:rgb(51 65 85)}
+  .coach-typing{display:inline-flex;gap:4px;padding:2px 0}
+  .coach-typing i{width:6px;height:6px;border-radius:50%;background:rgb(148 163 184);animation:coachdot 1s infinite ease-in-out}
+  .coach-typing i:nth-child(2){animation-delay:.15s}.coach-typing i:nth-child(3){animation-delay:.3s}
+  @keyframes coachdot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+</style>
 
 <!-- ── Feedback floating button (Phase 7) ────────────────────────────── -->
 {% if user.is_authenticated %}

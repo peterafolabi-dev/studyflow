@@ -1,10 +1,15 @@
 from django.urls import path
 
-from . import views
+from . import coach_views, views
 
 urlpatterns = [
     path('break-room/', views.break_room, name='break_room'),
     path('ai-chat/', views.ai_chat_api, name='ai_chat'),
+    path('ai-chat/add-task/', coach_views.coach_add_task, name='coach_add_task'),
+    path('ai-chat/save-cards/', coach_views.coach_save_cards, name='coach_save_cards'),
+    path('ai-chat/feedback/', coach_views.coach_feedback, name='coach_feedback'),
+    path('ai-chat/memory/', coach_views.coach_memory, name='coach_memory'),
+    path('ai-chat/forget/', coach_views.coach_forget, name='coach_forget'),
     path('', views.dashboard, name='dashboard'),
     path('courses/', views.course_list, name='course_list'),
     path('courses/new/', views.course_create, name='course_create'),

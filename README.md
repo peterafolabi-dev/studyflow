@@ -29,7 +29,7 @@ StudyFlow combines planning, AI help, resource sharing and focus tools in one re
 
 | Feature | Description |
 |---|---|
-| 🤖 AI Study Coach | Groq-powered assistant with conversation memory, LaTeX math rendering, and active recall assistance |
+| 🤖 AI Study Coach | Knows each student's courses, deadlines and weak topics; quizzes, plans exams, checks working, cites the app's own past questions, and can add tasks or save flashcards with one tap |
 | 📋 Dashboard | Bento-style overview of tasks, courses, recent resources, and quick tools |
 | 📚 Catalogue | Global library of books students can browse, save, and read online |
 | 🏛️ IBB Library | Reserve physical books at FUT Minna's IBB Library — track loans in real time |
@@ -49,15 +49,19 @@ StudyFlow combines planning, AI help, resource sharing and focus tools in one re
 
 ## 🤖 24/7 AI Study Coach
 
-The AI assistant is powered by **Groq API** (ultra-fast LLM inference) running `openai/gpt-oss-20b`.
+Groq-hosted models can't be fine-tuned from here, so the coach is "trained" the way production AI tutors are: a teaching playbook, live knowledge of the student, the app's own content, worked examples to imitate, a feedback loop, and an exam it has to pass. Everything lives in [`planner/coach/`](planner/coach).
 
-It is designed to:
-- Answer academic questions across engineering, math, coding, and sciences
-- Step into study group discussions when classmates aren't online
-- Render **LaTeX math equations** using **KaTeX** ($...$ for inline, $$...$$ for display)
-- Generate revision flashcards with structured question-answer pairs
-- Guide students through derivations step-by-step
-- Run seamlessly without requiring upfront login
+| Piece | What it does |
+|---|---|
+| **Playbook** (`prompt.py`) | How to teach: answer first, find the missing step, show working, one check question, proven study methods (active recall, spacing, past questions), academic integrity without lecturing, Nigerian 5-point CGPA context. Includes worked example replies the model imitates. Versioned (`PLAYBOOK_VERSION`). |
+| **Student context** (`context.py`) | Each message includes the student's department, level, courses, overdue and upcoming tasks, flashcards due, study time this week and today's classes. Only their own data. |
+| **Library retrieval** (`retrieval.py`) | Searches shared resources, public CBT past questions (with answers and explanations) and the student's own flashcards, so replies cite real items with links. Plain keyword scoring: works on SQLite and Postgres, no extra service. |
+| **Memory** (`CoachMemory`) | The coach can note durable facts ("weak at recursion", "exam on the 14th"). Students see and delete them from the 🧠 Memory panel. Passwords, phone numbers and similar are filtered out. |
+| **Modes** | Chat, Explain, Quiz me (one question at a time with a score), Exam plan, Check my work, Summarise. |
+| **Actions** (`actions.py`) | The coach proposes tasks and flashcards; the student taps to add them. Nothing is created without a tap. |
+| **Feedback loop** (`CoachFeedback`) | 👍/👎 on every reply, stored with the playbook version and model. Review in the admin; `python manage.py export_coach_feedback` writes chat-format JSONL of good and bad replies. |
+| **The exam** (`evals.py`) | `python manage.py coach_eval` runs 12 realistic student situations against the live model and marks them automatically (correct arithmetic, LaTeX, dated plan tasks, honesty about unknowns, integrity, care for a stressed student...). Run it after any prompt or model change. |
+| **Model fallback** (`engine.py`) | Uses `MODEL_NAME` (default `openai/gpt-oss-120b`) and falls back to other Groq models if one is missing or overloaded. |
 
 ---
 

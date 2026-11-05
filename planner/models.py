@@ -240,3 +240,40 @@ class UserBadge(models.Model):
     def __str__(self):
         return f"{self.user.username} earned {self.badge.name}"
 
+
+
+# ── StudyFlow Coach: memory and feedback ─────────────────────────────────────
+
+class CoachMemory(models.Model):
+    """A short fact the coach chose to remember about a student (the student can wipe these)."""
+    MAX_PER_USER = 12
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='coach_memories')
+    note = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.user.username}: {self.note}'
+
+
+class CoachFeedback(models.Model):
+    """A thumbs up/down on one coach reply. This is the coach's training data:
+    review it in the admin, and export it with `manage.py export_coach_feedback`."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='coach_feedback')
+    helpful = models.BooleanField()
+    mode = models.CharField(max_length=20, blank=True)
+    question = models.TextField()
+    reply = models.TextField()
+    comment = models.CharField(max_length=300, blank=True)
+    playbook_version = models.CharField(max_length=30, blank=True)
+    model_name = models.CharField(max_length=80, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{"👍" if self.helpful else "👎"} {self.question[:50]}'
