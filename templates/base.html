@@ -72,6 +72,7 @@
 
     // Initialize global tooltips
     document.addEventListener("DOMContentLoaded", () => {
+        if (typeof tippy !== 'function') return; // CDN didn't load (slow network): skip tooltips, keep the page working
         tippy('[data-tippy-content]', {
             animation: 'shift-away',
             theme: 'translucent',
@@ -736,6 +737,7 @@
 </div>
 
 <script>
+(function () { // AI coach widget: function scope so none of its names leak into page scripts (e.g. Campus Chat)
     
     const chatBtn = document.getElementById('ai-chat-btn');
     const chatModal = document.getElementById('ai-chat-modal');
@@ -1129,6 +1131,7 @@
             });
         }
     }
+})(); // end AI coach widget
 </script>
 <style>
   .coach-mode{flex:none;font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid rgb(203 213 225);color:rgb(71 85 105);background:transparent;white-space:nowrap;transition:all .15s}
