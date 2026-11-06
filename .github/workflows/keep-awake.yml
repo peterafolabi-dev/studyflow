@@ -43,5 +43,5 @@ jobs:
               curl -fsS --max-time 90 -o /dev/null -w "db: HTTP %{http_code}\n" "$SITE/healthz/db/" \
                 || echo "::warning::Database check failed at $(date -u +%H:%M) UTC"
             fi
-            [ "$i" -lt 39 ] && sleep 540
+            if [ "$i" -lt 39 ]; then sleep 540; fi
           done
