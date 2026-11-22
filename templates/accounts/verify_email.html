@@ -8,19 +8,35 @@
     </div>
     {% if state == 'invalid' %}
       <h1 class="font-display text-3xl font-bold tracking-tight text-white">That link didn't work</h1>
-      <p class="mt-2 text-slate-400">It may have expired or already been used. Send yourself a new one below.</p>
+      <p class="mt-2 text-slate-400">It may have expired or already been used. Enter the 6-digit code from your newest email, or send yourself a new code below.</p>
     {% else %}
       <h1 class="font-display text-3xl font-bold tracking-tight text-white">Check your email</h1>
-      <p class="mt-2 text-slate-400">{% if email %}We sent a confirmation link to <strong class="text-slate-200">{{ email }}</strong>.{% else %}We sent you a confirmation link.{% endif %} Click it to open your account. It can take a minute; check spam or promotions too.</p>
+      <p class="mt-2 text-slate-400">{% if email %}We sent a 6-digit code to <strong class="text-slate-200">{{ email }}</strong>.{% else %}We sent you a 6-digit code.{% endif %} Enter it below. It can take a minute; check spam or promotions too.</p>
     {% endif %}
 
-    <form method="post" action="{% url 'resend_verification' %}" class="mt-8 rounded-2xl border border-white/10 bg-slate-900/80 p-6 text-left">
+    <form method="post" action="{% url 'verify_code' %}" class="mt-8 rounded-2xl border border-white/10 bg-slate-900/80 p-6 text-left">
+      {% csrf_token %}
+      {% if not login %}
+      <label for="id_code_login" class="block text-sm font-semibold text-slate-300">Your username or email</label>
+      <input id="id_code_login" name="login" required autocomplete="username"
+             class="mt-2 mb-4 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+             placeholder="Username or email">
+      {% endif %}
+      <label for="id_code" class="block text-sm font-semibold text-slate-300">6-digit code</label>
+      <input id="id_code" name="code" required autofocus inputmode="numeric" autocomplete="one-time-code"
+             pattern="[0-9 ]{6,7}" maxlength="7" placeholder="000000"
+             class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-center font-mono text-3xl font-bold tracking-widest text-slate-100 placeholder:text-slate-600 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40">
+      <button class="mt-4 w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white transition hover:bg-brand-700">Confirm my email</button>
+      <p class="mt-3 text-center text-xs text-slate-500">The code works once and expires in 10 minutes. You can also tap the button in the email.</p>
+    </form>
+
+    <form method="post" action="{% url 'resend_verification' %}" class="mt-4 rounded-2xl border border-white/10 bg-slate-900/80 p-6 text-left">
       {% csrf_token %}
       <label for="id_login" class="block text-sm font-semibold text-slate-300">Didn't get it? Enter your username or email</label>
       <input id="id_login" name="login" value="{{ login }}" required autocomplete="username"
              class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
              placeholder="Username or email">
-      <button class="mt-4 w-full rounded-xl bg-brand-600 px-4 py-3 font-semibold text-white transition hover:bg-brand-700">Send a new link</button>
+      <button class="mt-4 w-full rounded-xl border border-slate-600 px-4 py-3 font-semibold text-slate-200 transition hover:bg-slate-800">Send a new code</button>
     </form>
     <p class="mt-6 text-sm text-slate-400">Already confirmed? <a href="{% url 'login' %}" class="font-semibold text-brand-400 hover:underline">Log in</a></p>
   </section>

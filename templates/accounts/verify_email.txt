@@ -1,13 +1,17 @@
 Hi {{ name }},
 
-Thanks for signing up to StudyFlow. Please confirm this is your email address by opening the link below:
+Thanks for signing up to StudyFlow. Your confirmation code is:
+
+    {{ code }}
+
+Enter it on the StudyFlow page you just opened. The code works once and expires in {{ code_minutes }} minutes.
+
+Prefer one tap? Open this link instead (works once, expires in {{ expiry_days }} day{{ expiry_days|pluralize }}):
 
 {{ link }}
 
-The link works once and expires in {{ expiry_days }} day{{ expiry_days|pluralize }}.
-
 Your username: {{ user.get_username }}
 
-Didn't sign up? You can ignore this email and no account will be activated.
+Didn't sign up? You can ignore this email and no account will be activated. Never share this code with anyone.
 
 StudyFlow · {{ domain }}
