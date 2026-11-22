@@ -28,7 +28,7 @@ def signup(request):
                 user.profile.email_verified = False
                 user.profile.save(update_fields=['email_verified'])
                 if not send_verification_email(user, request):
-                    messages.error(request, "Your account was created, but we couldn't send the confirmation email. Use “Send a new link” below.")
+                    messages.error(request, "Your account was created, but we couldn't send the confirmation email. Use “Send a new code” below.")
                 request.session['verify_login'] = user.email
                 return redirect('verify_email_sent')
             from .emails import send_welcome_email
@@ -67,7 +67,7 @@ def login_view(request):
             from .verification import needs_verification
             if user is not None and needs_verification(user):
                 request.session['verify_login'] = user.email
-                error = 'Please confirm your email first. We sent you a link when you signed up.'
+                error = 'Please confirm your email first. We sent you a 6-digit code when you signed up.'
                 messages.error(request, error)
                 return redirect('verify_email_sent')
             if user is not None:
@@ -295,27 +295,16 @@ def cron_daily_digest(request):
 
 
 def verify_email_sent(request):
-    """'Check your email' page, with a form to send a new link."""
+    """'Check your email' page: enter the 6-digit code, or ask for a new one."""
     login_hint = request.session.get('verify_login', '')
     return render(request, 'accounts/verify_email.html', {'state': 'sent', 'email': login_hint, 'login': login_hint})
 
 
-def verify_email(request, uidb64, token):
-    from django.contrib.auth import get_user_model
-    from django.utils.encoding import force_str
-    from django.utils.http import urlsafe_base64_decode
+def _finish_verification(request, user):
+    """Marks the email confirmed (first time only: welcome email), logs the student in."""
     from .emails import send_welcome_email
-    from .verification import email_verification_token
 
-    try:
-        user = get_user_model().objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
-    except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
-        user = None
-    if user is None or not email_verification_token.check_token(user, token):
-        return render(request, 'accounts/verify_email.html', {'state': 'invalid'}, status=400)
-
-    first_time = not user.profile.email_verified
-    if first_time:
+    if not user.profile.email_verified:
         user.profile.email_verified = True
         user.profile.save(update_fields=['email_verified'])
         send_welcome_email(user, request)
@@ -325,9 +314,52 @@ def verify_email(request, uidb64, token):
     return redirect('dashboard')
 
 
+def verify_email(request, uidb64, token):
+    from django.contrib.auth import get_user_model
+    from django.utils.encoding import force_str
+    from django.utils.http import urlsafe_base64_decode
+    from .verification import email_verification_token
+
+    try:
+        user = get_user_model().objects.get(pk=force_str(urlsafe_base64_decode(uidb64)))
+    except (TypeError, ValueError, OverflowError, get_user_model().DoesNotExist):
+        user = None
+    if user is None or not email_verification_token.check_token(user, token):
+        return render(request, 'accounts/verify_email.html', {'state': 'invalid'}, status=400)
+    return _finish_verification(request, user)
+
+
+@require_POST
+def verify_code(request):
+    """Checks the 6-digit code from the email. Wrong, expired and unknown all look the same."""
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from resources.ai_service import RateLimitExceeded, check_and_increment_rate_limit
+    from .verification import check_code
+
+    login_value = (request.session.get('verify_login') or request.POST.get('login', '')).strip()
+    if not login_value:
+        messages.error(request, 'Enter your username or email, then the 6-digit code.')
+        return redirect('verify_email_sent')
+    request.session['verify_login'] = login_value
+    try:
+        # Slows guessing: 10 tries per 15 minutes per account (each code also locks after 5 wrong tries).
+        check_and_increment_rate_limit(login_value.lower(), bucket='verify_code', max_requests=10, window=900)
+    except RateLimitExceeded:
+        messages.error(request, 'Too many tries. Please wait 15 minutes, or ask for a new code.')
+        return redirect('verify_email_sent')
+    user = get_user_model().objects.filter(
+        Q(username__iexact=login_value) | Q(email__iexact=login_value)
+    ).select_related('profile').first()
+    if user and user.email and not user.profile.email_verified and check_code(user, request.POST.get('code', '')):
+        return _finish_verification(request, user)
+    messages.error(request, "That code is wrong or has expired. Check your latest email, or send a new code below.")
+    return redirect('verify_email_sent')
+
+
 @require_POST
 def resend_verification(request):
-    """Sends a fresh link. Always shows the same message, so it can't be used to discover accounts."""
+    """Sends a fresh code. Always shows the same message, so it can't be used to discover accounts."""
     from django.contrib.auth import get_user_model
     from django.db.models import Q
     from resources.ai_service import RateLimitExceeded, check_and_increment_rate_limit
@@ -336,7 +368,7 @@ def resend_verification(request):
     login_value = request.POST.get('login', '').strip()
     if login_value:
         try:
-            check_and_increment_rate_limit(login_value.lower(), bucket='verify_resend', max_requests=3, window=3600)
+            check_and_increment_rate_limit(login_value.lower(), bucket='verify_resend', max_requests=5, window=3600)
             user = get_user_model().objects.filter(Q(username__iexact=login_value) | Q(email__iexact=login_value)).select_related('profile').first()
             if user and user.email and not user.profile.email_verified:
                 send_verification_email(user, request)
@@ -344,5 +376,5 @@ def resend_verification(request):
             messages.error(request, 'Too many requests. Please wait an hour and try again.')
             return redirect('verify_email_sent')
     request.session['verify_login'] = login_value
-    messages.success(request, "If that account is waiting for confirmation, we've sent a new link.")
+    messages.success(request, "If that account is waiting for confirmation, we've sent a new code.")
     return redirect('verify_email_sent')

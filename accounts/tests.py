@@ -479,7 +479,7 @@ class EmailVerificationTests(TestCase):
         response = self._signup()
         self.assertRedirects(response, reverse('verify_email_sent'))
         self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].subject, 'Confirm your email for StudyFlow')
+        self.assertIn('is your StudyFlow confirmation code', mail.outbox[0].subject)
         self.assertFalse(User.objects.get(username='tolu').profile.email_verified)
         self.assertContains(self.client.get(reverse('verify_email_sent')), 'tolu@example.com')
 
@@ -519,9 +519,121 @@ class EmailVerificationTests(TestCase):
         self.assertEqual(len(mail.outbox), 2)
         r2 = self.client.post(reverse('resend_verification'), {'login': 'nobody@example.com'}, follow=True)
         self.assertEqual(len(mail.outbox), 2)
-        msg = "If that account is waiting for confirmation, we&#x27;ve sent a new link."
+        msg = "If that account is waiting for confirmation, we&#x27;ve sent a new code."
         self.assertContains(r1, msg)
         self.assertContains(r2, msg)
+
+    # ---- 6-digit code ----
+
+    def _code(self, index=-1):
+        import re
+        from django.core import mail
+        return re.search(r'confirmation code is:\s+(\d{6})', mail.outbox[index].body).group(1)
+
+    def _wrong_code(self):
+        return '000000' if self._code() != '000000' else '111111'
+
+    def _submit(self, code, follow=False, **extra):
+        return self.client.post(reverse('verify_code'), {'code': code, **extra}, follow=follow)
+
+    def test_email_has_a_six_digit_code_in_subject_and_body(self):
+        from django.core import mail
+        self._signup()
+        code = self._code()
+        self.assertRegex(code, r'^\d{6}$')
+        self.assertIn(code, mail.outbox[0].subject)
+        html = mail.outbox[0].alternatives[0][0]
+        self.assertIn(code, html)
+
+    def test_correct_code_verifies_logs_in_and_sends_welcome(self):
+        from django.core import mail
+        self._signup()
+        response = self._submit(self._code())
+        self.assertRedirects(response, reverse('dashboard'), fetch_redirect_response=False)
+        self.assertTrue(User.objects.get(username='tolu').profile.email_verified)
+        self.assertIn('_auth_user_id', self.client.session)
+        self.assertIn('Welcome to StudyFlow', mail.outbox[-1].subject)
+
+    def test_code_with_spaces_is_accepted(self):
+        self._signup()
+        code = self._code()
+        response = self._submit(f'{code[:3]} {code[3:]}')
+        self.assertRedirects(response, reverse('dashboard'), fetch_redirect_response=False)
+
+    def test_wrong_code_is_rejected(self):
+        self._signup()
+        response = self._submit(self._wrong_code(), follow=True)
+        self.assertContains(response, 'That code is wrong or has expired')
+        self.assertFalse(User.objects.get(username='tolu').profile.email_verified)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_code_works_only_once(self):
+        self._signup()
+        code = self._code()
+        self.assertEqual(self._submit(code).status_code, 302)
+        self.client.logout()
+        response = self._submit(code, login='tolu@example.com', follow=True)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertContains(response, 'That code is wrong or has expired')
+
+    def test_code_locks_after_five_wrong_tries(self):
+        from django.core.cache import cache
+        cache.clear()
+        self._signup()
+        code = self._code()
+        bad = self._wrong_code()
+        for _ in range(5):
+            self._submit(bad)
+        response = self._submit(code, follow=True)
+        self.assertContains(response, 'That code is wrong or has expired')
+        self.assertFalse(User.objects.get(username='tolu').profile.email_verified)
+
+    def test_expired_code_is_rejected(self):
+        import time
+        from unittest import mock
+        self._signup()
+        code = self._code()
+        with mock.patch('accounts.verification.time.time', return_value=time.time() + 601):
+            response = self._submit(code, follow=True)
+        self.assertContains(response, 'That code is wrong or has expired')
+        self.assertFalse(User.objects.get(username='tolu').profile.email_verified)
+
+    def test_new_code_replaces_the_old_one(self):
+        from django.core.cache import cache
+        cache.clear()
+        self._signup()
+        old = self._code()
+        self.client.post(reverse('resend_verification'), {'login': 'tolu'})
+        new = self._code()
+        if new == old:  # 1 in a million: ask again so the test stays honest
+            self.client.post(reverse('resend_verification'), {'login': 'tolu'})
+            new = self._code()
+        if new != old:
+            self.assertContains(self._submit(old, follow=True), 'That code is wrong or has expired')
+        self.assertRedirects(self._submit(new), reverse('dashboard'), fetch_redirect_response=False)
+
+    def test_someone_elses_code_does_not_work(self):
+        self._signup()
+        mine = self._code()
+        User.objects.create_user('other', email='other@example.com', password='S7rong-pass-99')
+        other = User.objects.get(username='other')
+        other.profile.email_verified = False
+        other.profile.save()
+        client = self.client_class()
+        response = client.post(reverse('verify_code'), {'code': mine, 'login': 'other@example.com'}, follow=True)
+        self.assertContains(response, 'That code is wrong or has expired')
+        self.assertFalse(User.objects.get(username='other').profile.email_verified)
+
+    def test_verify_page_shows_the_code_form(self):
+        self._signup()
+        page = self.client.get(reverse('verify_email_sent'))
+        self.assertContains(page, 'name="code"')
+        self.assertContains(page, 'autocomplete="one-time-code"')
+        self.assertContains(page, 'tolu@example.com')
+
+    def test_code_needs_an_account_to_check(self):
+        response = self.client.post(reverse('verify_code'), {'code': '123456'}, follow=True)
+        self.assertContains(response, 'Enter your username or email')
 
     def test_existing_and_google_accounts_are_not_blocked(self):
         User.objects.create_user('old', email='old@example.com', password='S7rong-pass-99')
