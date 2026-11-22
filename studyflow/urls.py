@@ -26,7 +26,30 @@ def healthz_db(request):
         return HttpResponse('db down', content_type='text/plain', status=503)
 
 
+@never_cache
+def robots_txt(request):
+    """Search engines may index only the public entry pages, never logged-in or uploaded content."""
+    base = f'{request.scheme}://{request.get_host()}'
+    body = (
+        'User-agent: *\n'
+        'Allow: /login/\n'
+        'Allow: /signup/\n'
+        'Disallow: /\n'
+        f'Sitemap: {base}/sitemap.xml\n'
+    )
+    return HttpResponse(body, content_type='text/plain')
+
+
+def sitemap_xml(request):
+    base = f'{request.scheme}://{request.get_host()}'
+    urls = ''.join(f'<url><loc>{base}{path}</loc></url>' for path in ('/login/', '/signup/'))
+    xml = f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
+    return HttpResponse(xml, content_type='application/xml')
+
+
 urlpatterns = [
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('healthz/', healthz, name='healthz'),
     path('healthz/db/', healthz_db, name='healthz_db'),
     path('admin/', admin.site.urls),

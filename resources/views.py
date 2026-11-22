@@ -75,9 +75,18 @@ def resource_detail(request, pk):
     back_group = 'thesis_paper' if resource.resource_type in ('thesis', 'paper') else resource.resource_type
     _, _, back_url_name = TYPE_GROUPS.get(back_group, (None, None, 'notes_list'))
 
+    from urllib.parse import quote
+
+    from accounts.referrals import invite_url
+
+    share_text = (
+        f'{resource.title} on StudyFlow: {request.build_absolute_uri(request.path)}\n'
+        f'New to StudyFlow? Join free: {invite_url(request, request.user.profile)}'
+    )
     return render(
         request, 'resources/resource_detail.html',
-        {'resource': resource, 'my_rating': my_rating, 'comments': comments, 'back_url_name': back_url_name},
+        {'resource': resource, 'my_rating': my_rating, 'comments': comments, 'back_url_name': back_url_name,
+         'whatsapp_url': 'https://wa.me/?text=' + quote(share_text)},
     )
 
 

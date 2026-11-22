@@ -9,6 +9,19 @@
 
   <link rel="manifest" href="{% url 'pwa_manifest' %}">
   <meta name="theme-color" content="#7c3aed">
+  <meta name="description" content="StudyFlow is a free study app for university students: planner, AI study coach, past questions, flashcards and focus tools.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="StudyFlow">
+  <meta property="og:title" content="StudyFlow: study smarter, together">
+  <meta property="og:description" content="Free planner, AI study coach, past questions and flashcards for university students.">
+  <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="StudyFlow: study smarter, together">
+  <meta name="twitter:description" content="Free planner, AI study coach, past questions and flashcards for university students.">
+  <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.png' %}">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="StudyFlow">
   <link rel="apple-touch-icon" href="{% static 'icons/icon-192.png' %}">
@@ -169,6 +182,10 @@
                   <span>My Progress</span>
                   <span class="text-xs">📈</span>
                 </a>
+                <a href="{% url 'invite' %}" class="px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 flex items-center justify-between">
+                  <span>Invite friends</span>
+                  <span class="text-xs">🎁</span>
+                </a>
                 <a href="{% url 'notifications' %}" class="px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 flex items-center justify-between">
                   <span>Notifications</span>
                   <span class="text-xs">🔔</span>
@@ -222,6 +239,7 @@
 
       <a href="{% url 'global_chat' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Community</a>
       <a href="{% url 'progress' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">My Progress 📈</a>
+      <a href="{% url 'invite' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Invite friends 🎁</a>
       <a href="{% url 'notifications' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Notifications 🔔</a>
     </div>
     {% endif %}
@@ -1310,6 +1328,78 @@
     document.addEventListener('focusin', function (e) { if (isPageField(e.target)) setHidden(true); });
     document.addEventListener('focusout', function (e) { if (isPageField(e.target)) setHidden(false); });
   })();
+</script>
+
+<!-- ── PWA: install banner ─────────────────────────────────────────── -->
+<script>
+(function () {
+  var KEY = 'studyflow-install-dismissed';
+  var DAYS = 30;
+  function store(fn) { try { return fn(); } catch (e) { return null; } }
+  function dismissedRecently() {
+    var t = parseInt(store(function () { return localStorage.getItem(KEY); }) || '0', 10);
+    return t && (Date.now() - t) < DAYS * 86400000;
+  }
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (standalone || dismissedRecently()) return;
+
+  var ua = navigator.userAgent || '';
+  var isIOS = /iphone|ipad|ipod/i.test(ua) && !window.MSStream;
+  var deferred = null;
+  var bar = null;
+
+  function dismiss() {
+    store(function () { localStorage.setItem(KEY, String(Date.now())); });
+    if (bar) { bar.remove(); bar = null; }
+  }
+  function show(message, actionLabel, onAction) {
+    if (bar) return;
+    bar = document.createElement('div');
+    bar.id = 'install-banner';
+    bar.setAttribute('role', 'region');
+    bar.setAttribute('aria-label', 'Install StudyFlow');
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:1rem;z-index:9998;width:calc(100% - 2rem);max-width:28rem;display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:1rem;background:#1e293b;border:1px solid #475569;color:#f8fafc;font-size:.875rem;box-shadow:0 10px 30px rgba(0,0,0,.4)';
+    var text = document.createElement('span');
+    text.style.cssText = 'flex:1;line-height:1.3';
+    text.textContent = message;
+    bar.appendChild(text);
+    if (actionLabel) {
+      var go = document.createElement('button');
+      go.type = 'button';
+      go.textContent = actionLabel;
+      go.style.cssText = 'background:#7c3aed;color:#fff;border:0;border-radius:.625rem;padding:.4rem .8rem;font-weight:600;cursor:pointer';
+      go.addEventListener('click', onAction);
+      bar.appendChild(go);
+    }
+    var no = document.createElement('button');
+    no.type = 'button';
+    no.setAttribute('aria-label', 'Dismiss');
+    no.textContent = '✕';
+    no.style.cssText = 'background:transparent;color:#94a3b8;border:0;cursor:pointer;font-size:1rem;padding:.25rem';
+    no.addEventListener('click', dismiss);
+    bar.appendChild(no);
+    document.body.appendChild(bar);
+  }
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    show('Install StudyFlow for quick access, even offline.', 'Install', function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.then(function () { deferred = null; if (bar) { bar.remove(); bar = null; } });
+    });
+  });
+  window.addEventListener('appinstalled', function () { if (bar) { bar.remove(); bar = null; } });
+
+  if (isIOS) {
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        show('Install StudyFlow: tap the Share button, then “Add to Home Screen”.', null, null);
+      }, 4000);
+    });
+  }
+})();
 </script>
 
 <!-- ── PWA: Service-worker registration ─────────────────────────────── -->
