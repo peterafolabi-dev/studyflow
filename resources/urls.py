@@ -23,6 +23,7 @@ urlpatterns = [
     path('resources/<int:pk>/download/', views.resource_download, name='resource_download'),
     path('resources/<int:pk>/delete/', views.resource_delete, name='resource_delete'),
     path('resources/<int:pk>/rate/', views.rate_resource, name='rate_resource'),
+    path('resources/<int:pk>/report/', views.report_resource, name='report_resource'),
     path('resources/<int:pk>/ai/summarize/', views.resource_ai_summarize, name='resource_ai_summarize'),
     path('resources/<int:pk>/ai/flashcards/', views.resource_ai_flashcards, name='resource_ai_flashcards'),
     path('resources/<int:pk>/ai/save-flashcards/', views.resource_ai_save_flashcards, name='resource_ai_save_flashcards'),

@@ -238,7 +238,7 @@ studyflow/
 
 ## 📄 License
 
-MIT License — free to use, modify, and distribute.
+MIT License — free to use, modify, and distribute. See [LICENSE](LICENSE).
 
 ---
 
