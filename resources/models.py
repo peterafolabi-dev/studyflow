@@ -34,6 +34,13 @@ class Resource(models.Model):
     def __str__(self):
         return self.title
 
+    def file_available(self):
+        """True only if the file is really on the server. Free hosting wipes uploads on restart, so a row can outlive its file."""
+        try:
+            return bool(self.file) and self.file.storage.exists(self.file.name)
+        except Exception:  # noqa: BLE001 - a storage hiccup must not break a page
+            return False
+
     @property
     def is_research(self):
         return self.resource_type in ('thesis', 'paper')

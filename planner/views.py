@@ -124,9 +124,11 @@ def dashboard(request):
         'latest_notice': latest_notice,
         'weak_topics': _dashboard_weak_topics(request.user),
         'next_exam': Course.objects.filter(user=request.user, exam_date__gte=today).order_by('exam_date').first(),
-        'trending_resources': Resource.objects.filter(
-            last_downloaded_at__gte=timezone.now() - timedelta(days=7)
-        ).order_by('-download_count')[:5],
+        'trending_resources': [
+            r for r in Resource.objects.filter(
+                last_downloaded_at__gte=timezone.now() - timedelta(days=7)
+            ).order_by('-download_count')[:15] if r.file_available()
+        ][:5],  # skip files that free hosting has wiped, so Trending never leads to an error
         'quick_links': [
             ('Campus Hub', '🏛️', 'campus_hub'),
             ('Where is Light?', '⚡', 'power_tracker'),
