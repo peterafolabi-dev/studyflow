@@ -46,6 +46,23 @@ class Profile(models.Model):
     daily_digest = models.BooleanField(default=True, verbose_name='Daily study email')
     digest_token = models.CharField(max_length=40, blank=True, default='', db_index=True)
     last_digest_at = models.DateTimeField(null=True, blank=True)
+    # Invite links: a random, non-guessable code per student, and who invited them.
+    referral_code = models.CharField(max_length=16, unique=True, null=True, blank=True, editable=False)
+    referred_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='referred_profiles', editable=False,
+    )
+
+    def ensure_referral_code(self):
+        if not self.referral_code:
+            import secrets
+            for _ in range(10):
+                code = secrets.token_urlsafe(6).replace('-', 'x').replace('_', 'y')[:8].lower()
+                if not Profile.objects.filter(referral_code=code).exists():
+                    self.referral_code = code
+                    self.save(update_fields=['referral_code'])
+                    break
+        return self.referral_code
 
     def ensure_digest_token(self):
         if not self.digest_token:

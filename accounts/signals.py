@@ -24,5 +24,9 @@ if user_signed_up is not None:
     def welcome_new_google_user(sender, request, user, **kwargs):
         """Google (allauth) sign-ups get the same welcome email as the sign-up form."""
         from .emails import send_welcome_email
+        from .referrals import attach_referrer, award_referral_badge
 
+        referrer = attach_referrer(request, user)
+        if referrer:
+            award_referral_badge(referrer)
         send_welcome_email(user, request)

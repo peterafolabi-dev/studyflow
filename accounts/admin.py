@@ -9,6 +9,7 @@ from .presence import active_user_count, is_online, online_users
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
+    fk_name = 'user'
     verbose_name_plural = 'Academic Profile'
 
 

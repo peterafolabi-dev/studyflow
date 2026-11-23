@@ -30,6 +30,8 @@
       </p>
     {% endif %}
 
+    <p class="mb-4"><a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold">Share on WhatsApp</a></p>
+
     {% if resource.resource_type == 'notes' %}
       <div class="flex flex-wrap items-center gap-3 mb-4">
         <button type="button" data-save-offline data-offline-paths="{% url 'resource_detail' resource.pk %}{% if resource.file %}|{% url 'resource_download' resource.pk %}{% endif %}" class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold">Save note for offline</button>
@@ -57,6 +59,27 @@
         {% endif %}
       </form>
     </div>
+
+    {% if resource.uploaded_by_id != user.id %}
+    <details class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+      <summary class="cursor-pointer select-none hover:text-red-500 dark:hover:text-red-400">&#9873; Report this resource</summary>
+      <form method="post" action="{% url 'report_resource' resource.pk %}" class="mt-3 space-y-2 max-w-md">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'resource_detail' resource.pk %}">
+        <label for="report-reason" class="block font-medium text-slate-600 dark:text-slate-300">What's wrong?</label>
+        <select id="report-reason" name="reason" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-100">
+          <option value="copyright">Copyright or not allowed to be shared</option>
+          <option value="misleading">Wrong or misleading</option>
+          <option value="inappropriate">Inappropriate content</option>
+          <option value="spam">Spam</option>
+          <option value="other" selected>Other</option>
+        </select>
+        <label for="report-detail" class="block font-medium text-slate-600 dark:text-slate-300">Details (optional)</label>
+        <textarea id="report-detail" name="detail" maxlength="300" rows="2" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-100"></textarea>
+        <button type="submit" class="rounded-lg bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm font-semibold">Send report</button>
+      </form>
+    </details>
+    {% endif %}
   </div>
 
   <!-- AI Study Kit & Download Toolbar -->
