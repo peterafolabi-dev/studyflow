@@ -42,4 +42,8 @@ urlpatterns = [
     path('calendar.ics', views.export_calendar, name='export_calendar'),
     # Phase 5
     path('progress/', views.progress, name='progress'),
+    path('weak-topics/', views.weak_topics_view, name='weak_topics'),
+    path('revision-plan/', views.revision_plan_view, name='revision_plan'),
+    path('leaderboard/', views.leaderboard, name='leaderboard'),
+    path('leaderboard/visibility/', views.leaderboard_visibility, name='leaderboard_visibility'),
 ]

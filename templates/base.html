@@ -186,6 +186,10 @@
                   <span>Invite friends</span>
                   <span class="text-xs">🎁</span>
                 </a>
+                <a href="{% url 'leaderboard' %}" class="px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 flex items-center justify-between">
+                  <span>Weekly leaderboard</span>
+                  <span class="text-xs">🏅</span>
+                </a>
                 <a href="{% url 'notifications' %}" class="px-3 py-2 rounded-xl hover:bg-slate-800 text-slate-200 flex items-center justify-between">
                   <span>Notifications</span>
                   <span class="text-xs">🔔</span>
@@ -240,6 +244,9 @@
       <a href="{% url 'global_chat' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Community</a>
       <a href="{% url 'progress' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">My Progress 📈</a>
       <a href="{% url 'invite' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Invite friends 🎁</a>
+      <a href="{% url 'weak_topics' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Weak Topics 🎯</a>
+      <a href="{% url 'revision_plan' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Revision Plan 🗓️</a>
+      <a href="{% url 'leaderboard' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Leaderboard 🏅</a>
       <a href="{% url 'notifications' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Notifications 🔔</a>
     </div>
     {% endif %}
@@ -746,6 +753,9 @@
                 </label>
                 <input type="file" id="ai-chat-file" class="hidden" accept=".pdf,.txt,.md,.csv">
                 <input type="text" id="ai-chat-input" class="flex-1 min-w-0 bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none placeholder-slate-400" required placeholder="Ask StudyFlow Coach...">
+                <button type="button" id="ai-chat-mic" hidden aria-label="Ask with your voice" aria-pressed="false" title="Ask with your voice" class="flex-none text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3zM19 11a7 7 0 01-14 0M12 18v3"></path></svg>
+                </button>
                 <button type="submit" aria-label="Send" class="flex-none bg-brand-600 hover:bg-brand-700 text-white p-2.5 rounded-xl transition-colors shadow-sm">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                 </button>
@@ -1358,7 +1368,7 @@
     bar.id = 'install-banner';
     bar.setAttribute('role', 'region');
     bar.setAttribute('aria-label', 'Install StudyFlow');
-    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:1rem;z-index:9998;width:calc(100% - 2rem);max-width:28rem;display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:1rem;background:#1e293b;border:1px solid #475569;color:#f8fafc;font-size:.875rem;box-shadow:0 10px 30px rgba(0,0,0,.4)';
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:6rem;z-index:40;width:calc(100% - 2rem);max-width:28rem;display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:1rem;background:#1e293b;border:1px solid #475569;color:#f8fafc;font-size:.875rem;box-shadow:0 10px 30px rgba(0,0,0,.4)';
     var text = document.createElement('span');
     text.style.cssText = 'flex:1;line-height:1.3';
     text.textContent = message;
@@ -1399,6 +1409,39 @@
       }, 4000);
     });
   }
+})();
+</script>
+
+<!-- ── Coach: voice questions (hidden when the browser has no speech recognition) ── -->
+<script>
+(function () {
+  var Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var mic = document.getElementById('ai-chat-mic');
+  var input = document.getElementById('ai-chat-input');
+  if (!Rec || !mic || !input) return;
+  mic.hidden = false;
+  var rec = null, listening = false;
+  function setListening(on) {
+    listening = on;
+    mic.setAttribute('aria-pressed', on ? 'true' : 'false');
+    mic.style.color = on ? '#f43f5e' : '';
+    input.placeholder = on ? 'Listening… speak your question' : 'Ask StudyFlow Coach...';
+  }
+  mic.addEventListener('click', function () {
+    if (listening && rec) { rec.stop(); return; }
+    rec = new Rec();
+    rec.lang = 'en-NG';
+    rec.interimResults = false;
+    rec.maxAlternatives = 1;
+    rec.onresult = function (e) {
+      var text = (e.results[0] && e.results[0][0] && e.results[0][0].transcript) || '';
+      input.value = (input.value ? input.value + ' ' : '') + text.trim();
+      input.focus();
+    };
+    rec.onerror = function () { setListening(false); };
+    rec.onend = function () { setListening(false); };
+    try { rec.start(); setListening(true); } catch (err) { setListening(false); }
+  });
 })();
 </script>
 
