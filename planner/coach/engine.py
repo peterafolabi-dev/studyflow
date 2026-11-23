@@ -13,7 +13,9 @@ MAX_HISTORY = 20
 MAX_CHARS = 12000
 # Groq's free tier allows about 8000 tokens per minute per model, and a request is counted as
 # (input tokens + max_tokens). Keep both parts inside that so a long PDF doesn't get a 413.
-MAX_OUTPUT_TOKENS = 1500
+MAX_OUTPUT_TOKENS = 1500            # reserved when sizing the input
+MIN_OUTPUT_TOKENS = 800
+MAX_OUTPUT_TOKENS_CEILING = 3000    # never ask for more than this
 TPM_LIMIT = 8000
 INPUT_TOKEN_BUDGET = TPM_LIMIT - MAX_OUTPUT_TOKENS - 400   # 400 = safety margin for estimate error
 CHARS_PER_TOKEN = 3                                        # pessimistic: maths/LaTeX uses more tokens per character
@@ -96,12 +98,19 @@ def _is_model_problem(exc):
     return status in (404, 413, 429, 503) or 'rate_limit' in text or 'request too large' in text or 'model_not_found' in text or 'does not exist' in text or 'decommissioned' in text or 'over capacity' in text
 
 
+def reply_token_cap(messages):
+    """Longest reply we can ask for while (input + reply) stays under the per-minute limit.
+    Short chats get long room for worked solutions; a big file gets a shorter reply."""
+    est_input = sum(len(m['content']) for m in messages) // CHARS_PER_TOKEN
+    return max(MIN_OUTPUT_TOKENS, min(MAX_OUTPUT_TOKENS_CEILING, TPM_LIMIT - 400 - est_input))
+
+
 def complete(client, messages):
     """Call the first model that works. Returns (text, model_name)."""
     last = None
     for model in model_candidates():
         try:
-            resp = client.chat.completions.create(model=model, messages=messages, temperature=0.5, max_tokens=MAX_OUTPUT_TOKENS)
+            resp = client.chat.completions.create(model=model, messages=messages, temperature=0.5, max_tokens=reply_token_cap(messages))
             return (resp.choices[0].message.content or '').strip(), model
         except Exception as exc:  # noqa: BLE001 - we decide below whether to try the next model
             last = exc
