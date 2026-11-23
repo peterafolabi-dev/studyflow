@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Weekly leaderboard · StudyFlow{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-xl">
+  <h1 class="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Weekly leaderboard</h1>
+  <p class="mt-2 text-slate-500 dark:text-slate-400">XP earned since Monday {{ week_start|date:"j M" }}. Only usernames are shown.</p>
+
+  {% if rows %}
+    <ol class="mt-6 divide-y divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800">
+      {% for r in rows %}
+        <li class="flex items-center justify-between px-4 py-3 {% if r.is_me %}bg-brand-500/10{% endif %}">
+          <span class="text-slate-800 dark:text-slate-100"><span class="inline-block w-8 text-slate-500">{{ r.rank }}</span>{{ r.username }}{% if r.is_me %} <span class="text-xs text-brand-600 dark:text-brand-400">(you)</span>{% endif %}</span>
+          <span class="font-semibold text-brand-600 dark:text-brand-400">{{ r.xp }} XP</span>
+        </li>
+      {% endfor %}
+    </ol>
+    {% if me and me.rank > rows|length %}
+      <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">You are #{{ me.rank }} with {{ me.xp }} XP.</p>
+    {% endif %}
+  {% else %}
+    <p class="mt-6 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-6 text-center text-slate-500 dark:text-slate-400">No XP earned this week yet. Finish a task, a Pomodoro or a few flashcards to get on the board.</p>
+  {% endif %}
+
+  <form method="post" action="{% url 'leaderboard_visibility' %}" class="mt-6">
+    {% csrf_token %}
+    <input type="hidden" name="show" value="{% if opted_in %}0{% else %}1{% endif %}">
+    <button type="submit" class="rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+      {% if opted_in %}Hide me from the leaderboard{% else %}Show me on the leaderboard{% endif %}
+    </button>
+  </form>
+</div>
+{% endblock %}

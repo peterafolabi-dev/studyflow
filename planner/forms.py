@@ -6,9 +6,10 @@ from .models import Course, Task, TimetableEntry
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ['name', 'code']
-        labels = {'name': 'Course name', 'code': 'Course code (optional)'}
+        fields = ['name', 'code', 'exam_date']
+        labels = {'name': 'Course name', 'code': 'Course code (optional)', 'exam_date': 'Exam date (optional)'}
         widgets = {
+            'exam_date': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}),
             'name': forms.TextInput(attrs={'placeholder': 'e.g. Signals and Systems'}),
             'code': forms.TextInput(attrs={'placeholder': 'e.g. EEE 301'}),
         }

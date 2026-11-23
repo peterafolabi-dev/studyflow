@@ -65,6 +65,11 @@ def task_list(request):
     })
 
 
+def _dashboard_weak_topics(user):
+    from .study_insights import weak_topics
+    return weak_topics(user)[:3]
+
+
 @login_required
 def dashboard(request):
     today = timezone.localdate()
@@ -117,6 +122,8 @@ def dashboard(request):
         'show_onboarding': show_onboarding,
         'campus_light_spots': campus_light_spots,
         'latest_notice': latest_notice,
+        'weak_topics': _dashboard_weak_topics(request.user),
+        'next_exam': Course.objects.filter(user=request.user, exam_date__gte=today).order_by('exam_date').first(),
         'trending_resources': Resource.objects.filter(
             last_downloaded_at__gte=timezone.now() - timedelta(days=7)
         ).order_by('-download_count')[:5],
@@ -977,3 +984,37 @@ def progress(request):
     }
     return render(request, 'planner/progress.html', context)
 
+
+
+# ---------- Study insights ----------
+
+@login_required
+def weak_topics_view(request):
+    from .study_insights import MIN_ANSWERED, MIN_REVIEWED_CARDS, WEAK_BELOW_PERCENT, weak_topics
+    return render(request, 'planner/weak_topics.html', {
+        'topics': weak_topics(request.user),
+        'min_answered': MIN_ANSWERED, 'min_cards': MIN_REVIEWED_CARDS, 'threshold': WEAK_BELOW_PERCENT,
+    })
+
+
+@login_required
+def revision_plan_view(request):
+    from .study_insights import revision_plan
+    return render(request, 'planner/revision_plan.html', revision_plan(request.user))
+
+
+@login_required
+def leaderboard(request):
+    from .study_insights import weekly_leaderboard
+    return render(request, 'planner/leaderboard.html', weekly_leaderboard(request.user))
+
+
+@login_required
+@require_POST
+def leaderboard_visibility(request):
+    from .models import StudyStreak
+    streak, _ = StudyStreak.objects.get_or_create(user=request.user)
+    streak.show_on_leaderboard = request.POST.get('show') == '1'
+    streak.save(update_fields=['show_on_leaderboard'])
+    messages.success(request, 'You are on the weekly leaderboard.' if streak.show_on_leaderboard else 'You are hidden from the weekly leaderboard.')
+    return redirect('leaderboard')

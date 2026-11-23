@@ -6,6 +6,7 @@
     <div>
       <h1>{{ course.name }}</h1>
       {% if course.code %}<p class="muted">{{ course.code }}</p>{% endif %}
+      {% if course.exam_date %}<p class="muted">📅 Exam {{ course.exam_date|date:"D j M Y" }}{% if course.days_to_exam >= 0 %} · {% if course.days_to_exam == 0 %}today{% else %}{{ course.days_to_exam }} day{{ course.days_to_exam|pluralize }} left{% endif %} · <a class="underline" href="{% url 'revision_plan' %}">revision plan</a>{% endif %}</p>{% endif %}
     </div>
     <div class="head-actions">
       <a class="btn ghost" href="{% url 'course_update' course.pk %}">Edit</a>

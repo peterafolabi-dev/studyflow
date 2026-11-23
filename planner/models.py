@@ -10,10 +10,17 @@ class Course(models.Model):
     )
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, blank=True)
+    exam_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['name']
+
+    @property
+    def days_to_exam(self):
+        if not self.exam_date:
+            return None
+        return (self.exam_date - timezone.localdate()).days
 
     def __str__(self):
         return f'{self.code} {self.name}'.strip()
@@ -170,6 +177,8 @@ class StudyStreak(models.Model):
     current_streak = models.PositiveIntegerField(default=0)
     longest_streak = models.PositiveIntegerField(default=0)
     last_activity_date = models.DateField(null=True, blank=True)
+    # Weekly leaderboard shows usernames only; students can opt out at any time.
+    show_on_leaderboard = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.user.username}: {self.current_streak} day streak"
