@@ -883,6 +883,9 @@
         }
     }
 
+    // Shared with other pages (e.g. the AI answer card on discussion threads) so markdown and maths render the same way everywhere.
+    window.studyflowRenderMarkdown = renderMarkdown;
+
     if(chatBtn && chatModal) {
         chatBtn.addEventListener('click', () => {
             chatModal.classList.remove('hidden');

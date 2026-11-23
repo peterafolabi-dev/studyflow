@@ -57,9 +57,12 @@ def generate_ai_answer_for_thread(thread, question_context=''):
             f"Course Code: {thread.course_code or 'General University'}\n"
             f"Discussion Question / Topic: {thread.title}\n"
             f"Additional Details: {question_context or 'None provided'}\n\n"
-            f"Provide a thorough, accurate, step-by-step academic answer explaining the core concepts, "
-            f"working out any math, and giving practical tips. Use clean markdown with headings and bullets. "
-            f"Write math in LaTeX using $...$ for inline and $$...$$ for display formulas. Keep it motivating."
+            f"Answer exactly what the student asked. If the question names a different course or topic than the course code, "
+            f"follow the question, not the code. If the topic is a whole course (for example 'Math 101'), give a short map of "
+            f"the main topics in the order they are usually taught, then teach the first topic from the basics with one worked example "
+            f"and finish by asking which part they want next. Do not add a generic list of study tips unless they asked for tips. "
+            f"Keep it under 350 words. Use clean markdown with short headings and bullets. "
+            f"Write math in LaTeX using $...$ for inline and $$...$$ for display formulas, each formula on a single line."
         )
 
         system = build_system_prompt() + (
