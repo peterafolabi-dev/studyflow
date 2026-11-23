@@ -49,3 +49,37 @@ class EmergencyContactAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'phone_number', 'campus')
     list_filter = ('category', 'campus')
 
+
+
+from .models import CampusEvent, LostFoundItem, Opportunity  # noqa: E402
+
+
+@admin.register(LostFoundItem)
+class LostFoundItemAdmin(admin.ModelAdmin):
+    list_display = ('title', 'kind', 'location', 'reporter', 'is_resolved', 'created_at')
+    list_filter = ('kind', 'is_resolved')
+    search_fields = ('title', 'description', 'location')
+
+
+@admin.register(CampusEvent)
+class CampusEventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'starts_at', 'location', 'organizer', 'is_approved')
+    list_filter = ('is_approved',)
+    search_fields = ('title', 'description', 'location')
+    actions = ['approve']
+
+    @admin.action(description='Approve selected events')
+    def approve(self, request, queryset):
+        self.message_user(request, f'{queryset.update(is_approved=True)} event(s) approved.')
+
+
+@admin.register(Opportunity)
+class OpportunityAdmin(admin.ModelAdmin):
+    list_display = ('title', 'kind', 'organisation', 'deadline', 'submitted_by', 'is_approved')
+    list_filter = ('kind', 'is_approved')
+    search_fields = ('title', 'organisation', 'description')
+    actions = ['approve']
+
+    @admin.action(description='Approve selected opportunities')
+    def approve(self, request, queryset):
+        self.message_user(request, f'{queryset.update(is_approved=True)} opportunity(ies) approved.')

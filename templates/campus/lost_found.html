@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Lost & Found · StudyFlow{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <h1 class="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white">🔎 Lost &amp; Found</h1>
+  <p class="mt-2 text-slate-500 dark:text-slate-400">Lost your ID card, calculator or keys? Found something? Post it here so the owner can reach you on WhatsApp.</p>
+
+  <nav class="mt-5 flex gap-2 text-sm" aria-label="Filter">
+    <a href="{% url 'lost_found' %}" class="rounded-full px-3 py-1 border border-slate-300 dark:border-slate-700 {% if not selected_kind %}bg-brand-600 text-white border-brand-600{% endif %}">All</a>
+    <a href="?kind=lost" class="rounded-full px-3 py-1 border border-slate-300 dark:border-slate-700 {% if selected_kind == 'lost' %}bg-brand-600 text-white border-brand-600{% endif %}">Lost</a>
+    <a href="?kind=found" class="rounded-full px-3 py-1 border border-slate-300 dark:border-slate-700 {% if selected_kind == 'found' %}bg-brand-600 text-white border-brand-600{% endif %}">Found</a>
+  </nav>
+
+  <details class="mt-5 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
+    <summary class="cursor-pointer font-semibold text-brand-600 dark:text-brand-400">Post an item</summary>
+    <form method="post" action="{% url 'lost_found_create' %}" class="mt-4 grid gap-3">
+      {% csrf_token %}
+      <div class="grid grid-cols-2 gap-3">
+        <label class="text-sm text-slate-600 dark:text-slate-300">Type
+          <select name="kind" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"><option value="lost">I lost something</option><option value="found">I found something</option></select></label>
+        <label class="text-sm text-slate-600 dark:text-slate-300">Item
+          <input name="title" required maxlength="120" placeholder="e.g. Black Casio calculator" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      </div>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Where?
+        <input name="location" maxlength="120" placeholder="e.g. Engineering Lecture Theatre" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Details (no personal ID numbers please)
+        <input name="description" maxlength="500" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Your WhatsApp number (with country code)
+        <input name="whatsapp_number" required inputmode="numeric" placeholder="2348012345678" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <button type="submit" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 text-sm font-semibold">Post</button>
+    </form>
+  </details>
+
+  <ul class="mt-6 space-y-3">
+    {% for i in items %}
+      <li class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 p-4 {% if i.is_resolved %}opacity-60{% endif %}">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <span class="rounded-full px-2 py-0.5 text-xs font-bold {% if i.kind == 'lost' %}bg-rose-500/10 text-rose-500{% else %}bg-emerald-500/10 text-emerald-500{% endif %}">{{ i.get_kind_display }}</span>
+            {% if i.is_resolved %}<span class="ml-1 text-xs text-slate-500">resolved</span>{% endif %}
+            <p class="mt-1 font-semibold text-slate-900 dark:text-white">{{ i.title }}</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">{% if i.location %}{{ i.location }} · {% endif %}{{ i.created_at|timesince }} ago · {{ i.reporter.username }}</p>
+            {% if i.description %}<p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ i.description }}</p>{% endif %}
+          </div>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          {% if not i.is_resolved %}<a href="https://wa.me/{{ i.whatsapp_number }}" target="_blank" rel="noopener" class="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 font-semibold">Message on WhatsApp</a>{% endif %}
+          {% if i.reporter_id == user.pk %}
+            <form method="post" action="{% url 'lost_found_resolve' i.pk %}">{% csrf_token %}<button class="rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-1.5">{% if i.is_resolved %}Reopen{% else %}Mark resolved{% endif %}</button></form>
+          {% endif %}
+          {% if i.reporter_id == user.pk or user.is_staff %}
+            <form method="post" action="{% url 'lost_found_delete' i.pk %}" onsubmit="return confirm('Remove this post?')">{% csrf_token %}<button class="rounded-lg border border-rose-400/50 text-rose-500 px-3 py-1.5">Delete</button></form>
+          {% endif %}
+        </div>
+      </li>
+    {% empty %}
+      <li class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-6 text-center text-slate-500 dark:text-slate-400">Nothing posted yet. Be the first.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

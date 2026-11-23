@@ -31,6 +31,14 @@
   </div>
 </div>
 
+{% if user.is_authenticated %}
+<p class="mb-4 text-sm fade-in-up">
+  {% if my_class %}<a href="{% url 'notice_board' %}" class="font-semibold text-brand-600 dark:text-brand-400">Showing notices for your department and level · show all</a>
+  {% else %}<a href="?mine=1" class="font-semibold text-brand-600 dark:text-brand-400">Show only notices for my class →</a>{% endif %}
+  <span class="text-slate-500 dark:text-slate-400">(uses the department and level on your profile)</span>
+</p>
+{% endif %}
+
 <!-- Search & Filter Controls -->
 <div class="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 mb-8 shadow-sm fade-in-up">
   <form method="get" action="{% url 'notice_board' %}" class="grid grid-cols-1 sm:grid-cols-4 gap-3">

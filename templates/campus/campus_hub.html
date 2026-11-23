@@ -15,7 +15,10 @@
         Live campus power tracker, official departmental notices, off-campus lodge reviews, verified SIWES placements, and student marketplace.
       </p>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="{% url 'campus_events' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 text-xs sm:text-sm font-semibold transition-all">📅 Events</a>
+      <a href="{% url 'campus_opportunities' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 text-xs sm:text-sm font-semibold transition-all">🎓 Opportunities</a>
+      <a href="{% url 'lost_found' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-brand-400 border border-brand-500/30 text-xs sm:text-sm font-semibold transition-all">🔎 Lost &amp; Found</a>
       <a href="{% url 'emergency_directory' %}" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs sm:text-sm font-semibold transition-all">
         <span>🚨</span> Emergency Helplines
       </a>

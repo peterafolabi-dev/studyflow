@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Campus Events · StudyFlow{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <h1 class="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white">📅 Campus Events</h1>
+  <p class="mt-2 text-slate-500 dark:text-slate-400">Seminars, workshops, society meetings and more. Add any event to your phone calendar.</p>
+  <p class="mt-3"><a href="{% url 'campus_events_ics' %}" class="text-sm font-semibold text-brand-600 dark:text-brand-400">Download all upcoming events (.ics) →</a></p>
+
+  {% if pending %}
+    <div class="mt-5 rounded-2xl border border-amber-300/60 bg-amber-500/10 p-4 text-sm text-amber-600 dark:text-amber-300" role="status">
+      Waiting for staff approval: {% for e in pending %}<strong>{{ e.title }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+
+  <details class="mt-5 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
+    <summary class="cursor-pointer font-semibold text-brand-600 dark:text-brand-400">Submit an event</summary>
+    <form method="post" action="{% url 'campus_event_create' %}" class="mt-4 grid gap-3">
+      {% csrf_token %}
+      <label class="text-sm text-slate-600 dark:text-slate-300">Title
+        <input name="title" required maxlength="150" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label class="text-sm text-slate-600 dark:text-slate-300">Starts
+          <input type="datetime-local" name="starts_at" required class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+        <label class="text-sm text-slate-600 dark:text-slate-300">Ends (optional)
+          <input type="datetime-local" name="ends_at" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      </div>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Venue
+        <input name="location" maxlength="150" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Details
+        <textarea name="description" maxlength="1000" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></textarea></label>
+      <p class="text-xs text-slate-500">Student submissions are shown after staff approve them.</p>
+      <button type="submit" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 text-sm font-semibold">Submit</button>
+    </form>
+  </details>
+
+  <ul class="mt-6 space-y-3">
+    {% for e in events %}
+      <li class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 p-4">
+        <p class="font-semibold text-slate-900 dark:text-white">{{ e.title }}</p>
+        <p class="text-sm text-brand-600 dark:text-brand-400">{{ e.starts_at|date:"D j M Y, g:i A" }}{% if e.location %} · {{ e.location }}{% endif %}</p>
+        {% if e.description %}<p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ e.description|linebreaksbr }}</p>{% endif %}
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <a href="{% url 'campus_event_ics' e.pk %}" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 font-semibold">Add to calendar</a>
+          {% if e.organizer_id == user.pk or user.is_staff %}
+            <form method="post" action="{% url 'campus_event_delete' e.pk %}" onsubmit="return confirm('Remove this event?')">{% csrf_token %}<button class="rounded-lg border border-rose-400/50 text-rose-500 px-3 py-1.5">Delete</button></form>
+          {% endif %}
+        </div>
+      </li>
+    {% empty %}
+      <li class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-6 text-center text-slate-500 dark:text-slate-400">No upcoming events yet. Submit the first one.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
