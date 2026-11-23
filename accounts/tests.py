@@ -646,3 +646,138 @@ class HealthzDbTests(TestCase):
         response = self.client.get(reverse('healthz_db'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'ok')
+
+
+class InviteLinkTests(TestCase):
+    """Invite links: capture, attribution, anti-abuse, badge."""
+
+    def setUp(self):
+        self.inviter = User.objects.create_user('ada', 'ada@example.com', 'S7rong-pass-99')
+        self.code = self.inviter.profile.ensure_referral_code()
+
+    def _signup(self, name, **extra):
+        return self.client.post(reverse('signup'), {
+            'username': name, 'email': f'{name}@example.com',
+            'password1': 'S7rong-pass-99', 'password2': 'S7rong-pass-99', **extra,
+        })
+
+    def test_code_is_random_unique_and_stable(self):
+        self.assertRegex(self.code, r'^[a-z0-9]{4,16}$')
+        self.assertEqual(self.inviter.profile.ensure_referral_code(), self.code)
+        other = User.objects.create_user('bola', 'b@example.com', 'S7rong-pass-99')
+        self.assertNotEqual(other.profile.ensure_referral_code(), self.code)
+
+    @override_settings(EMAIL_VERIFICATION_REQUIRED=False)
+    def test_signup_via_link_records_inviter(self):
+        self.client.get(reverse('signup') + f'?ref={self.code}')
+        self._signup('tolu')
+        self.assertEqual(User.objects.get(username='tolu').profile.referred_by, self.inviter)
+
+    @override_settings(EMAIL_VERIFICATION_REQUIRED=False)
+    def test_ref_captured_on_login_page_too(self):
+        self.client.get(reverse('login') + f'?ref={self.code}')
+        self._signup('tolu')
+        self.assertEqual(User.objects.get(username='tolu').profile.referred_by, self.inviter)
+
+    @override_settings(EMAIL_VERIFICATION_REQUIRED=False)
+    def test_bad_or_unknown_code_is_ignored(self):
+        for bad in ('nope1234', '../../etc', 'A' * 40, '<script>'):
+            self.client.get(reverse('signup') + f'?ref={bad}')
+        self._signup('tolu')
+        self.assertIsNone(User.objects.get(username='tolu').profile.referred_by)
+
+    @override_settings(EMAIL_VERIFICATION_REQUIRED=False)
+    def test_no_ref_means_no_inviter(self):
+        self._signup('tolu')
+        self.assertIsNone(User.objects.get(username='tolu').profile.referred_by)
+
+    def test_cannot_refer_yourself(self):
+        from accounts.referrals import attach_referrer
+        request = MagicMock()
+        request.session = {'referral_code': self.code}
+        self.assertIsNone(attach_referrer(request, self.inviter))
+        self.assertIsNone(self.inviter.profile.referred_by)
+
+    def test_invite_page_needs_login(self):
+        self.assertEqual(self.client.get(reverse('invite')).status_code, 302)
+
+    def test_invite_page_shows_link_whatsapp_and_count(self):
+        self.client.force_login(self.inviter)
+        response = self.client.get(reverse('invite'))
+        self.assertContains(response, f'/signup/?ref={self.code}')
+        self.assertContains(response, 'https://wa.me/?text=')
+        self.assertEqual(response.context['joined'], 0)
+        self.assertEqual(response.context['remaining'], 3)
+
+    def _friend(self, name, verified):
+        friend = User.objects.create_user(name, f'{name}@example.com', 'S7rong-pass-99')
+        friend.profile.referred_by = self.inviter
+        friend.profile.email_verified = verified
+        friend.profile.save()
+        return friend
+
+    def test_only_verified_friends_count_and_badge_is_idempotent(self):
+        from planner.models import UserBadge
+        for name in ('f1', 'f2'):
+            self._friend(name, True)
+        self._friend('f3', False)
+        self.client.force_login(self.inviter)
+        self.assertEqual(self.client.get(reverse('invite')).context['joined'], 2)
+        self.assertFalse(UserBadge.objects.filter(user=self.inviter, badge__slug='invite-3').exists())
+        friend = User.objects.get(username='f3')
+        friend.profile.email_verified = True
+        friend.profile.save()
+        self.client.get(reverse('invite'))
+        self.client.get(reverse('invite'))
+        self.assertEqual(UserBadge.objects.filter(user=self.inviter, badge__slug='invite-3').count(), 1)
+
+    @override_settings(EMAIL_VERIFICATION_REQUIRED=True)
+    def test_verifying_the_third_friend_awards_badge(self):
+        from planner.models import UserBadge
+        from accounts.referrals import award_referral_badge
+        self._friend('f1', True)
+        self._friend('f2', True)
+        third = self._friend('f3', False)
+        self.assertFalse(award_referral_badge(self.inviter))
+        third.profile.email_verified = True
+        third.profile.save()
+        self.assertTrue(award_referral_badge(self.inviter))
+        self.assertTrue(UserBadge.objects.filter(user=self.inviter, badge__slug='invite-3').exists())
+
+    def test_deleting_inviter_keeps_friend(self):
+        friend = self._friend('f1', True)
+        self.inviter.delete()
+        friend.profile.refresh_from_db()
+        self.assertIsNone(friend.profile.referred_by)
+
+
+class GrowthPublicPageTests(TestCase):
+    def test_share_meta_tags_on_public_pages(self):
+        html = self.client.get(reverse('login')).content.decode()
+        for needle in ('og:title', 'og:image', 'twitter:card', 'summary_large_image', '/static/img/og-image.png'):
+            self.assertIn(needle, html)
+
+    def test_og_image_exists_at_1200_by_630(self):
+        from PIL import Image
+        from django.conf import settings
+        with Image.open(settings.BASE_DIR / 'static' / 'img' / 'og-image.png') as im:
+            self.assertEqual(im.size, (1200, 630))
+
+    def test_robots_only_allows_public_entry_pages(self):
+        body = self.client.get('/robots.txt').content.decode()
+        self.assertIn('Allow: /login/', body)
+        self.assertIn('Disallow: /', body)
+        self.assertIn('Sitemap: http://testserver/sitemap.xml', body)
+
+    def test_sitemap_lists_only_public_pages(self):
+        body = self.client.get('/sitemap.xml').content.decode()
+        self.assertIn('/login/', body)
+        self.assertIn('/signup/', body)
+        for private in ('/resources', '/dashboard', '/admin'):
+            self.assertNotIn(private, body)
+
+    def test_install_banner_is_dismissible_and_skips_installed_app(self):
+        html = self.client.get(reverse('login')).content.decode()
+        self.assertIn('beforeinstallprompt', html)
+        self.assertIn('display-mode: standalone', html)
+        self.assertIn('studyflow-install-dismissed', html)

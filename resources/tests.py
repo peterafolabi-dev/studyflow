@@ -382,6 +382,18 @@ class AccessAndRedirectTests(TestCase):
         self.assertRedirects(response, reverse('notes_list'), fetch_redirect_response=False)
 
 
+class WhatsAppShareTests(TestCase):
+    def test_resource_page_has_encoded_whatsapp_share_with_invite(self):
+        from django.contrib.auth import get_user_model
+        from .models import Resource
+        user = get_user_model().objects.create_user('ada', 'a@example.com', 'S7rong-pass-99')
+        resource = Resource.objects.create(title='CSC 201 & Notes', resource_type='notes', uploaded_by=user)
+        self.client.force_login(user)
+        html = self.client.get(reverse('resource_detail', args=[resource.pk])).content.decode()
+        self.assertIn('https://wa.me/?text=', html)
+        self.assertIn('CSC%20201%20%26%20Notes', html)
+        self.assertIn('signup/%3Fref%3D', html)
+
 class ResourceReportTests(TestCase):
     """Students can flag a shared resource; a moderator reviews it by hand in the admin."""
 

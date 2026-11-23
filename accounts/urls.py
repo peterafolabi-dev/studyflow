@@ -7,6 +7,7 @@ from .forms import StudyFlowPasswordResetForm
 
 urlpatterns = [
     path('signup/', views.signup, name='signup'),
+    path('invite/', views.invite, name='invite'),
     path('verify-email/', views.verify_email_sent, name='verify_email_sent'),
     path('verify-email/resend/', views.resend_verification, name='resend_verification'),
     path('verify-email/code/', views.verify_code, name='verify_code'),
