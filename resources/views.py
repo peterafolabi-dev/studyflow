@@ -40,7 +40,8 @@ def resource_list(request, rtype):
     trending = Resource.objects.filter(
         resource_type__in=types,
         last_downloaded_at__gte=timezone.now() - timedelta(days=7),
-    ).order_by('-download_count')[:4]
+    ).order_by('-download_count')[:12]
+    trending = [r for r in trending if r.file_available()][:4]  # never promote a file that's gone
 
     my_ratings = dict(
         ResourceRating.objects.filter(user=request.user, resource__resource_type__in=types)
@@ -134,6 +135,9 @@ def resource_download(request, pk):
     resource = get_object_or_404(Resource, pk=pk)
     if not resource.file:
         messages.error(request, 'This resource has no file attached yet.')
+        return redirect_back(request, 'dashboard')
+    if not resource.file_available():
+        messages.error(request, 'This file is no longer on the server (free hosting clears uploads when the app restarts). Please ask the uploader to upload it again.')
         return redirect_back(request, 'dashboard')
 
     Resource.objects.filter(pk=pk).update(

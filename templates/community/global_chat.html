@@ -99,6 +99,7 @@
 
     function switchRoom(room) {
         currentRoom = room;
+        isScrolledToBottom = true;
         
         // Reset styles
         document.querySelectorAll('.room-btn').forEach(btn => {
@@ -129,11 +130,25 @@
         isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 30;
     });
 
+    function chatNotice(icon, text) {
+        return `<div class="flex flex-col justify-center items-center h-full text-center gap-2 text-slate-500 dark:text-slate-400">
+                    <div class="text-4xl">${icon}</div>
+                    <p class="text-sm font-medium">${text}</p>
+                </div>`;
+    }
+
     async function fetchMessages() {
+        const roomAtStart = currentRoom;
         try {
-            const res = await fetch(`{% url 'chat_api' %}?room=${encodeURIComponent(currentRoom)}`);
+            const res = await fetch(`{% url 'chat_api' %}?room=${encodeURIComponent(roomAtStart)}`);
+            if (roomAtStart !== currentRoom) return;  // student switched rooms while this was loading
+            if (!res.ok) throw new Error('Chat returned ' + res.status);
             const data = await res.json();
-            
+            if (!data.messages.length) {
+                chatMessages.innerHTML = chatNotice('💬', 'No messages yet. Say hi and start the conversation!');
+                return;
+            }
+
             chatMessages.innerHTML = data.messages.map(msg => `
                 <div class="flex flex-col max-w-[85%] sm:max-w-[75%] ${msg.is_me ? 'self-end items-end' : 'self-start items-start'} animate-in slide-in-from-bottom-2 fade-in duration-300">
                     <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">${msg.is_me ? 'You' : escapeChat(msg.username)} <span class="mx-1 opacity-50">•</span> ${escapeChat(msg.time)}</span>
@@ -149,7 +164,13 @@
             if(isScrolledToBottom) {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error(e);
+            // Never leave a blank room: if the very first load fails, say so. Later polls just retry quietly.
+            if (!chatMessages.querySelector('.animate-in') && roomAtStart === currentRoom) {
+                chatMessages.innerHTML = chatNotice('📡', 'Can\'t load messages right now. Retrying...');
+            }
+        }
     }
 
     chatForm.addEventListener('submit', async (e) => {
@@ -173,14 +194,21 @@
         chatInput.value = '';
         
         try {
-            await fetch("{% url 'chat_api' %}", {
+            const res = await fetch("{% url 'chat_api' %}", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
                 body: JSON.stringify({ text: text, room: currentRoom })
             });
+            if (!res.ok) throw new Error('Send failed ' + res.status);
             isScrolledToBottom = true;
-            fetchMessages(); 
-        } catch (e) { console.error(e); }
+            fetchMessages();
+        } catch (e) {
+            console.error(e);
+            const temp = document.getElementById('temp-msg');
+            if (temp) temp.remove();
+            chatInput.value = text;  // give the text back so nothing is lost
+            chatInput.placeholder = "Couldn't send. Check your connection and tap send again.";
+        }
     });
 
     fetchMessages();
