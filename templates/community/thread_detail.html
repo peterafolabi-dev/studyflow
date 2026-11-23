@@ -104,9 +104,7 @@
               </div>
               <span class="text-xs font-medium text-slate-400 bg-white/50 dark:bg-slate-900/50 px-2 py-1 rounded-md">{{ post.created_at|date:"d M, g:i a" }}</span>
             </div>
-            <div class="prose prose-sm dark:prose-invert prose-brand max-w-none text-slate-800 dark:text-slate-200 leading-relaxed font-sans">
-              {{ post.body|linebreaks }}
-            </div>
+            <div class="ai-md prose prose-sm dark:prose-invert prose-brand max-w-none text-slate-800 dark:text-slate-200 leading-relaxed font-sans whitespace-pre-wrap break-words">{{ post.body }}</div>
           </div>
         {% else %}
           <!-- Student Post Card -->
@@ -164,4 +162,21 @@
     </div>
 
   </div>
+
+  <script>
+    // The AI answer is markdown with LaTeX maths. Turn it into formatted text; if anything fails the plain text stays visible.
+    (function () {
+      function renderAll() {
+        if (typeof window.studyflowRenderMarkdown !== 'function') return;
+        document.querySelectorAll('.ai-md').forEach(function (el) {
+          try {
+            var html = window.studyflowRenderMarkdown(el.textContent);
+            if (html) { el.innerHTML = html; el.classList.remove('whitespace-pre-wrap'); }
+          } catch (e) { console.error('AI answer render failed', e); }
+        });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderAll);
+      else renderAll();
+    })();
+  </script>
 {% endblock %}

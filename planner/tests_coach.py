@@ -191,6 +191,39 @@ class PromptAndEngineTests(CoachBase):
         self.assertEqual(model, 'openai/gpt-oss-120b')
         self.assertEqual([c['model'] for c in fake.calls], ['gone-model', 'openai/gpt-oss-120b'])
 
+    def test_long_file_is_cut_to_fit_the_token_limit(self):
+        from .coach.engine import INPUT_CHAR_BUDGET, MAX_OUTPUT_TOKENS, TRUNCATION_NOTE
+        fake = FakeGroq(['Summary here'])
+        history = [{'role': 'user', 'content': 'x' * 5000}, {'role': 'assistant', 'content': 'y' * 5000}]
+        with mock.patch.dict(os.environ, {'GROQ_API_KEY': 'test-key'}):
+            result = coach_reply(fake, self.ada, 'Summarise this: ' + 'word ' * 4000, history, 'summarise')
+        sent = fake.calls[0]
+        total = sum(len(m['content']) for m in sent['messages'])
+        self.assertLessEqual(total, INPUT_CHAR_BUDGET)
+        self.assertEqual(sent['max_tokens'], MAX_OUTPUT_TOKENS)
+        self.assertTrue(result['reply'].endswith(TRUNCATION_NOTE.strip()))
+
+    def test_short_message_is_untouched_and_keeps_the_full_playbook(self):
+        fake = FakeGroq(['Hi'])
+        result = coach_reply(fake, self.ada, 'what is a derivative?', [], '')
+        self.assertIn('HOW YOU TEACH', fake.system_prompt())
+        self.assertEqual(fake.calls[0]['messages'][-1]['content'], 'what is a derivative?')
+        self.assertNotIn('only read the first part', result['reply'])
+
+    def test_413_tries_the_next_model(self):
+        class TooBig(FakeGroq):
+            def _create(self, model, messages, **kw):
+                if model == 'openai/gpt-oss-120b':
+                    err = Exception('Request too large for model')
+                    err.status_code = 413
+                    raise err
+                return super()._create(model, messages, **kw)
+        big = TooBig(['ok'])
+        big.chat = SimpleNamespace(completions=SimpleNamespace(create=big._create))
+        text, model = complete(big, [{'role': 'user', 'content': 'hi'}])
+        self.assertEqual(text, 'ok')
+        self.assertEqual(model, 'llama-3.3-70b-versatile')
+
     def test_other_errors_are_not_swallowed(self):
         class Boom(FakeGroq):
             def _create(self, model, messages, **kw):

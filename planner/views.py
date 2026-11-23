@@ -28,7 +28,7 @@ TIMER_PRESETS = {15, 25, 45, 60}  # countdown lengths offered in the study room
 MAX_DAILY_STUDY_MINUTES = 12 * 60
 MIN_XP_SESSION_MINUTES = 15       # shortest preset; tiny sessions log time but don't earn XP
 
-AI_CHAT_MAX_MESSAGE_CHARS = 12000  # leaves room for an attached file's text
+AI_CHAT_MAX_MESSAGE_CHARS = 60000  # generous on purpose: the coach engine trims to the model's limit and tells the student
 AI_CHAT_MAX_HISTORY = 20
 
 # SECURITY RULE: every query below is filtered by the logged-in user.
@@ -864,6 +864,11 @@ def ai_chat_api(request):
             return JsonResponse({
                 'reply': f"Model '{model_name}' not found on Groq.{extra} Set MODEL_NAME in your environment to choose an available model."
             }, status=500)
+        if getattr(e, 'status_code', None) in (413, 429) or 'rate_limit' in error_msg or 'Request too large' in error_msg:
+            return JsonResponse({
+                'reply': "That was too much for me to read in one go, or the AI is busy for a moment. "
+                         "Try again in a minute, or send a shorter part of the file (a few pages at a time)."
+            }, status=429)
         if isinstance(e, ValueError):
             return JsonResponse({'reply': 'Sorry, I could not read that message.'}, status=400)
         return JsonResponse({'reply': "Sorry, I'm having trouble right now. Please try again in a moment."}, status=500)

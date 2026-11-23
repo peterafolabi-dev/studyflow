@@ -107,7 +107,13 @@ MODES = {
 }
 
 
-def build_system_prompt(*, student_context='', memory_notes='', library_hits='', mode=''):
+def build_system_prompt(*, student_context='', memory_notes='', library_hits='', mode='', compact=False):
+    """compact=True keeps only identity, format rules and the mode, so a long attached file still fits Groq's per-minute token limit."""
+    if compact:
+        parts = [IDENTITY, FORMAT_RULES]
+        if mode in MODES:
+            parts.append(MODES[mode])
+        return '\n\n'.join(parts)
     parts = [IDENTITY, TEACHING_PLAYBOOK, NIGERIA_CONTEXT, APP_FEATURES, FORMAT_RULES, ACTIONS_PROTOCOL, WORKED_EXAMPLES]
     if student_context:
         parts.append("THE STUDENT YOU'RE TALKING TO (use this naturally; don't recite it back)\n" + student_context)
