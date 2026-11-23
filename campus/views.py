@@ -82,6 +82,15 @@ def notice_board(request):
     search = request.GET.get('q', '').strip()
 
     notices = CourseNotice.objects.all()
+    my_class = request.GET.get('mine') == '1' and request.user.is_authenticated
+    if my_class:
+        profile = request.user.profile
+        class_filter = Q(department__iexact='All Departments')
+        if profile.department:
+            class_filter |= Q(department__icontains=profile.department)
+        notices = notices.filter(class_filter)
+        if profile.level:
+            notices = notices.filter(Q(level=profile.level) | Q(level=0))
     if level and level.isdigit():
         notices = notices.filter(level=int(level))
     if urgency:
@@ -90,6 +99,7 @@ def notice_board(request):
         notices = notices.filter(Q(title__icontains=search) | Q(course_code__icontains=search) | Q(department__icontains=search))
 
     context = {
+        'my_class': my_class,
         'notices': notices,
         'selected_level': level,
         'selected_urgency': urgency,

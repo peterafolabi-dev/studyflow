@@ -223,3 +223,75 @@ class EmergencyContact(models.Model):
     def __str__(self):
         return f"{self.title}: {self.phone_number}"
 
+
+
+class LostFoundItem(models.Model):
+    """Lost and found board. Text only (no photos), contact is a WhatsApp number."""
+    KIND_CHOICES = [('lost', 'Lost'), ('found', 'Found')]
+
+    kind = models.CharField(max_length=5, choices=KIND_CHOICES)
+    title = models.CharField(max_length=120)
+    description = models.CharField(max_length=500, blank=True)
+    location = models.CharField(max_length=120, blank=True, help_text='Where it was lost or found')
+    whatsapp_number = models.CharField(max_length=25, help_text='WhatsApp number with country code, e.g. 2348012345678')
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='lost_found_items')
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['is_resolved', '-created_at']
+
+    def __str__(self):
+        return f'{self.get_kind_display()}: {self.title}'
+
+
+class CampusEvent(models.Model):
+    """Campus events board. Student submissions wait for staff approval."""
+    title = models.CharField(max_length=150)
+    description = models.TextField(blank=True, max_length=1000)
+    location = models.CharField(max_length=150, blank=True)
+    starts_at = models.DateTimeField()
+    ends_at = models.DateTimeField(null=True, blank=True)
+    organizer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='campus_events')
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['starts_at']
+
+    def __str__(self):
+        return self.title
+
+
+class Opportunity(models.Model):
+    """Scholarship / internship / other alerts. Student submissions wait for staff approval."""
+    KIND_CHOICES = [
+        ('scholarship', 'Scholarship 🎓'),
+        ('internship', 'Internship / SIWES 💼'),
+        ('competition', 'Competition / Grant 🏆'),
+        ('other', 'Other'),
+    ]
+
+    kind = models.CharField(max_length=15, choices=KIND_CHOICES, default='scholarship')
+    title = models.CharField(max_length=150)
+    organisation = models.CharField(max_length=120, blank=True)
+    description = models.TextField(blank=True, max_length=1000)
+    link = models.URLField(max_length=300)
+    deadline = models.DateField()
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='opportunities')
+    is_approved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['deadline']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def days_left(self):
+        return (self.deadline - timezone.localdate()).days
+
+    @property
+    def closing_soon(self):
+        return 0 <= self.days_left <= 7

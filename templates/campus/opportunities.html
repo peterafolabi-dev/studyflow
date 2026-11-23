@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Opportunities · StudyFlow{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <h1 class="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white">🎓 Opportunities</h1>
+  <p class="mt-2 text-slate-500 dark:text-slate-400">Scholarships, internships and competitions, soonest deadline first. Always check the official link before applying, and never pay to apply.</p>
+
+  <nav class="mt-5 flex flex-wrap gap-2 text-sm" aria-label="Filter">
+    <a href="{% url 'campus_opportunities' %}" class="rounded-full px-3 py-1 border border-slate-300 dark:border-slate-700 {% if not selected_kind %}bg-brand-600 text-white border-brand-600{% endif %}">All</a>
+    {% for value, label in kinds %}<a href="?kind={{ value }}" class="rounded-full px-3 py-1 border border-slate-300 dark:border-slate-700 {% if selected_kind == value %}bg-brand-600 text-white border-brand-600{% endif %}">{{ label }}</a>{% endfor %}
+  </nav>
+
+  {% if pending %}
+    <div class="mt-5 rounded-2xl border border-amber-300/60 bg-amber-500/10 p-4 text-sm text-amber-600 dark:text-amber-300" role="status">
+      Waiting for staff approval: {% for o in pending %}<strong>{{ o.title }}</strong>{% if not forloop.last %}, {% endif %}{% endfor %}
+    </div>
+  {% endif %}
+
+  <details class="mt-5 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
+    <summary class="cursor-pointer font-semibold text-brand-600 dark:text-brand-400">Share an opportunity</summary>
+    <form method="post" action="{% url 'campus_opportunity_create' %}" class="mt-4 grid gap-3">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label class="text-sm text-slate-600 dark:text-slate-300">Type
+          <select name="kind" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white">{% for value, label in kinds %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+        <label class="text-sm text-slate-600 dark:text-slate-300">Deadline
+          <input type="date" name="deadline" required class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      </div>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Title
+        <input name="title" required maxlength="150" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Organisation
+        <input name="organisation" maxlength="120" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Official link (https://...)
+        <input type="url" name="link" required maxlength="300" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></label>
+      <label class="text-sm text-slate-600 dark:text-slate-300">Details
+        <textarea name="description" maxlength="1000" rows="3" class="mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"></textarea></label>
+      <p class="text-xs text-slate-500">Student submissions are shown after staff approve them.</p>
+      <button type="submit" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 text-sm font-semibold">Submit</button>
+    </form>
+  </details>
+
+  <ul class="mt-6 space-y-3">
+    {% for o in items %}
+      <li class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="font-semibold text-slate-900 dark:text-white">{{ o.title }}</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">{{ o.get_kind_display }}{% if o.organisation %} · {{ o.organisation }}{% endif %}</p>
+          </div>
+          {% if o.closing_soon %}<span class="shrink-0 rounded-full bg-rose-500/10 px-2.5 py-1 text-xs font-bold text-rose-500">Closing soon</span>{% endif %}
+        </div>
+        <p class="mt-1 text-sm text-brand-600 dark:text-brand-400">Deadline {{ o.deadline|date:"D j M Y" }} · {% if o.days_left == 0 %}today{% elif o.days_left == 1 %}tomorrow{% else %}{{ o.days_left }} days left{% endif %}</p>
+        {% if o.description %}<p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ o.description|linebreaksbr }}</p>{% endif %}
+        <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <a href="{{ o.link }}" target="_blank" rel="noopener noreferrer nofollow" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 font-semibold">View details</a>
+          {% if o.submitted_by_id == user.pk or user.is_staff %}
+            <form method="post" action="{% url 'campus_opportunity_delete' o.pk %}" onsubmit="return confirm('Remove this?')">{% csrf_token %}<button class="rounded-lg border border-rose-400/50 text-rose-500 px-3 py-1.5">Delete</button></form>
+          {% endif %}
+        </div>
+      </li>
+    {% empty %}
+      <li class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-6 text-center text-slate-500 dark:text-slate-400">No open opportunities yet. Share one you know about.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
