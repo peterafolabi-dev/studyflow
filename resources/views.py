@@ -13,7 +13,7 @@ from django.views.decorators.http import require_POST
 from studyflow.http import redirect_back, redirect_next
 
 from .forms import ResourceUploadForm
-from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceRating
+from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceRating, ResourceReport
 
 # Which underlying resource_type values each hub page shows, and its label +
 # url name (used to send an uploader back to the right page afterwards).
@@ -75,9 +75,18 @@ def resource_detail(request, pk):
     back_group = 'thesis_paper' if resource.resource_type in ('thesis', 'paper') else resource.resource_type
     _, _, back_url_name = TYPE_GROUPS.get(back_group, (None, None, 'notes_list'))
 
+    from urllib.parse import quote
+
+    from accounts.referrals import invite_url
+
+    share_text = (
+        f'{resource.title} on StudyFlow: {request.build_absolute_uri(request.path)}\n'
+        f'New to StudyFlow? Join free: {invite_url(request, request.user.profile)}'
+    )
     return render(
         request, 'resources/resource_detail.html',
-        {'resource': resource, 'my_rating': my_rating, 'comments': comments, 'back_url_name': back_url_name},
+        {'resource': resource, 'my_rating': my_rating, 'comments': comments, 'back_url_name': back_url_name,
+         'whatsapp_url': 'https://wa.me/?text=' + quote(share_text)},
     )
 
 
@@ -236,6 +245,33 @@ def rate_resource(request, pk):
     else:
         ResourceRating.objects.update_or_create(user=request.user, resource=resource, defaults={'stars': stars})
         messages.success(request, 'Thanks for the rating!')
+    return redirect_next(request, 'notes_list')
+
+
+@login_required
+@require_POST
+def report_resource(request, pk):
+    """Lets a student flag a resource. Reports are reviewed by hand in the admin (nothing is hidden automatically)."""
+    resource = get_object_or_404(Resource, pk=pk)
+    if resource.uploaded_by_id == request.user.id:
+        messages.error(request, "That's your own upload. You can delete it from this page instead.")
+        return redirect_next(request, 'notes_list')
+    reason = request.POST.get('reason', 'other')
+    if reason not in dict(ResourceReport.REASONS):
+        reason = 'other'
+    detail = request.POST.get('detail', '').strip()[:300]
+    try:
+        check_and_increment_rate_limit(request.user.id, bucket='resource_report', max_requests=10, window=3600)
+    except RateLimitExceeded:
+        messages.error(request, 'You have sent a lot of reports. Please try again in a little while.')
+        return redirect_next(request, 'notes_list')
+    _, created = ResourceReport.objects.get_or_create(
+        reporter=request.user, resource=resource, defaults={'reason': reason, 'detail': detail},
+    )
+    if created:
+        messages.success(request, 'Thanks. Your report was sent and will be reviewed.')
+    else:
+        messages.info(request, 'You already reported this resource.')
     return redirect_next(request, 'notes_list')
 
 

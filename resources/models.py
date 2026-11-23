@@ -238,3 +238,28 @@ class TestAttempt(models.Model):
                 'explanation': q.explanation,
             })
         return results
+
+
+class ResourceReport(models.Model):
+    """A student flagging a shared resource for a moderator to review (manual review only)."""
+
+    REASONS = [
+        ('copyright', 'Copyright or not allowed to be shared'),
+        ('misleading', 'Wrong or misleading'),
+        ('inappropriate', 'Inappropriate content'),
+        ('spam', 'Spam'),
+        ('other', 'Other'),
+    ]
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='resource_reports')
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, related_name='reports')
+    reason = models.CharField(max_length=30, choices=REASONS, default='other')
+    detail = models.CharField(max_length=300, blank=True)
+    reviewed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ('reporter', 'resource')
+
+    def __str__(self):
+        return f"Report by {self.reporter.username} on resource {self.resource_id}"

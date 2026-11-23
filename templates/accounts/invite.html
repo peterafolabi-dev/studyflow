@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Invite friends · StudyFlow{% endblock %}
+{% block content %}
+<main class="relative z-10 mx-auto max-w-xl px-4 py-10 sm:px-6">
+  <h1 class="font-display text-3xl font-bold tracking-tight text-white">Invite your friends</h1>
+  <p class="mt-2 text-slate-400">Studying is easier with your classmates on the same app. Share your link; it is free for everyone.</p>
+
+  <div class="mt-6 rounded-2xl border border-slate-700 bg-slate-900/70 p-5">
+    <label for="invite-link" class="text-xs font-semibold uppercase tracking-wide text-slate-400">Your invite link</label>
+    <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+      <input id="invite-link" type="text" readonly value="{{ invite_link }}" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200">
+      <button type="button" id="copy-invite" class="rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">Copy link</button>
+    </div>
+    <p id="copy-status" role="status" class="mt-2 min-h-[1rem] text-xs text-emerald-400"></p>
+    <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="mt-3 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">Share on WhatsApp</a>
+  </div>
+
+  <div class="mt-4 rounded-2xl border border-slate-700 bg-slate-900/70 p-5">
+    <p class="text-sm text-slate-300"><strong class="text-2xl text-white">{{ joined }}</strong> friend{{ joined|pluralize }} joined with your link</p>
+    <p class="mt-1 text-xs text-slate-400">A friend counts once they confirm their email.</p>
+    {% if remaining %}
+      <p class="mt-3 text-sm text-slate-300">🚀 {{ remaining }} more to earn the <strong>Squad Builder</strong> badge.</p>
+    {% else %}
+      <p class="mt-3 text-sm text-emerald-400">🚀 You earned the Squad Builder badge. Thank you!</p>
+    {% endif %}
+  </div>
+</main>
+<script>
+document.getElementById('copy-invite').addEventListener('click', function () {
+  var input = document.getElementById('invite-link');
+  var status = document.getElementById('copy-status');
+  function done(ok) { status.textContent = ok ? 'Link copied.' : 'Press and hold the link to copy it.'; }
+  input.select();
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(input.value).then(function () { done(true); }, function () { done(false); });
+  } else {
+    try { done(document.execCommand('copy')); } catch (e) { done(false); }
+  }
+});
+</script>
+{% endblock %}

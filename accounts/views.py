@@ -19,10 +19,14 @@ def signup(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
 
+    from .referrals import attach_referrer, capture_referral
+    capture_referral(request)
+
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save()
+            attach_referrer(request, user)
             from .verification import send_verification_email, verification_required
             if verification_required():
                 user.profile.email_verified = False
@@ -47,6 +51,9 @@ def login_view(request):
     This bypasses allauth's email-first flow so username-only accounts can log in."""
     if request.user.is_authenticated:
         return redirect('dashboard')
+
+    from .referrals import capture_referral
+    capture_referral(request)
 
     error = None
     if request.method == 'POST':
@@ -308,6 +315,9 @@ def _finish_verification(request, user):
         user.profile.email_verified = True
         user.profile.save(update_fields=['email_verified'])
         send_welcome_email(user, request)
+        if user.profile.referred_by_id:
+            from .referrals import award_referral_badge
+            award_referral_badge(user.profile.referred_by)
     request.session.pop('verify_login', None)
     login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     messages.success(request, 'Email confirmed. Welcome to StudyFlow! 🎉')
@@ -378,3 +388,23 @@ def resend_verification(request):
     request.session['verify_login'] = login_value
     messages.success(request, "If that account is waiting for confirmation, we've sent a new code.")
     return redirect('verify_email_sent')
+
+
+@login_required
+def invite(request):
+    """Personal invite link, share buttons and how many friends have joined."""
+    from urllib.parse import quote
+
+    from .referrals import BADGE_TARGET, award_referral_badge, invite_url, verified_referral_count
+
+    link = invite_url(request, request.user.profile)
+    joined = verified_referral_count(request.user)
+    award_referral_badge(request.user)
+    text = f'Join me on StudyFlow, a free study app for university students: {link}'
+    return render(request, 'accounts/invite.html', {
+        'invite_link': link,
+        'joined': joined,
+        'target': BADGE_TARGET,
+        'remaining': max(0, BADGE_TARGET - joined),
+        'whatsapp_url': 'https://wa.me/?text=' + quote(text),
+    })
