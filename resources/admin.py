@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Loan, PhysicalHolding, Resource, ResourceComment
+from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceReport
 
 
 @admin.register(Resource)
@@ -28,3 +28,16 @@ class LoanAdmin(admin.ModelAdmin):
 class ResourceCommentAdmin(admin.ModelAdmin):
     list_display = ('resource', 'user', 'created_at')
     search_fields = ('body', 'user__username')
+
+
+@admin.register(ResourceReport)
+class ResourceReportAdmin(admin.ModelAdmin):
+    list_display = ('resource', 'reason', 'reporter', 'reviewed', 'created_at')
+    list_filter = ('reason', 'reviewed', 'created_at')
+    search_fields = ('resource__title', 'reporter__username', 'detail')
+    raw_id_fields = ('resource', 'reporter')
+    actions = ['mark_reviewed']
+
+    @admin.action(description='Mark selected reports as reviewed')
+    def mark_reviewed(self, request, queryset):
+        queryset.update(reviewed=True)

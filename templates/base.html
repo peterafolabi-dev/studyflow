@@ -524,8 +524,8 @@
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500">
         <span>&copy; {% now "Y" %} StudyFlow. Built for FUT Minna students.</span>
         <div class="flex gap-6 mt-3 sm:mt-0">
-          <a href="#" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
-          <a href="#" class="hover:text-slate-300 transition-colors">Terms of Service</a>
+          <a href="{% url 'privacy' %}" class="hover:text-slate-300 transition-colors">Privacy Policy</a>
+          <a href="{% url 'terms' %}" class="hover:text-slate-300 transition-colors">Terms of Service</a>
           <a href="#" class="hover:text-slate-300 transition-colors">Campus Support</a>
         </div>
       </div>

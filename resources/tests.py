@@ -393,3 +393,140 @@ class WhatsAppShareTests(TestCase):
         self.assertIn('https://wa.me/?text=', html)
         self.assertIn('CSC%20201%20%26%20Notes', html)
         self.assertIn('signup/%3Fref%3D', html)
+
+class ResourceReportTests(TestCase):
+    """Students can flag a shared resource; a moderator reviews it by hand in the admin."""
+
+    def setUp(self):
+        cache.clear()
+        self.owner = User.objects.create_user('owner', password='S7rong-pass-99')
+        self.student = User.objects.create_user('reader', password='S7rong-pass-99')
+        self.resource = Resource.objects.create(
+            title='MTH101 Past Questions', resource_type='past_question', uploaded_by=self.owner,
+        )
+        self.url = reverse('report_resource', args=[self.resource.pk])
+
+    def _report(self, **data):
+        data.setdefault('reason', 'copyright')
+        return self.client.post(self.url, data, follow=True)
+
+    def test_must_be_signed_in(self):
+        response = self.client.post(self.url, {'reason': 'spam'})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response['Location'])
+        from resources.models import ResourceReport
+        self.assertEqual(ResourceReport.objects.count(), 0)
+
+    def test_get_is_not_allowed(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_report_is_saved_and_confirmed(self):
+        from resources.models import ResourceReport
+        self.client.force_login(self.student)
+        response = self._report(reason='copyright', detail='This is a textbook scan.')
+        self.assertContains(response, 'Your report was sent')
+        report = ResourceReport.objects.get()
+        self.assertEqual((report.reporter, report.resource, report.reason), (self.student, self.resource, 'copyright'))
+        self.assertEqual(report.detail, 'This is a textbook scan.')
+        self.assertFalse(report.reviewed)
+
+    def test_reporting_twice_keeps_one_report(self):
+        from resources.models import ResourceReport
+        self.client.force_login(self.student)
+        self._report()
+        response = self._report(reason='spam')
+        self.assertContains(response, 'You already reported this resource')
+        self.assertEqual(ResourceReport.objects.count(), 1)
+        self.assertEqual(ResourceReport.objects.get().reason, 'copyright')
+
+    def test_cannot_report_your_own_upload(self):
+        from resources.models import ResourceReport
+        self.client.force_login(self.owner)
+        response = self._report()
+        self.assertContains(response, 'your own upload')
+        self.assertEqual(ResourceReport.objects.count(), 0)
+
+    def test_unknown_reason_becomes_other_and_detail_is_capped(self):
+        from resources.models import ResourceReport
+        self.client.force_login(self.student)
+        self._report(reason='<script>', detail='x' * 1000)
+        report = ResourceReport.objects.get()
+        self.assertEqual(report.reason, 'other')
+        self.assertEqual(len(report.detail), 300)
+
+    def test_reports_are_rate_limited(self):
+        from resources.models import ResourceReport
+        self.client.force_login(self.student)
+        for i in range(10):
+            res = Resource.objects.create(title=f'R{i}', resource_type='notes', uploaded_by=self.owner)
+            self.client.post(reverse('report_resource', args=[res.pk]), {'reason': 'spam'})
+        extra = Resource.objects.create(title='one too many', resource_type='notes', uploaded_by=self.owner)
+        response = self.client.post(reverse('report_resource', args=[extra.pk]), {'reason': 'spam'}, follow=True)
+        self.assertContains(response, 'sent a lot of reports')
+        self.assertEqual(ResourceReport.objects.count(), 10)
+
+    def test_resource_is_never_hidden_by_reports(self):
+        # reports are for a moderator to review; a few reports must not hide a resource
+        self.client.force_login(self.student)
+        self._report()
+        other = User.objects.create_user('third', password='S7rong-pass-99')
+        self.client.force_login(other)
+        self._report(reason='spam')
+        self.assertEqual(self.client.get(reverse('resource_detail', args=[self.resource.pk])).status_code, 200)
+
+    def test_report_button_shows_for_others_but_not_for_the_owner(self):
+        self.client.force_login(self.student)
+        self.assertContains(self.client.get(reverse('resource_detail', args=[self.resource.pk])), self.url)
+        self.client.force_login(self.owner)
+        self.assertNotContains(self.client.get(reverse('resource_detail', args=[self.resource.pk])), self.url)
+
+    def test_admin_can_mark_reports_reviewed(self):
+        from resources.models import ResourceReport
+        self.client.force_login(self.student)
+        self._report()
+        admin = User.objects.create_superuser('boss', 'boss@example.com', 'S7rong-pass-99')
+        self.client.force_login(admin)
+        response = self.client.post(reverse('admin:resources_resourcereport_changelist'), {
+            'action': 'mark_reviewed', '_selected_action': [ResourceReport.objects.get().pk],
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(ResourceReport.objects.get().reviewed)
+
+
+class LegalPagesTests(TestCase):
+    """The Privacy Policy and Terms are public, accurate pages, and the footer links to them."""
+
+    def test_pages_are_public(self):
+        for name in ('privacy', 'terms'):
+            response = self.client.get(reverse(name))
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'Last updated')
+
+    def test_privacy_names_the_real_services_and_the_data(self):
+        text = self.client.get(reverse('privacy')).content.decode()
+        for word in ('Groq', 'Brevo', 'Render', 'Google', 'session cookie', 'only to you and to the site administrator'):
+            self.assertIn(word, text)
+
+    def test_terms_warn_that_free_hosting_can_lose_uploads(self):
+        text = self.client.get(reverse('terms')).content.decode()
+        self.assertIn('can be lost when the server restarts', text)
+        self.assertIn('not run, approved or endorsed by any university', text)
+
+    def test_footer_links_point_at_the_pages(self):
+        page = self.client.get(reverse('login'))
+        self.assertContains(page, f'href="{reverse("privacy")}"')
+        self.assertContains(page, f'href="{reverse("terms")}"')
+
+    def test_signup_page_links_to_both(self):
+        page = self.client.get(reverse('signup'))
+        self.assertContains(page, 'By signing up you agree to the')
+        self.assertContains(page, reverse('terms'))
+        self.assertContains(page, reverse('privacy'))
+
+    def test_license_file_exists_and_is_mit(self):
+        from pathlib import Path
+        from django.conf import settings
+        text = (Path(settings.BASE_DIR) / 'LICENSE').read_text()
+        self.assertTrue(text.startswith('MIT License'))
+        self.assertIn('Afolabi Peter', text)
