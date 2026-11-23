@@ -47,6 +47,12 @@
         </button>
       </form>
 
+      <p class="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
+        By signing up you agree to the
+        <a href="{% url 'terms' %}" class="font-semibold text-brand-600 dark:text-brand-400 hover:underline">Terms of Service</a> and
+        <a href="{% url 'privacy' %}" class="font-semibold text-brand-600 dark:text-brand-400 hover:underline">Privacy Policy</a>.
+      </p>
+
       <p class="text-sm text-center text-slate-600 dark:text-slate-400 mt-6 font-medium">
         Already have an account?
         <a href="{% url 'login' %}" class="text-brand-600 dark:text-brand-400 font-bold hover:underline ml-1">
