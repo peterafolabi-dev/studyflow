@@ -530,3 +530,74 @@ class LegalPagesTests(TestCase):
         text = (Path(settings.BASE_DIR) / 'LICENSE').read_text()
         self.assertTrue(text.startswith('MIT License'))
         self.assertIn('Afolabi Peter', text)
+
+
+class AIHardeningTests(TestCase):
+    """Limits, outages and bad model output must give students a readable result, not a raw API error."""
+
+    def _client(self, *behaviours):
+        calls = []
+        def create(**kw):
+            calls.append(kw)
+            b = behaviours[min(len(calls) - 1, len(behaviours) - 1)]
+            if isinstance(b, Exception):
+                raise b
+            return MagicMock(choices=[MagicMock(message=MagicMock(content=b))])
+        client = MagicMock()
+        client.chat.completions.create.side_effect = create
+        return client, calls
+
+    def _limit_error(self):
+        err = Exception('Error code: 413 - Request too large')
+        err.status_code = 413
+        return err
+
+    def test_falls_back_to_next_model_when_first_is_over_limit(self):
+        from resources import ai_service
+        client, calls = self._client(self._limit_error(), '{"summary": "ok", "key_points": ["a"]}')
+        with patch.object(ai_service, 'get_groq_client', return_value=client):
+            out = ai_service.summarize_material('text', title='T')
+        self.assertEqual(out['summary'], 'ok')
+        self.assertNotEqual(calls[0]['model'], calls[1]['model'])
+        self.assertTrue(all(c['max_tokens'] <= ai_service.AI_MAX_OUTPUT_TOKENS for c in calls))
+
+    def test_all_models_limited_gives_friendly_message(self):
+        from resources import ai_service
+        client, _ = self._client(self._limit_error())
+        with patch.object(ai_service, 'get_groq_client', return_value=client):
+            with self.assertRaises(ai_service.AIProcessingError) as ctx:
+                ai_service.summarize_material('text')
+        self.assertNotIn('413', str(ctx.exception))
+        self.assertIn('busy', str(ctx.exception))
+
+    def test_long_documents_are_clipped_before_sending(self):
+        from resources import ai_service
+        client, calls = self._client('{"summary": "s", "key_points": []}')
+        with patch.object(ai_service, 'get_groq_client', return_value=client):
+            ai_service.summarize_material('x' * 50000)
+        sent = calls[0]['messages'][-1]['content']
+        self.assertLess(len(sent), ai_service.AI_MAX_INPUT_CHARS + 500)
+
+    def test_broken_json_is_repaired_once(self):
+        from resources import ai_service
+        client, calls = self._client('not json at all', '{"summary": "fixed", "key_points": []}')
+        with patch.object(ai_service, 'get_groq_client', return_value=client):
+            self.assertEqual(ai_service.summarize_material('t')['summary'], 'fixed')
+        self.assertEqual(len(calls), 2)
+
+    def test_quiz_skips_questions_without_a_valid_answer_key(self):
+        from resources import ai_service
+        payload = ('{"questions": [{"question": "Q1", "options": ["a","b","c","d"], "correct_index": 9, "explanation": "e"},'
+                   '{"question": "Q2", "options": ["a","b","c","d"], "correct_index": 2, "explanation": "e"}]}')
+        client, _ = self._client(payload)
+        with patch.object(ai_service, 'get_groq_client', return_value=client):
+            qs = ai_service.generate_quiz_from_material('t')
+        self.assertEqual([q['question'] for q in qs], ['Q2'])
+        self.assertEqual(qs[0]['correct_index'], 2)
+
+    def test_explain_answer_falls_back_to_base_text_on_failure(self):
+        from resources import ai_service
+        client, _ = self._client(Exception('boom'))
+        with patch.object(ai_service, 'get_groq_client', return_value=client):
+            out = ai_service.explain_cbt_answer_with_ai('Q', 'a', 'b', 'c', 'd', 'A', 'B', base_explanation='Because B.')
+        self.assertEqual(out, 'Because B.')

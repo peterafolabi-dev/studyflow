@@ -8,7 +8,7 @@ from groq import Groq
 
 logger = logging.getLogger(__name__)
 
-# Rate limit configuration: 5 requests per 5 minutes per user
+# Rate limit configuration: 6 requests per 5 minutes per user
 RATE_LIMIT_MAX_REQUESTS = 6
 RATE_LIMIT_WINDOW_SECONDS = 300
 
@@ -81,27 +81,67 @@ def parse_strict_json(raw_text):
     return json.loads(cleaned)
 
 
+# Groq's free tier allows ~8000 tokens/minute per model and counts (input + max_tokens), so size both.
+AI_MAX_OUTPUT_TOKENS = 2500
+AI_MAX_INPUT_CHARS = 9000
+AI_FALLBACK_MODELS = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'llama-3.3-70b-versatile']
+FRIENDLY_BUSY = "The AI is busy right now (free-tier limit). Please wait a minute and try again."
+
+
+def _model_candidates():
+    out = [get_model_name()]
+    for m in AI_FALLBACK_MODELS:
+        if m not in out:
+            out.append(m)
+    return out
+
+
+def _is_model_problem(exc):
+    text = str(exc).lower()
+    status = getattr(exc, 'status_code', None)
+    return (status in (404, 413, 429, 503) or 'rate_limit' in text or 'request too large' in text
+            or 'model_not_found' in text or 'does not exist' in text or 'decommissioned' in text
+            or 'over capacity' in text)
+
+
+def _chat(client, messages, temperature, max_tokens=None):
+    """Call the first model that works (limits and outages happen on the free tier)."""
+    last = None
+    for model in _model_candidates():
+        kwargs = dict(model=model, messages=messages, temperature=temperature, max_tokens=max_tokens or AI_MAX_OUTPUT_TOKENS)
+        if 'gpt-oss' in model:
+            kwargs['reasoning_effort'] = 'low'  # keep thinking short so the JSON isn't cut off
+        try:
+            return client.chat.completions.create(**kwargs).choices[0].message.content
+        except Exception as exc:  # noqa: BLE001 - decide below whether to try the next model
+            last = exc
+            if not _is_model_problem(exc):
+                raise
+            logger.warning('AI model %s unavailable (%s); trying next', model, exc)
+    raise last
+
+
+def _clip(text):
+    text = text or ''
+    if len(text) > AI_MAX_INPUT_CHARS:
+        return text[:AI_MAX_INPUT_CHARS] + '\n\n[... rest of the document was cut to fit the AI size limit ...]'
+    return text
+
+
 def _call_groq_with_retry(messages, expected_schema_description, temperature=0.3):
     """
-    Calls Groq API, validates strict JSON parsing, and performs exactly 1 auto-retry
-    if JSON parsing fails.
+    Calls Groq (with model fallback), parses strict JSON, and retries once if the JSON is broken.
+    Always raises AIProcessingError with a message a student can read.
     """
     client = get_groq_client()
-    model = get_model_name()
-
+    content = ''
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-        )
-        content = response.choices[0].message.content
+        content = _chat(client, messages, temperature)
         return parse_strict_json(content)
     except (json.JSONDecodeError, ValueError) as err:
         logger.warning(f"Initial JSON parse failed: {err}. Retrying with repair prompt...")
-        # Auto-retry once with strict repair instruction
         repair_messages = list(messages) + [
-            {"role": "assistant", "content": content if 'content' in locals() else ""},
+            {"role": "assistant", "content": content or ""},
             {
                 "role": "user",
                 "content": (
@@ -111,20 +151,18 @@ def _call_groq_with_retry(messages, expected_schema_description, temperature=0.3
                 )
             }
         ]
-        retry_response = client.chat.completions.create(
-            model=model,
-            messages=repair_messages,
-            temperature=0.1,
-        )
-        retry_content = retry_response.choices[0].message.content
         try:
-            return parse_strict_json(retry_content)
-        except Exception as retry_err:
-            logger.error(f"Retry JSON parse also failed: {retry_err}")
-            raise AIProcessingError("Failed to parse structured response from AI after retry. Please try again.")
-    except Exception as e:
+            return parse_strict_json(_chat(client, repair_messages, 0.1))
+        except Exception as retry_err:  # noqa: BLE001
+            logger.error(f"Retry failed: {retry_err}")
+            if _is_model_problem(retry_err):
+                raise AIProcessingError(FRIENDLY_BUSY)
+            raise AIProcessingError("The AI gave an unreadable answer. Please try again.")
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Groq API error: {e}")
-        raise AIProcessingError(f"AI service error: {str(e)}")
+        if _is_model_problem(e):
+            raise AIProcessingError(FRIENDLY_BUSY)
+        raise AIProcessingError("The AI service had a problem. Please try again in a moment.")
 
 
 def summarize_material(text, title="Study Material"):
@@ -143,7 +181,7 @@ def summarize_material(text, title="Study Material"):
         "Return ONLY the raw JSON object. Do not include markdown ticks or outside text."
     )
 
-    user_prompt = f"Material Title: {title}\n\nContent:\n{text}"
+    user_prompt = f"Material Title: {title}\n\nContent:\n{_clip(text)}"
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
@@ -177,7 +215,7 @@ def generate_flashcards_from_material(text, title="Study Material", card_count=8
         "Return ONLY the raw JSON object. Do not include markdown codeblocks or other commentary."
     )
 
-    user_prompt = f"Material Title: {title}\n\nContent:\n{text}"
+    user_prompt = f"Material Title: {title}\n\nContent:\n{_clip(text)}"
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
@@ -223,7 +261,7 @@ def generate_quiz_from_material(text, title="Study Material", question_count=5):
         "Return ONLY the raw JSON object with NO surrounding markdown or notes."
     )
 
-    user_prompt = f"Material Title: {title}\n\nContent:\n{text}"
+    user_prompt = f"Material Title: {title}\n\nContent:\n{_clip(text)}"
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
@@ -239,11 +277,11 @@ def generate_quiz_from_material(text, title="Study Material", question_count=5):
             opts = [str(o).strip() for o in q["options"] if str(o).strip()]
             if len(opts) >= 2:
                 try:
-                    c_idx = int(q.get("correct_index", 0))
-                    if c_idx < 0 or c_idx >= len(opts):
-                        c_idx = 0
+                    c_idx = int(q.get("correct_index"))
                 except (ValueError, TypeError):
-                    c_idx = 0
+                    continue  # no usable answer key: skip rather than mark option A correct
+                if c_idx < 0 or c_idx >= len(opts):
+                    continue
 
                 valid_questions.append({
                     "question": str(q["question"]).strip(),
@@ -288,7 +326,7 @@ def generate_cbt_bank_from_pdf(text, title="Past Question", count=10, time_limit
         "Return ONLY the raw JSON object with NO surrounding markdown or extra commentary."
     )
 
-    user_prompt = f"Document Title: {title}\n\nDocument Text:\n{text}"
+    user_prompt = f"Document Title: {title}\n\nDocument Text:\n{_clip(text)}"
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
@@ -341,7 +379,6 @@ def explain_cbt_answer_with_ai(question_text, option_a, option_b, option_c, opti
     Asks the AI Study Coach for a personalized, clear explanation of a test question.
     """
     client = get_groq_client()
-    model = get_model_name()
 
     options_formatted = f"A) {option_a}\nB) {option_b}\nC) {option_c}\nD) {option_d}"
     prompt = (
@@ -363,16 +400,11 @@ def explain_cbt_answer_with_ai(question_text, option_a, option_b, option_c, opti
     )
 
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.4,
-            max_tokens=350,
-        )
-        return response.choices[0].message.content.strip()
+        reply = _chat(client, [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": prompt}
+        ], 0.4, max_tokens=600)
+        return (reply or '').strip() or base_explanation
     except Exception as e:
         logger.error(f"Error fetching AI explanation: {e}")
         return base_explanation or "The correct option is derived from standard syllabus principles."
