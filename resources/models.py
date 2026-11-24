@@ -1,3 +1,5 @@
+import io
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -34,10 +36,22 @@ class Resource(models.Model):
     def __str__(self):
         return self.title
 
+    def open_for_reading(self):
+        """The file as an in-memory object. Works on local disk and on cloud storage (which has no .path)."""
+        self.file.open('rb')
+        try:
+            return io.BytesIO(self.file.read())
+        finally:
+            self.file.close()
+
     def file_available(self):
         """True only if the file is really on the server. Free hosting wipes uploads on restart, so a row can outlive its file."""
+        if not self.file:
+            return False
+        if getattr(settings, 'USING_CLOUDINARY', False):
+            return True  # cloud files survive restarts; don't make a network call per file
         try:
-            return bool(self.file) and self.file.storage.exists(self.file.name)
+            return self.file.storage.exists(self.file.name)
         except Exception:  # noqa: BLE001 - a storage hiccup must not break a page
             return False
 

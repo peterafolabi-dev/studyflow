@@ -170,9 +170,17 @@ CACHES = {
     }
 }
 
+# Uploaded files (past questions, notes...). Render's free disk is wiped on every restart, so when
+# CLOUDINARY_URL is set (Render -> Environment) files are kept on Cloudinary instead. Without it we fall back to local disk.
+USING_CLOUDINARY = bool(os.environ.get('CLOUDINARY_URL'))
+
 STORAGES = {
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': (
+            'cloudinary_storage.storage.RawMediaCloudinaryStorage'
+            if USING_CLOUDINARY
+            else 'django.core.files.storage.FileSystemStorage'
+        ),
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',

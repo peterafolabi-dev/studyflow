@@ -49,3 +49,16 @@ class MissingFileTests(TestCase):
         response = self.client.get(reverse('dashboard'))
         titles = [r.title for r in response.context['trending_resources']]
         self.assertEqual(titles, ['Mathematics'])
+
+
+class CloudStorageReadinessTests(MissingFileTests):
+    """Reading files must not depend on a local path, so it also works once uploads live on Cloudinary."""
+
+    def test_open_for_reading_returns_the_bytes_without_using_a_path(self):
+        data = self.good.open_for_reading().read()
+        self.assertEqual(data, b'%PDF-1.4 test')
+
+    def test_with_cloud_storage_a_file_is_assumed_present_without_a_network_call(self):
+        with override_settings(USING_CLOUDINARY=True):
+            self.assertTrue(self.gone.file_available())      # cloud files survive restarts
+            self.assertFalse(Resource(title='no file').file_available())
