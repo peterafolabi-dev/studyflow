@@ -781,3 +781,13 @@ class GrowthPublicPageTests(TestCase):
         self.assertIn('beforeinstallprompt', html)
         self.assertIn('display-mode: standalone', html)
         self.assertIn('studyflow-install-dismissed', html)
+
+
+class SocialLoginErrorPageTests(TestCase):
+    """Google callback problems show a friendly page with a way forward, not allauth's bare error."""
+
+    def test_cancelled_google_callback_shows_friendly_page(self):
+        response = self.client.get('/accounts/google/login/callback/', {'error': 'access_denied'})
+        # allauth answers an auth error with HTTP 401 and renders our template
+        self.assertContains(response, "Google sign-in didn't finish", status_code=401)
+        self.assertContains(response, 'Try signing in again', status_code=401)

@@ -45,3 +45,24 @@ class VoteTests(TestCase):
             self.assertEqual(ThreadVote.objects.get(user=self.user, thread=self.thread).value, 1)
         self.client.post(url, {'value': '-1'})
         self.assertEqual(ThreadVote.objects.get(user=self.user, thread=self.thread).value, -1)
+
+
+class AnalyticsLiveRefreshTests(TestCase):
+    """The analytics page refreshes itself, so the wrapper it swaps must exist and stay staff-only."""
+
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        self.staff = User.objects.create_user('boss', 'boss@example.com', 'pw-12345-x', is_staff=True)
+        self.student = User.objects.create_user('stu', 'stu@example.com', 'pw-12345-x')
+
+    def test_staff_page_has_the_live_wrapper_and_script(self):
+        self.client.force_login(self.staff)
+        html = self.client.get(reverse('admin_dashboard')).content.decode()
+        self.assertIn('id="live-dashboard"', html)
+        self.assertIn('id="live-badge"', html)
+        self.assertEqual(html.count('id="live-dashboard"'), 1)
+
+    def test_students_still_cannot_see_the_dashboard(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(reverse('admin_dashboard')).status_code, 403)
