@@ -44,13 +44,13 @@
       <div>Uploaded by <strong class="text-slate-700 dark:text-slate-200">{{ resource.uploaded_by.username|default:"A Student" }}</strong></div>
       
       <!-- Rating widget -->
-      <form method="post" action="{% url 'rate_resource' resource.pk %}" class="flex items-center gap-1">
+      <form method="post" action="{% url 'rate_resource' resource.pk %}" class="flex items-center gap-1.5">
         {% csrf_token %}
         <input type="hidden" name="next" value="{% url 'resource_detail' resource.pk %}">
         <span class="mr-1">Rating:</span>
         {% for i in "12345" %}
           <button name="stars" value="{{ forloop.counter }}" type="submit" title="Rate {{ forloop.counter }} stars"
-                  class="text-base transition hover:scale-125 {% if my_rating and forloop.counter <= my_rating.stars %}text-amber-400{% else %}text-slate-300 dark:text-slate-600{% endif %} hover:text-amber-400">
+                  class="text-2xl leading-none px-1 py-2 transition hover:scale-125 {% if my_rating and forloop.counter <= my_rating.stars %}text-amber-400{% else %}text-slate-300 dark:text-slate-600{% endif %} hover:text-amber-400">
             ★
           </button>
         {% endfor %}
