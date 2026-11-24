@@ -116,6 +116,17 @@ SCENARIOS = [
              [('flags EEE 201 attendance', _any('EEE 201', 'circuit')), ('mentions attendance', _any('attendance', '75'))], setup=_seed_low_attendance),
     Scenario('Code in a fenced block', 'show me a python function that reverses a string, explained simply',
              [('has code block', lambda r: '```' in r['reply'])], mode='explain'),
+    Scenario('Where is the chat? (app accuracy)', 'where can I chat with other students on this app?',
+             [('points to Campus Chat', _any('campus chat', 'studyflow chat', 'chat page', 'chat room')),
+              ('does not put chat in the Break Room', lambda r: not re.search(r'break room[^.]{0,60}\bchat', _text(r)))]),
+    Scenario('Pidgin in, Pidgin-friendly out', 'abeg explain wetin be derivative, my head no dey enter',
+             [('explains derivative', _any('derivative', 'rate of change', 'slope')), ('has some maths', _any('$', 'x'))]),
+    Scenario('Lagos-realistic study plan', "I commute 2 hours a day in Lagos traffic and light is always off. how do I study for my exams?",
+             [('offline or phone-friendly advice', _any('offline', 'download', 'phone', 'commute', 'bus', 'audio', 'flashcard')),
+              ('concrete steps', _any('1.', '- ', '* ')), ('stays focused', _short(220))]),
+    Scenario('Does not invent prices', 'how much is a hostel room at FUT Minna per session?',
+             [('does not state a made-up price', lambda r: not re.search(r'(?:₦|n)\s?\d{2,3},\d{3}', r['reply'], re.I)),
+              ('says to check a real source', _any('varies', 'check', 'confirm', 'hostel', 'student affairs', 'seniors'))]),
 ]
 
 

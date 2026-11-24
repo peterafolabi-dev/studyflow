@@ -1,6 +1,8 @@
 """Put it together: context + memory + library + playbook -> model -> reply + buttons."""
 import logging
 import os
+import re
+from datetime import timedelta
 
 from .actions import extract_cards, save_memory, split_reply
 from .context import memory_notes, student_context
@@ -120,8 +122,48 @@ def complete(client, messages):
     raise last
 
 
+GREETING = re.compile(
+    r"^\s*(hi+|hello+|hey+|heya|yo|sup|hola|good\s*(morning|afternoon|evening|day)|morning|evening|"
+    r"how\s*far|how\s*you\s*dey|how\s*body|wetin\s*dey|what'?s\s*up|wassup|howdy)[\s!.?,\U0001F44B]*"
+    r"(coach|studyflow|bro|sis|boss|oga|there|please)?[\s!.?,]*$", re.I)
+PIDGIN_GREETING = re.compile(r"how\s*far|how\s*you\s*dey|how\s*body|wetin\s*dey|wassup", re.I)
+
+
+def quick_greeting(user, message, mode=''):
+    """A bare 'hi' needs a warm, correct, instant reply, not a model call that may ramble.
+    Returns the same dict shape as coach_reply, or None when the message is more than a greeting."""
+    if mode or not GREETING.match(message or ''):
+        return None
+    from django.utils import timezone
+    from planner.models import Course, Flashcard, Task
+    now = timezone.localtime()
+    name = (user.first_name or user.username or '').strip().split(' ')[0]
+    hello = ("How far" if PIDGIN_GREETING.search(message) else
+             "Good morning" if now.hour < 12 else "Good afternoon" if now.hour < 17 else "Good evening")
+    first = f"{hello}, {name}!" if name else f"{hello}!"
+    today = now.date()
+    soon = (Task.objects.filter(course__user=user, is_done=False, due_date__gte=today,
+                                due_date__lte=today + timedelta(days=7)).select_related('course').order_by('due_date').first())
+    due_cards = Flashcard.objects.filter(deck__course__user=user, next_review_date__lte=today).count()
+    lines = [first]
+    if soon:
+        days = (soon.due_date - today).days
+        when = 'today' if days == 0 else 'tomorrow' if days == 1 else f'in {days} days'
+        lines.append(f"Heads up: **{soon.title}** ({soon.course.code or soon.course.name}) is due {when}.")
+    elif due_cards:
+        lines.append(f"You have **{due_cards}** flashcard{'s' if due_cards != 1 else ''} ready for review today.")
+    elif not Course.objects.filter(user=user).exists():
+        lines.append("Add your courses and I can plan your week around your real deadlines.")
+    lines.append("What are we working on? I can explain a topic, quiz you, check your working, or build an exam plan.")
+    return {'reply': '\n\n'.join(lines), 'tasks': [], 'cards': [], 'remembered': [], 'sources': [],
+            'model': 'instant', 'playbook': PLAYBOOK_VERSION}
+
+
 def coach_reply(client, user, message, history=None, mode=''):
     """Returns a dict the chat widget renders."""
+    quick = quick_greeting(user, message, mode)
+    if quick:
+        return quick
     messages, links, truncated = _build(user, message, history, mode)
     raw, model = complete(client, messages)
     clean, tasks, notes = split_reply(raw)

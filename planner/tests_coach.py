@@ -178,8 +178,8 @@ class PromptAndEngineTests(CoachBase):
 
     def test_memory_is_capped_and_deduplicated(self):
         for i in range(CoachMemory.MAX_PER_USER + 3):
-            coach_reply(FakeGroq([f'ok\n[[remember: fact {i}]]']), self.ada, 'hello there')
-        coach_reply(FakeGroq(['ok\n[[remember: fact 14]]']), self.ada, 'hello there')
+            coach_reply(FakeGroq([f'ok\n[[remember: fact {i}]]']), self.ada, 'hello there, summarise limits')
+        coach_reply(FakeGroq(['ok\n[[remember: fact 14]]']), self.ada, 'hello there, summarise limits')
         self.assertEqual(CoachMemory.objects.filter(user=self.ada).count(), CoachMemory.MAX_PER_USER)
         self.assertEqual(CoachMemory.objects.filter(user=self.ada, note='fact 14').count(), 1)
 
@@ -330,3 +330,46 @@ class EvalHarnessTests(TestCase):
     def test_scenarios_roll_back_their_data(self):
         evals.run(FakeGroq(['ok']), evals.SCENARIOS, verbose=None)
         self.assertFalse(User.objects.filter(username='coach-eval-student').exists())
+
+
+class CoachGreetingAndPromptTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        self.user = get_user_model().objects.create_user('ada', 'ada@example.com', 'pw12345!x', first_name='Ada')
+
+    def test_bare_greeting_is_instant_and_never_calls_the_model(self):
+        from unittest.mock import MagicMock
+        from planner.coach.engine import coach_reply
+        client = MagicMock()
+        for msg in ['Hi', 'hello!', 'Good morning', 'how far', 'hey coach', 'wetin dey']:
+            out = coach_reply(client, self.user, msg, [])
+            self.assertEqual(out['model'], 'instant')
+            self.assertIn('Ada', out['reply'])
+            self.assertIn('What are we working on', out['reply'])
+        client.chat.completions.create.assert_not_called()
+
+    def test_real_questions_are_not_treated_as_greetings(self):
+        from planner.coach.engine import quick_greeting
+        for msg in ['hi can you explain recursion', 'hello what is 2+2', 'how far is Minna from Abuja', 'good morning, quiz me on limits']:
+            self.assertIsNone(quick_greeting(self.user, msg), msg)
+        self.assertIsNone(quick_greeting(self.user, 'hi', mode='quiz'))
+
+    def test_greeting_mentions_a_real_upcoming_deadline(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from planner.coach.engine import quick_greeting
+        from planner.models import Course, Task
+        c = Course.objects.create(user=self.user, name='Physics I', code='PHY 101')
+        Task.objects.create(course=c, title='Lab report', due_date=timezone.localdate())
+        out = quick_greeting(self.user, 'hi')
+        self.assertIn('Lab report', out['reply'])
+        self.assertIn('due today', out['reply'])
+
+    def test_prompt_knows_where_chat_lives_and_stays_within_budget(self):
+        from planner.coach.prompt import build_system_prompt
+        from planner.coach.engine import INPUT_CHAR_BUDGET
+        prompt = build_system_prompt()
+        self.assertIn('Campus Chat', prompt)
+        self.assertIn('NOT the chat', prompt)
+        self.assertIn('Answer ONLY what the student actually asked', prompt)
+        self.assertLess(len(prompt), INPUT_CHAR_BUDGET * 0.7)
