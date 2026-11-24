@@ -1,0 +1,10 @@
+<details class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-600 bg-white/60 dark:bg-slate-900/60 p-4 mb-5" {% if open_by_default %}open{% endif %}>
+  <summary class="cursor-pointer font-semibold text-sm text-brand-600 dark:text-brand-300">+ Add my courses (one per line)</summary>
+  <form method="post" action="{% url 'course_bulk_create' %}" class="mt-3 space-y-2">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next_name }}">
+    <textarea name="lines" rows="4" required placeholder="CPE 205 Digital Logic Design&#10;MTH 201 Engineering Mathematics II&#10;GST 211 Peace Studies" class="w-full rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm"></textarea>
+    <p class="text-xs text-slate-500 dark:text-slate-400">Type the code first, then the name. Courses you already have are skipped.</p>
+    <button class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Add courses</button>
+  </form>
+</details>

@@ -13,6 +13,7 @@ urlpatterns = [
     path('ai-chat/forget/', coach_views.coach_forget, name='coach_forget'),
     path('', views.dashboard, name='dashboard'),
     path('courses/', views.course_list, name='course_list'),
+    path('courses/bulk/', views.course_bulk_create, name='course_bulk_create'),
     path('courses/new/', views.course_create, name='course_create'),
     path('courses/<int:pk>/', views.course_detail, name='course_detail'),
     path('courses/<int:pk>/edit/', views.course_update, name='course_update'),

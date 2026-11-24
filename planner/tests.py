@@ -590,3 +590,48 @@ class TimetableAndSuggestTests(TestCase):
         r = self.client.get('/timetable/')
         self.assertContains(r, '.katex-display{overflow-x:auto')
         self.assertContains(r, 'id="ai-suggest"')
+
+
+class BulkCourseAndAttendanceTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user('att', 'att@example.com', 'pw12345!x')
+        Course.objects.filter(user=self.user).delete()  # new accounts are seeded with a DEMO 101 course
+        self.client.force_login(self.user)
+
+    def test_parse_lines_handles_codes_names_dupes_and_junk(self):
+        from .views import parse_course_lines
+        got = parse_course_lines('CPE 205 Digital Logic Design\nmth201 - Engineering Maths II\n\nGST-211: Peace Studies\nTechnical Writing\ncpe 205 again')
+        self.assertEqual(got, [('CPE 205', 'Digital Logic Design'), ('MTH 201', 'Engineering Maths II'),
+                               ('GST 211', 'Peace Studies'), ('', 'Technical Writing')])
+
+    def test_bulk_add_skips_existing_and_is_user_scoped(self):
+        Course.objects.create(user=self.user, name='Digital Logic', code='CPE 205')
+        other = get_user_model().objects.create_user('o', 'o@example.com', 'pw12345!x')
+        Course.objects.create(user=other, name='X', code='MTH 201')
+        r = self.client.post('/courses/bulk/', {'lines': 'CPE 205 Digital Logic\nMTH 201 Maths II', 'next': 'attendance'})
+        self.assertRedirects(r, '/attendance/')
+        self.assertEqual(Course.objects.filter(user=self.user, code='MTH 201').count(), 1)
+        self.assertEqual(Course.objects.filter(user=self.user, code='CPE 205').count(), 1)
+
+    def test_bulk_add_ignores_unsafe_next(self):
+        r = self.client.post('/courses/bulk/', {'lines': 'PHY 101 Physics', 'next': 'https://evil.example'})
+        self.assertRedirects(r, '/courses/')
+
+    def test_attendance_lists_every_course_and_offers_add_box(self):
+        for code in ('CPE 205', 'MTH 201', 'GST 211'):
+            Course.objects.create(user=self.user, name=code, code=code)
+        r = self.client.get('/attendance/')
+        for code in ('CPE 205', 'MTH 201', 'GST 211'):
+            self.assertContains(r, code)
+        self.assertContains(r, 'Add my courses')
+        self.assertNotContains(r, '<details class="rounded-2xl border border-dashed border-brand-300 dark:border-slate-600 bg-white/60 dark:bg-slate-900/60 p-4 mb-5" open>')
+
+    def test_add_box_open_when_only_one_course(self):
+        Course.objects.create(user=self.user, name='Demo', code='DEMO 101')
+        self.assertContains(self.client.get('/attendance/'), 'p-4 mb-5" open>')
+
+    def test_demo_course_removal_link_only_once_real_courses_exist(self):
+        demo = Course.objects.create(user=self.user, name='Introduction to StudyFlow', code='DEMO 101')
+        self.assertNotContains(self.client.get('/attendance/'), 'Remove this demo course')
+        Course.objects.create(user=self.user, name='Physics', code='PHY 101')
+        self.assertContains(self.client.get('/attendance/'), 'Remove this demo course')

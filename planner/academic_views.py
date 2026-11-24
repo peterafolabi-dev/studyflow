@@ -102,7 +102,7 @@ def attendance(request):
     at_risk = [r for r in rows if r['status'] == 'danger']
     return render(request, 'planner/attendance.html', {
         'rows': rows, 'recent': recent, 'at_risk': at_risk, 'required': AttendanceRecord.REQUIRED_PERCENT,
-        'today': timezone.localdate(),
+        'today': timezone.localdate(), 'open_add': len(rows) <= 1,
     })
 
 

@@ -7,6 +7,8 @@
     <p class="text-slate-500 dark:text-slate-400 mt-1">Most schools need {{ required }}% attendance before you can sit the exam. Tap after each class and StudyFlow keeps count.</p>
   </div>
 
+  {% include 'planner/_quick_add_courses.html' with next_name='attendance' open_by_default=open_add %}
+
   {% if at_risk %}
     <div class="rounded-2xl border border-rose-300 dark:border-rose-700/60 bg-rose-50 dark:bg-rose-900/15 p-4 mb-5 text-sm text-rose-800 dark:text-rose-200" role="alert">
       <b>Below {{ required }}%:</b>
@@ -21,6 +23,7 @@
           <div>
             <h2 class="font-display font-bold text-slate-900 dark:text-white">{{ r.course.code|default:r.course.name }}</h2>
             {% if r.course.code %}<p class="text-xs text-slate-500">{{ r.course.name }}</p>{% endif %}
+            {% if r.course.code == 'DEMO 101' and rows|length > 1 %}<a href="{% url 'course_delete' r.course.pk %}" class="text-xs text-rose-500 hover:underline">Remove this demo course</a>{% endif %}
           </div>
           <span class="font-display text-2xl font-bold {% if r.status == 'danger' %}text-rose-600{% elif r.status == 'edge' %}text-amber-600{% elif r.status == 'safe' %}text-emerald-600{% else %}text-slate-400{% endif %}">{% if r.percent is not None %}{{ r.percent }}%{% else %}–{% endif %}</span>
         </div>

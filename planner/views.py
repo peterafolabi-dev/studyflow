@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, time, timedelta
 from urllib.parse import urlsplit
 
@@ -159,7 +160,7 @@ def dashboard(request):
 @login_required
 def course_list(request):
     courses = Course.objects.filter(user=request.user)
-    return render(request, 'planner/course_list.html', {'courses': courses})
+    return render(request, 'planner/course_list.html', {'courses': courses, 'open_add': courses.count() <= 1})
 
 
 @login_required
@@ -233,6 +234,45 @@ def course_delete(request, pk):
         messages.success(request, f'Deleted {name} and its tasks.')
         return redirect('course_list')
     return render(request, 'planner/course_confirm_delete.html', {'course': course})
+
+
+COURSE_LINE = re.compile(r'^\s*([A-Za-z]{2,5}\s?-?\d{3}[A-Za-z]?)\s*[-:.]?\s*(.*)$')
+
+
+def parse_course_lines(text):
+    """'CPE 205 Digital Logic' per line -> [(code, name)]. A line with no code is just a name."""
+    out, seen = [], set()
+    for raw in (text or '').splitlines()[:30]:
+        line = raw.strip(' \t,;')
+        if not line:
+            continue
+        m = COURSE_LINE.match(line)
+        code, name = (re.sub(r'^([A-Z]+)\s*(\d)', r'\1 \2', re.sub(r'\s+', ' ', m.group(1).replace('-', ' ')).strip().upper()), m.group(2).strip()) if m else ('', line)
+        name = (name or code)[:100]
+        key = (code or name).lower()
+        if key not in seen:
+            seen.add(key)
+            out.append((code[:20], name))
+    return out
+
+
+@login_required
+@require_POST
+def course_bulk_create(request):
+    """Add many courses at once, one per line: 'CPE 205 Digital Logic Design'."""
+    added = 0
+    for code, name in parse_course_lines(request.POST.get('lines', '')):
+        exists = (Course.objects.filter(user=request.user, code__iexact=code).exists() if code
+                  else Course.objects.filter(user=request.user, name__iexact=name).exists())
+        if not exists:
+            Course.objects.create(user=request.user, code=code, name=name)
+            added += 1
+    if added:
+        messages.success(request, f'Added {added} course{"s" if added != 1 else ""}.')
+    else:
+        messages.info(request, 'No new courses to add. Type one per line, like: CPE 205 Digital Logic Design')
+    target = request.POST.get('next')
+    return redirect(target if target in ('attendance', 'course_list', 'timetable_create', 'weekly_plan') else 'course_list')
 
 
 # ---------- Tasks ----------
