@@ -29,7 +29,12 @@ class ChatApiTests(TestCase):
 
     def test_long_messages_are_truncated(self):
         self.post({'text': 'x' * 5000, 'room': 'global'})
-        self.assertEqual(len(ChatMessage.objects.get().text), 500)
+        self.assertEqual(len(ChatMessage.objects.get().text), 1000)
+
+    def test_multiline_paste_keeps_line_breaks(self):
+        msg = 'Welcome to FUT Minna!\n\nShare notes, ask questions.\n' + 'a' * 400
+        self.post({'text': msg, 'room': 'global'})
+        self.assertEqual(ChatMessage.objects.get().text, msg)
 
 
 class VoteTests(TestCase):
