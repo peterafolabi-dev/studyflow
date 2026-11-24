@@ -62,3 +62,22 @@ class CloudStorageReadinessTests(MissingFileTests):
         with override_settings(USING_CLOUDINARY=True):
             self.assertTrue(self.gone.file_available())      # cloud files survive restarts
             self.assertFalse(Resource(title='no file').file_available())
+
+
+class CloudMissingFileTests(TestCase):
+    """With cloud storage on, file_available() is optimistic; opening a lost file must not 500."""
+
+    def test_download_when_storage_cannot_open_file(self):
+        from unittest import mock
+        from django.contrib.auth import get_user_model
+        from django.core.files.base import ContentFile
+        from .models import Resource
+        user = get_user_model().objects.create_user('cloudu', 'c@example.com', 'pw12345!x')
+        res = Resource(title='Mapping', resource_type='past_question', uploaded_by=user)
+        res.file.save('gone.pdf', ContentFile(b'x'), save=True)
+        self.client.force_login(user)
+        with mock.patch.object(Resource, 'file_available', return_value=True), \
+             mock.patch('django.db.models.fields.files.FieldFile.open', side_effect=RuntimeError('404 from cloud')):
+            r = self.client.get(f'/resources/{res.pk}/download/', follow=True)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'missing from storage')
