@@ -54,6 +54,9 @@
             </span>
         </div>
 
+        <!-- Pinned message -->
+        <button id="chat-pinned" type="button" class="hidden absolute top-[4.25rem] left-4 right-4 z-10 text-left rounded-2xl bg-amber-50/95 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/60 px-4 py-2 text-xs text-amber-900 dark:text-amber-100 shadow-sm"></button>
+
         <!-- Messages Area -->
         <div id="chat-messages" class="flex-1 p-6 pt-24 overflow-y-auto flex flex-col gap-5 pb-28 scroll-smooth">
             <!-- JS will populate -->
@@ -64,6 +67,10 @@
 
         <!-- Floating Input Area -->
         <div class="absolute bottom-6 left-6 right-6 z-20">
+            <div id="reply-bar" class="hidden mb-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 border border-brand-200 dark:border-slate-700 px-4 py-2 text-xs flex items-center justify-between gap-3 shadow-lg">
+                <div class="min-w-0"><p class="font-bold text-brand-600 dark:text-brand-300" id="reply-who"></p><p class="truncate text-slate-500 dark:text-slate-400" id="reply-snippet"></p></div>
+                <button type="button" id="reply-cancel" aria-label="Cancel reply" class="shrink-0 text-slate-400 hover:text-rose-500 text-base px-2">✕</button>
+            </div>
             <div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border border-white/50 dark:border-slate-700/50 rounded-3xl p-2 shadow-2xl shadow-brand-500/10">
                 <form id="chat-form" class="flex gap-2 items-center">
                     {% csrf_token %}
@@ -85,44 +92,54 @@
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const roomTitle = document.getElementById('room-title');
+    const pinnedBar = document.getElementById('chat-pinned');
+    const replyBar = document.getElementById('reply-bar');
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
+    const API = "{% url 'chat_api' %}";
+    const EMOJIS = ['👍', '❤️', '😂', '🙏', '🔥', '😮'];
+
     let currentRoom = 'global';
     let isScrolledToBottom = true;
+    let selectedId = null;      // message whose action bar is open
+    let editingId = null;       // message being edited (polling pauses so typing isn't wiped)
+    let replyTo = null;         // {id, username, text}
+    let lastSignature = '';
+    let lastData = null;
 
-    // Chat text is user-supplied: always escape before it goes into innerHTML.
+    // Chat text is user-supplied: escape first, then turn plain links into safe links.
     function escapeChat(value) {
         const div = document.createElement('div');
         div.textContent = value == null ? '' : String(value);
         return div.innerHTML;
     }
+    function linkify(escaped) {
+        return escaped.replace(/(https?:\/\/[^\s<]+)/g, (url) => {
+            const trail = (url.match(/[.,!?;:)\]]+$/) || [''])[0];
+            const clean = url.slice(0, url.length - trail.length);
+            return `<a href="${clean}" target="_blank" rel="noopener noreferrer nofollow" class="underline underline-offset-2 break-all">${clean}</a>${trail}`;
+        });
+    }
+    function chatNotice(icon, text) {
+        return `<div class="flex flex-col justify-center items-center h-full text-center gap-2 text-slate-500 dark:text-slate-400">
+                    <div class="text-4xl">${icon}</div><p class="text-sm font-medium">${text}</p></div>`;
+    }
 
     function switchRoom(room) {
-        currentRoom = room;
-        isScrolledToBottom = true;
-        
-        // Reset styles
+        currentRoom = room; isScrolledToBottom = true; selectedId = null; editingId = null; clearReply(); lastSignature = '';
         document.querySelectorAll('.room-btn').forEach(btn => {
             btn.className = 'room-btn group relative w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl hover:bg-white/60 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-medium transition-all text-left border border-transparent hover:border-slate-200 dark:hover:border-slate-700';
             btn.querySelector('.text-2xl').classList.remove('relative', 'z-10', 'drop-shadow-md');
             if(btn.querySelector('.absolute.right-4')) btn.querySelector('.absolute.right-4').remove();
             if(btn.querySelector('.absolute.inset-0')) btn.querySelector('.absolute.inset-0').remove();
         });
-        
-        // Active styles
         const activeBtn = document.getElementById('btn-' + room);
         activeBtn.className = 'room-btn group relative w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 text-white font-semibold transition-all shadow-lg shadow-brand-500/30 text-left overflow-hidden';
         activeBtn.querySelector('.text-2xl').classList.add('relative', 'z-10', 'drop-shadow-md');
         activeBtn.insertAdjacentHTML('afterbegin', '<div class="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>');
         activeBtn.insertAdjacentHTML('beforeend', '<span class="absolute right-4 w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>');
-        
-        // Update Title
         roomTitle.innerHTML = room === 'global' ? '🌍 Global Network' : '🏫 FUT Minna';
-        
-        chatMessages.innerHTML = `
-            <div class="flex justify-center items-center h-full">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
-            </div>`;
+        pinnedBar.classList.add('hidden');
+        chatMessages.innerHTML = `<div class="flex justify-center items-center h-full"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div></div>`;
         fetchMessages();
     }
 
@@ -130,47 +147,134 @@
         isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 30;
     });
 
-    function chatNotice(icon, text) {
-        return `<div class="flex flex-col justify-center items-center h-full text-center gap-2 text-slate-500 dark:text-slate-400">
-                    <div class="text-4xl">${icon}</div>
-                    <p class="text-sm font-medium">${text}</p>
-                </div>`;
+    function actionBar(msg, canModerate) {
+        const reacts = EMOJIS.map(e => `<button type="button" data-act="react" data-emoji="${e}" class="text-xl px-1.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">${e}</button>`).join('');
+        const btn = (act, label, danger) => `<button type="button" data-act="${act}" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg ${danger ? 'text-rose-500' : 'text-slate-600 dark:text-slate-300'} hover:bg-slate-100 dark:hover:bg-slate-700">${label}</button>`;
+        let row = '';
+        if (!msg.deleted) {
+            row += btn('reply', '↩ Reply') + btn('copy', '⧉ Copy');
+            if (msg.can_edit) row += btn('edit', '✎ Edit');
+            if (canModerate) row += btn('pin', msg.pinned ? '📌 Unpin' : '📌 Pin');
+        }
+        if (msg.is_me || canModerate) row += btn('delete', '🗑 Delete', true);
+        return `<div class="mt-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-lg p-1.5 flex flex-col gap-1 max-w-full">
+                    ${msg.deleted ? '' : `<div class="flex flex-wrap">${reacts}</div>`}
+                    <div class="flex flex-wrap">${row}</div></div>`;
     }
 
-    async function fetchMessages() {
+    function messageHtml(msg, canModerate) {
+        const mine = msg.is_me;
+        const bubbleCls = msg.deleted
+            ? 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-400 italic border border-slate-200 dark:border-slate-700 rounded-2xl'
+            : (mine ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20'
+                    : 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/50 dark:border-slate-700/50 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-sm shadow-sm');
+        const quote = msg.reply ? `<button type="button" data-act="jump" data-target="${msg.reply.id}" class="block w-full text-left mb-1.5 rounded-lg border-l-4 ${mine ? 'border-white/70 bg-white/15' : 'border-brand-400 bg-brand-50 dark:bg-slate-700/60'} px-2 py-1 text-xs opacity-90"><b>${escapeChat(msg.reply.username)}</b><br>${msg.reply.text ? escapeChat(msg.reply.text) : '<i>message deleted</i>'}</button>` : '';
+        const body = msg.deleted ? '🚫 This message was deleted' : linkify(escapeChat(msg.text));
+        const chips = (msg.reactions || []).map(r => `<button type="button" data-act="react" data-emoji="${r.emoji}" class="text-xs rounded-full px-2 py-0.5 border ${r.mine ? 'bg-brand-100 dark:bg-brand-900/50 border-brand-400 text-brand-700 dark:text-brand-200' : 'bg-white/80 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">${r.emoji} ${r.count}</button>`).join('');
+        return `<div id="msg-${msg.id}" data-id="${msg.id}" class="flex flex-col max-w-[85%] sm:max-w-[75%] ${mine ? 'self-end items-end' : 'self-start items-start'}">
+            <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">${mine ? 'You' : escapeChat(msg.username)} <span class="mx-1 opacity-50">•</span> ${escapeChat(msg.time)}${msg.edited && !msg.deleted ? ' <span class="normal-case font-medium opacity-70">(edited)</span>' : ''}${msg.pinned ? ' 📌' : ''}</span>
+            <div data-act="select" class="${bubbleCls} px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words cursor-pointer select-text max-w-full">${quote}<span class="msg-text">${body}</span></div>
+            ${chips ? `<div class="flex flex-wrap gap-1 mt-1">${chips}</div>` : ''}
+            ${selectedId === msg.id ? actionBar(msg, canModerate) : ''}
+        </div>`;
+    }
+
+    function render(data) {
+        lastData = data;
+        if (!data.messages.length) { chatMessages.innerHTML = chatNotice('💬', 'No messages yet. Say hi and start the conversation!'); return; }
+        const keep = chatMessages.scrollTop;
+        chatMessages.innerHTML = data.messages.map(m => messageHtml(m, data.can_moderate)).join('');
+        chatMessages.scrollTop = isScrolledToBottom ? chatMessages.scrollHeight : keep;
+        if (data.pinned) {
+            pinnedBar.innerHTML = `📌 <b>${escapeChat(data.pinned.username)}:</b> ${escapeChat(data.pinned.text)}`;
+            pinnedBar.dataset.target = data.pinned.id; pinnedBar.classList.remove('hidden');
+        } else { pinnedBar.classList.add('hidden'); }
+    }
+
+    async function fetchMessages(force) {
         const roomAtStart = currentRoom;
+        if (editingId && !force) return;   // don't wipe a message that is being edited
         try {
-            const res = await fetch(`{% url 'chat_api' %}?room=${encodeURIComponent(roomAtStart)}`);
-            if (roomAtStart !== currentRoom) return;  // student switched rooms while this was loading
+            const res = await fetch(`${API}?room=${encodeURIComponent(roomAtStart)}`);
+            if (roomAtStart !== currentRoom) return;
             if (!res.ok) throw new Error('Chat returned ' + res.status);
             const data = await res.json();
-            if (!data.messages.length) {
-                chatMessages.innerHTML = chatNotice('💬', 'No messages yet. Say hi and start the conversation!');
-                return;
-            }
-
-            chatMessages.innerHTML = data.messages.map(msg => `
-                <div class="flex flex-col max-w-[85%] sm:max-w-[75%] ${msg.is_me ? 'self-end items-end' : 'self-start items-start'} animate-in slide-in-from-bottom-2 fade-in duration-300">
-                    <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">${msg.is_me ? 'You' : escapeChat(msg.username)} <span class="mx-1 opacity-50">•</span> ${escapeChat(msg.time)}</span>
-                    <div class="${msg.is_me 
-                        ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20' 
-                        : 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/50 dark:border-slate-700/50 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-sm shadow-sm'} 
-                        px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words">${escapeChat(msg.text)}
-                    </div>
-                </div>
-            `).join('');
-
-            if(isScrolledToBottom) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
+            const signature = JSON.stringify([data.messages, data.pinned]) + selectedId;
+            if (signature === lastSignature && !force) return;   // nothing changed: leave the screen alone
+            lastSignature = signature;
+            render(data);
         } catch (e) {
             console.error(e);
-            // Never leave a blank room: if the very first load fails, say so. Later polls just retry quietly.
-            if (!chatMessages.querySelector('.animate-in') && roomAtStart === currentRoom) {
+            if (!chatMessages.querySelector('[data-id]') && roomAtStart === currentRoom) {
                 chatMessages.innerHTML = chatNotice('📡', 'Can\'t load messages right now. Retrying...');
             }
         }
     }
+
+    async function post(url, body) {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }, body: JSON.stringify(body || {}) });
+        let data = {}; try { data = await res.json(); } catch (e) {}
+        if (!res.ok) throw new Error(data.error || 'Something went wrong. Try again.');
+        return data;
+    }
+    function toast(text) { chatInput.placeholder = text; setTimeout(() => { chatInput.placeholder = 'Type your message...'; }, 4000); }
+
+    function setReply(msg) {
+        replyTo = { id: msg.id, username: msg.username, text: msg.text };
+        document.getElementById('reply-who').textContent = 'Replying to ' + msg.username;
+        document.getElementById('reply-snippet').textContent = msg.text.slice(0, 90);
+        replyBar.classList.remove('hidden'); chatInput.focus();
+    }
+    function clearReply() { replyTo = null; replyBar.classList.add('hidden'); }
+    document.getElementById('reply-cancel').addEventListener('click', clearReply);
+
+    function startEdit(msg) {
+        editingId = msg.id; selectedId = null;
+        const holder = document.querySelector(`#msg-${msg.id} .msg-text`);
+        const wrap = holder.parentElement;
+        wrap.innerHTML = `<textarea id="edit-box" rows="2" maxlength="1000" class="w-full rounded-lg bg-white text-slate-900 text-sm p-2 border border-slate-300">${escapeChat(msg.text)}</textarea>
+            <div class="flex gap-2 mt-2 justify-end"><button type="button" data-act="edit-cancel" class="text-xs px-3 py-1.5 rounded-lg bg-white/80 text-slate-700 font-semibold">Cancel</button><button type="button" data-act="edit-save" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500 text-white font-semibold">Save</button></div>`;
+        const box = document.getElementById('edit-box'); box.focus(); box.setSelectionRange(box.value.length, box.value.length);
+    }
+
+    chatMessages.addEventListener('click', async (e) => {
+        const target = e.target.closest('[data-act]');
+        if (e.target.closest('a')) return;                       // links open normally
+        const holder = e.target.closest('[data-id]');
+        const id = holder ? Number(holder.dataset.id) : null;
+        const msg = lastData && id ? lastData.messages.find(m => m.id === id) : null;
+        if (!target) { if (selectedId !== null && !editingId) { selectedId = null; fetchMessages(true); } return; }
+        const act = target.dataset.act;
+        try {
+            if (act === 'select') {
+                if (editingId) return;
+                if (window.getSelection && String(window.getSelection()).length > 0) return;   // user is selecting text
+                selectedId = selectedId === id ? null : id; fetchMessages(true);
+            } else if (act === 'jump') {
+                const el = document.getElementById('msg-' + target.dataset.target);
+                if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.add('ring-2', 'ring-amber-400', 'rounded-2xl'); setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400', 'rounded-2xl'), 1500); }
+            } else if (act === 'react') {
+                await post(`${API}${id}/react/`, { emoji: target.dataset.emoji });
+                selectedId = null; fetchMessages(true);
+            } else if (act === 'reply') { selectedId = null; setReply(msg); fetchMessages(true);
+            } else if (act === 'copy') { try { await navigator.clipboard.writeText(msg.text); toast('Copied'); } catch (_) { toast('Could not copy'); } selectedId = null; fetchMessages(true);
+            } else if (act === 'edit') { startEdit(msg);
+            } else if (act === 'edit-cancel') { editingId = null; fetchMessages(true);
+            } else if (act === 'edit-save') {
+                const text = document.getElementById('edit-box').value.trim();
+                await post(`${API}${editingId}/edit/`, { text }); editingId = null; fetchMessages(true);
+            } else if (act === 'delete') {
+                if (!confirm('Delete this message for everyone?')) return;
+                await post(`${API}${id}/delete/`); selectedId = null; fetchMessages(true);
+            } else if (act === 'pin') {
+                await post(`${API}${id}/pin/`); selectedId = null; fetchMessages(true);
+            }
+        } catch (err) { toast(err.message); }
+    });
+    pinnedBar.addEventListener('click', () => {
+        const el = document.getElementById('msg-' + pinnedBar.dataset.target);
+        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
 
     function growChatInput() {
         chatInput.style.height = 'auto';
@@ -178,52 +282,34 @@
     }
     chatInput.addEventListener('input', growChatInput);
     chatInput.addEventListener('keydown', (e) => {
-        // Enter sends; Shift+Enter makes a new line
-        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
-            e.preventDefault();
-            chatForm.requestSubmit();
-        }
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); chatForm.requestSubmit(); }
     });
 
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = chatInput.value.trim();
-        if(!text) return;
-        
+        if (!text) return;
+        const sendingReply = replyTo;
+        chatInput.value = ''; growChatInput(); clearReply(); selectedId = null;
         const now = new Date();
         const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        
-        // Optimistic UI
-        chatMessages.innerHTML += `
-            <div class="flex flex-col max-w-[85%] sm:max-w-[75%] self-end items-end opacity-70 transition-opacity animate-in zoom-in-95 duration-200" id="temp-msg">
-                <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">You <span class="mx-1 opacity-50">•</span> ${timeString}</span>
-                <div class="bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words">${escapeChat(text)}
-                </div>
-            </div>
-        `;
+        chatMessages.insertAdjacentHTML('beforeend', `
+            <div class="flex flex-col max-w-[85%] sm:max-w-[75%] self-end items-end opacity-70" id="temp-msg">
+                <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 mb-1.5 px-2">You <span class="mx-1 opacity-50">•</span> ${timeString}</span>
+                <div class="bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words">${linkify(escapeChat(text))}</div>
+            </div>`);
         chatMessages.scrollTop = chatMessages.scrollHeight;
-        chatInput.value = '';
-        growChatInput();
-        
         try {
-            const res = await fetch("{% url 'chat_api' %}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                body: JSON.stringify({ text: text, room: currentRoom })
-            });
-            if (!res.ok) throw new Error('Send failed ' + res.status);
-            isScrolledToBottom = true;
-            fetchMessages();
-        } catch (e) {
-            console.error(e);
-            const temp = document.getElementById('temp-msg');
-            if (temp) temp.remove();
-            chatInput.value = text; growChatInput();  // give the text back so nothing is lost
-            chatInput.placeholder = "Couldn't send. Check your connection and tap send again.";
+            await post(API, { text, room: currentRoom, reply_to: sendingReply ? sendingReply.id : null });
+            isScrolledToBottom = true; await fetchMessages(true);
+        } catch (err) {
+            const temp = document.getElementById('temp-msg'); if (temp) temp.remove();
+            chatInput.value = text; growChatInput(); if (sendingReply) setReply(sendingReply);
+            toast(err.message || "Couldn't send. Check your connection and tap send again.");
         }
     });
 
-    fetchMessages();
-    setInterval(fetchMessages, 3000);
+    fetchMessages(true);
+    setInterval(() => fetchMessages(false), 3000);
 </script>
 {% endblock %}

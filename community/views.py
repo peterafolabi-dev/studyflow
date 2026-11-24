@@ -1,7 +1,9 @@
 import logging
+from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.db import models
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,7 +12,7 @@ from django.views.decorators.http import require_POST
 
 from studyflow.http import int_or, redirect_back
 
-from .models import Post, Thread, ChatMessage
+from .models import Post, Thread, ChatMessage, ChatReaction
 
 logger = logging.getLogger(__name__)
 
@@ -339,6 +341,41 @@ import json
 def global_chat(request):
     return render(request, 'community/global_chat.html')
 
+CHAT_EDIT_WINDOW = timedelta(minutes=15)
+CHAT_RATE_LIMIT = 12        # messages ...
+CHAT_RATE_WINDOW = 30       # ... per this many seconds, per student
+
+
+def _chat_snippet(msg):
+    return '' if msg.is_deleted else ' '.join(msg.text.split())[:90]
+
+
+def _serialize_chat(messages_qs, me):
+    msgs = list(messages_qs)
+    ids = [m.id for m in msgs]
+    counts, mine = {}, set()
+    for r in ChatReaction.objects.filter(message_id__in=ids).values('message_id', 'emoji', 'user_id'):
+        counts.setdefault(r['message_id'], {}).setdefault(r['emoji'], 0)
+        counts[r['message_id']][r['emoji']] += 1
+        if r['user_id'] == me.id:
+            mine.add((r['message_id'], r['emoji']))
+    out = []
+    for m in msgs:
+        reactions = [{'emoji': e, 'count': counts.get(m.id, {}).get(e, 0), 'mine': (m.id, e) in mine}
+                     for e in ChatReaction.EMOJIS if counts.get(m.id, {}).get(e)]
+        reply = None
+        if m.reply_to_id and m.reply_to:
+            reply = {'id': m.reply_to_id, 'username': m.reply_to.user.username, 'text': _chat_snippet(m.reply_to)}
+        out.append({
+            'id': m.id, 'username': m.user.username, 'text': '' if m.is_deleted else m.text,
+            'time': timezone.localtime(m.created_at).strftime('%H:%M'), 'is_me': m.user_id == me.id,
+            'deleted': m.is_deleted, 'edited': bool(m.edited_at), 'pinned': m.is_pinned,
+            'reply': reply, 'reactions': reactions,
+            'can_edit': m.user_id == me.id and not m.is_deleted and timezone.now() - m.created_at <= CHAT_EDIT_WINDOW,
+        })
+    return out
+
+
 @login_required
 def chat_api(request):
     room = request.GET.get('room', 'global')
@@ -347,24 +384,102 @@ def chat_api(request):
             data = json.loads(request.body)
             text = str(data.get('text', '')).strip()
             room = data.get('room', 'global')
+            reply_id = data.get('reply_to')
         except (ValueError, AttributeError):
             return JsonResponse({'status': 'error'}, status=400)
-        if text and room in CHAT_ROOMS:
-            ChatMessage.objects.create(user=request.user, text=text[:CHAT_MAX_LENGTH], room=room)
-            return JsonResponse({'status': 'ok'})
-        return JsonResponse({'status': 'error'}, status=400)
+        if not (text and room in CHAT_ROOMS):
+            return JsonResponse({'status': 'error'}, status=400)
+        key = f'chat-rate:{request.user.id}'
+        cache.add(key, 0, CHAT_RATE_WINDOW)
+        try:
+            sent = cache.incr(key)
+        except ValueError:
+            sent = 1
+        if sent > CHAT_RATE_LIMIT:
+            return JsonResponse({'status': 'error', 'error': 'Slow down a little. Try again in a few seconds.'}, status=429)
+        reply = None
+        if reply_id:
+            reply = ChatMessage.objects.filter(pk=reply_id, room=room).first()
+        msg = ChatMessage.objects.create(user=request.user, text=text[:CHAT_MAX_LENGTH], room=room, reply_to=reply)
+        return JsonResponse({'status': 'ok', 'id': msg.id})
     if room not in CHAT_ROOMS:
         room = 'global'
-    recent = ChatMessage.objects.filter(room=room).select_related('user').order_by('-created_at')[:50]
-    data = []
-    for msg in reversed(recent):
-        data.append({
-            'username': msg.user.username,
-            'text': msg.text,
-            'time': msg.created_at.strftime('%H:%M'),
-            'is_me': msg.user_id == request.user.id
-        })
-    return JsonResponse({'messages': data})
+    recent = (ChatMessage.objects.filter(room=room).select_related('user', 'reply_to__user')
+              .order_by('-created_at')[:50])
+    pinned = ChatMessage.objects.filter(room=room, is_pinned=True, is_deleted=False).select_related('user').first()
+    return JsonResponse({
+        'messages': _serialize_chat(reversed(list(recent)), request.user),
+        'pinned': {'id': pinned.id, 'username': pinned.user.username, 'text': pinned.text[:300]} if pinned else None,
+        'can_moderate': request.user.is_staff,
+    })
+
+
+def _chat_message_or_404(pk):
+    return get_object_or_404(ChatMessage, pk=pk)
+
+
+@login_required
+@require_POST
+def chat_edit(request, pk):
+    msg = _chat_message_or_404(pk)
+    if msg.user_id != request.user.id or msg.is_deleted:
+        return JsonResponse({'status': 'error', 'error': 'You can only edit your own messages.'}, status=403)
+    if timezone.now() - msg.created_at > CHAT_EDIT_WINDOW:
+        return JsonResponse({'status': 'error', 'error': 'You can edit a message for 15 minutes after sending it.'}, status=403)
+    try:
+        text = str(json.loads(request.body).get('text', '')).strip()
+    except (ValueError, AttributeError):
+        text = ''
+    if not text:
+        return JsonResponse({'status': 'error', 'error': 'A message cannot be empty. Delete it instead.'}, status=400)
+    msg.text = text[:CHAT_MAX_LENGTH]
+    msg.edited_at = timezone.now()
+    msg.save(update_fields=['text', 'edited_at'])
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def chat_delete(request, pk):
+    msg = _chat_message_or_404(pk)
+    if msg.user_id != request.user.id and not request.user.is_staff:
+        return JsonResponse({'status': 'error', 'error': 'You can only delete your own messages.'}, status=403)
+    msg.is_deleted, msg.is_pinned, msg.text = True, False, ''
+    msg.save(update_fields=['is_deleted', 'is_pinned', 'text'])
+    ChatReaction.objects.filter(message=msg).delete()
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def chat_react(request, pk):
+    msg = _chat_message_or_404(pk)
+    try:
+        emoji = str(json.loads(request.body).get('emoji', ''))
+    except (ValueError, AttributeError):
+        emoji = ''
+    if emoji not in ChatReaction.EMOJIS or msg.is_deleted:
+        return JsonResponse({'status': 'error'}, status=400)
+    reaction, created = ChatReaction.objects.get_or_create(message=msg, user=request.user, emoji=emoji)
+    if not created:
+        reaction.delete()
+    return JsonResponse({'status': 'ok', 'added': created})
+
+
+@login_required
+@require_POST
+def chat_pin(request, pk):
+    if not request.user.is_staff:
+        return JsonResponse({'status': 'error', 'error': 'Only admins can pin messages.'}, status=403)
+    msg = _chat_message_or_404(pk)
+    if msg.is_deleted:
+        return JsonResponse({'status': 'error'}, status=400)
+    pin = not msg.is_pinned
+    if pin:
+        ChatMessage.objects.filter(room=msg.room, is_pinned=True).update(is_pinned=False)
+    msg.is_pinned = pin
+    msg.save(update_fields=['is_pinned'])
+    return JsonResponse({'status': 'ok', 'pinned': pin})
 
 
 # ── Phase 6: Moderation ──────────────────────────────────────────────────────
