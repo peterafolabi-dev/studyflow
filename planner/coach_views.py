@@ -85,3 +85,27 @@ def coach_forget(request):
         qs = qs.filter(pk=data['id'])
     deleted, _ = qs.delete()
     return JsonResponse({'ok': True, 'deleted': deleted})
+
+
+@login_required
+@require_GET
+def coach_suggest(request):
+    """Personal autocomplete for the coach box: the student's own courses and library titles."""
+    from resources.models import Resource
+    q = ' '.join(request.GET.get('q', '').split())[:60]
+    if len(q) < 2:
+        return JsonResponse({'suggestions': []})
+    out = []
+    for c in request.user.courses.all()[:30]:
+        label = (c.code + ' ' + c.name).strip() if c.code else c.name
+        if q.lower() in label.lower():
+            out += [f'Explain {label} simply', f'Quiz me on {label}', f'Make an exam plan for {label}']
+    for title in (Resource.objects.filter(title__icontains=q).order_by('-download_count')
+                  .values_list('title', flat=True)[:3]):
+        out.append(f'Summarise {title[:70]}')
+    seen, uniq = set(), []
+    for item in out:
+        if item.lower() not in seen:
+            seen.add(item.lower())
+            uniq.append(item)
+    return JsonResponse({'suggestions': uniq[:6]})

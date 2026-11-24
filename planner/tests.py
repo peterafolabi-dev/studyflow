@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Course, Task, FlashcardDeck, Flashcard
+from .models import Course, Task, FlashcardDeck, Flashcard, TimetableEntry
 
 User = get_user_model()
 
@@ -526,3 +526,67 @@ class TaskListTests(BaseCase):
 
     def test_bad_focus_value_is_ignored(self):
         self.assertEqual(self.client.get(reverse('task_list'), {'focus': 'abc'}).status_code, 200)
+
+
+class TimetableAndSuggestTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        self.user = get_user_model().objects.create_user('tt', 'tt@example.com', 'pw12345!x')
+        self.client.force_login(self.user)
+
+    def _post(self, **over):
+        data = {'days': ['0', '2'], 'start_time': '09:00', 'end_time': '10:00', 'location': 'LT 2', 'title': '', 'course': ''}
+        data.update(over)
+        return self.client.post('/timetable/new/', data)
+
+    def test_add_class_for_a_brand_new_course_on_several_days(self):
+        r = self._post(new_course_code='CPE 205', new_course_name='Digital Logic')
+        self.assertEqual(r.status_code, 302)
+        course = Course.objects.get(user=self.user, code='CPE 205')
+        entries = TimetableEntry.objects.filter(user=self.user, course=course)
+        self.assertEqual(sorted(e.day_of_week for e in entries), [0, 2])
+        self.assertEqual(entries[0].title, 'CPE 205 Class')
+
+    def test_pick_an_existing_course_and_resubmit_does_not_duplicate(self):
+        c = Course.objects.create(user=self.user, name='Physics', code='PHY 101')
+        self._post(course=c.pk)
+        self._post(course=c.pk)
+        self.assertEqual(TimetableEntry.objects.filter(user=self.user, course=c).count(), 2)
+
+    def test_needs_a_course_or_name_and_at_least_one_day(self):
+        self.assertEqual(self._post().status_code, 200)
+        self.assertEqual(self._post(title='Lab', days=[]).status_code, 200)
+        self.assertEqual(TimetableEntry.objects.count(), 0)
+
+    def test_end_time_must_be_after_start(self):
+        r = self._post(title='Lab', start_time='10:00', end_time='09:00')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'End time must be after the start time')
+
+    def test_edit_updates_the_entry_and_is_private(self):
+        e = TimetableEntry.objects.create(user=self.user, title='Old', day_of_week=1, start_time='08:00', end_time='09:00')
+        r = self.client.post(f'/timetable/{e.pk}/edit/', {'days': ['3'], 'title': 'New', 'start_time': '11:00', 'end_time': '12:00', 'location': '', 'course': ''})
+        self.assertEqual(r.status_code, 302)
+        e.refresh_from_db()
+        self.assertEqual((e.title, e.day_of_week), ('New', 3))
+        from django.contrib.auth import get_user_model
+        other = get_user_model().objects.create_user('other', 'o@example.com', 'pw12345!x')
+        self.client.force_login(other)
+        self.assertEqual(self.client.get(f'/timetable/{e.pk}/edit/').status_code, 404)
+
+    def test_coach_suggest_uses_own_courses_only(self):
+        from django.contrib.auth import get_user_model
+        Course.objects.create(user=self.user, name='Signals and Systems', code='EEE 301')
+        other = get_user_model().objects.create_user('o2', 'o2@example.com', 'pw12345!x')
+        Course.objects.create(user=other, name='Secret Course', code='ZZZ 999')
+        got = self.client.get('/ai-chat/suggest/?q=signal').json()['suggestions']
+        self.assertTrue(any('EEE 301' in s for s in got))
+        self.assertEqual(self.client.get('/ai-chat/suggest/?q=secret').json()['suggestions'], [])
+        self.assertEqual(self.client.get('/ai-chat/suggest/?q=a').json()['suggestions'], [])
+        self.client.logout()
+        self.assertEqual(self.client.get('/ai-chat/suggest/?q=signal').status_code, 302)
+
+    def test_page_ships_math_overflow_fix_and_suggest_box(self):
+        r = self.client.get('/timetable/')
+        self.assertContains(r, '.katex-display{overflow-x:auto')
+        self.assertContains(r, 'id="ai-suggest"')

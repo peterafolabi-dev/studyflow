@@ -1,28 +1,59 @@
 {% extends 'base.html' %}
-{% block title %}Add to timetable · StudyFlow{% endblock %}
+{% block title %}{% if editing %}Edit class{% else %}Add to timetable{% endif %} · StudyFlow{% endblock %}
 {% block content %}
+{% with input_cls="w-full rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2.5 text-sm" %}
   <div class="max-w-xl">
-    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-6">Add a class</h1>
-    <form method="post" class="space-y-4">
+    <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-1">{% if editing %}Edit class{% else %}Add a class{% endif %}</h1>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Pick a course (or add a new one), choose the days it holds, and set the time. One class can repeat on several days.</p>
+
+    <form method="post" class="space-y-6">
       {% csrf_token %}
-      {% for field in form %}
-        <div>
-          <label for="{{ field.id_for_label }}" class="block font-medium text-sm mb-1">{{ field.label }}</label>
-          <div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2 [&_input]:text-sm
-                      [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-brand-200 dark:[&_select]:border-slate-700 [&_select]:bg-white dark:[&_select]:bg-slate-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm">
-            {{ field }}
+      {% if form.non_field_errors %}<p class="text-sm text-rose-500">{{ form.non_field_errors }}</p>{% endif %}
+
+      <section class="space-y-2">
+        <label for="{{ form.course.id_for_label }}" class="block font-medium text-sm">1. Course</label>
+        <div class="[&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-brand-200 dark:[&_select]:border-slate-700 [&_select]:bg-white dark:[&_select]:bg-slate-900 [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-sm">{{ form.course }}</div>
+        {% for e in form.course.errors %}<p class="text-xs text-rose-500">{{ e }}</p>{% endfor %}
+        <details class="rounded-xl border border-dashed border-brand-300 dark:border-slate-600 p-3" {% if form.new_course_code.value or form.new_course_name.value %}open{% endif %}>
+          <summary class="cursor-pointer text-sm font-semibold text-brand-600 dark:text-brand-300">+ My course isn't listed, add it</summary>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+            <div><label class="block text-xs font-medium mb-1" for="{{ form.new_course_code.id_for_label }}">Course code</label><div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm">{{ form.new_course_code }}</div></div>
+            <div><label class="block text-xs font-medium mb-1" for="{{ form.new_course_name.id_for_label }}">Course name</label><div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm">{{ form.new_course_name }}</div></div>
           </div>
-          {% if field.errors %}
-            <ul class="text-xs text-rose-600 dark:text-rose-400 mt-1">
-              {% for e in field.errors %}<li>{{ e }}</li>{% endfor %}
-            </ul>
-          {% endif %}
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">It is saved to your courses automatically.</p>
+        </details>
+      </section>
+
+      <section class="space-y-2">
+        <p class="font-medium text-sm">2. Days</p>
+        <div class="flex flex-wrap gap-2">
+          {% for value, label in form.fields.days.choices %}
+            <label class="cursor-pointer">
+              <input type="checkbox" name="days" value="{{ value }}" class="peer sr-only" {% if value|stringformat:"s" in form.days.value %}checked{% endif %}>
+              <span class="inline-block rounded-full border border-brand-200 dark:border-slate-600 px-3.5 py-2 text-sm font-medium peer-checked:bg-brand-600 peer-checked:text-white peer-checked:border-brand-600 peer-focus-visible:ring-2 peer-focus-visible:ring-brand-400">{{ label|slice:":3" }}</span>
+            </label>
+          {% endfor %}
         </div>
-      {% endfor %}
+        {% for e in form.days.errors %}<p class="text-xs text-rose-500">{{ e }}</p>{% endfor %}
+      </section>
+
+      <section class="space-y-2">
+        <p class="font-medium text-sm">3. Time and place</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-medium mb-1" for="{{ form.start_time.id_for_label }}">Starts</label><div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm">{{ form.start_time }}</div>{% for e in form.start_time.errors %}<p class="text-xs text-rose-500">{{ e }}</p>{% endfor %}</div>
+          <div><label class="block text-xs font-medium mb-1" for="{{ form.end_time.id_for_label }}">Ends</label><div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm">{{ form.end_time }}</div>{% for e in form.end_time.errors %}<p class="text-xs text-rose-500">{{ e }}</p>{% endfor %}</div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="block text-xs font-medium mb-1" for="{{ form.location.id_for_label }}">Location (optional)</label><div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm">{{ form.location }}</div></div>
+          <div><label class="block text-xs font-medium mb-1" for="{{ form.title.id_for_label }}">Class name (optional)</label><div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm">{{ form.title }}</div></div>
+        </div>
+      </section>
+
       <div class="flex gap-2 pt-2">
-        <button type="submit" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Add</button>
-        <a href="{% url 'timetable' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">Cancel</a>
+        <button type="submit" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-5 py-2.5 text-sm">{% if editing %}Save changes{% else %}Add to timetable{% endif %}</button>
+        <a href="{% url 'timetable' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2.5 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">Cancel</a>
       </div>
     </form>
   </div>
+{% endwith %}
 {% endblock %}

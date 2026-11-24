@@ -27,19 +27,63 @@ class TaskForm(forms.ModelForm):
 
 
 class TimetableEntryForm(forms.ModelForm):
+    """One class that can repeat on several days, for a course you pick or add on the spot."""
+    days = forms.MultipleChoiceField(
+        choices=TimetableEntry.DAY_CHOICES, widget=forms.CheckboxSelectMultiple, label='Days',
+        error_messages={'required': 'Pick at least one day.'},
+    )
+    new_course_code = forms.CharField(
+        max_length=20, required=False, label='Course code',
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. CPE 205'}),
+    )
+    new_course_name = forms.CharField(
+        max_length=100, required=False, label='Course name',
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. Digital Logic Design'}),
+    )
+
     class Meta:
         model = TimetableEntry
-        fields = ['title', 'course', 'day_of_week', 'start_time', 'end_time', 'location']
-        labels = {'title': 'Class / activity'}
+        fields = ['course', 'title', 'start_time', 'end_time', 'location']
+        labels = {'title': 'Class name (optional)'}
         widgets = {
-            'title': forms.TextInput(attrs={'placeholder': 'e.g. CPE 205 Lecture'}),
-            'start_time': forms.TimeInput(attrs={'type': 'time'}),
-            'end_time': forms.TimeInput(attrs={'type': 'time'}),
-            'location': forms.TextInput(attrs={'placeholder': 'e.g. LT 2'}),
+            'title': forms.TextInput(attrs={'placeholder': 'e.g. Lecture, Tutorial, Lab'}),
+            'start_time': forms.TimeInput(attrs={'type': 'time'}, format='%H:%M'),
+            'end_time': forms.TimeInput(attrs={'type': 'time'}, format='%H:%M'),
+            'location': forms.TextInput(attrs={'placeholder': 'e.g. LT 2, ETF Hall'}),
         }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.user = user
         if user is not None:
             self.fields['course'].queryset = Course.objects.filter(user=user)
         self.fields['course'].required = False
+        self.fields['course'].empty_label = 'Choose a course you added'
+        self.fields['title'].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        start, end = cleaned.get('start_time'), cleaned.get('end_time')
+        if start and end and end <= start:
+            self.add_error('end_time', 'End time must be after the start time.')
+        code = (cleaned.get('new_course_code') or '').strip()
+        name = (cleaned.get('new_course_name') or '').strip()
+        if cleaned.get('course') is None:
+            if code or name:
+                cleaned['new_course_code'], cleaned['new_course_name'] = code, name or code
+            elif not (cleaned.get('title') or '').strip():
+                self.add_error('course', 'Choose a course, add a new one below, or type a class name.')
+        return cleaned
+
+    def resolve_course(self):
+        """The chosen course, or a new/existing one from the 'add a course' boxes."""
+        course = self.cleaned_data.get('course')
+        if course is not None:
+            return course
+        code = self.cleaned_data.get('new_course_code', '')
+        name = self.cleaned_data.get('new_course_name', '')
+        if not (code or name):
+            return None
+        existing = Course.objects.filter(user=self.user, code__iexact=code).first() if code else None
+        existing = existing or Course.objects.filter(user=self.user, name__iexact=name).first()
+        return existing or Course.objects.create(user=self.user, code=code, name=name)
