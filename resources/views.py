@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import timedelta
 
@@ -14,6 +15,8 @@ from studyflow.http import redirect_back, redirect_next
 
 from .forms import ResourceUploadForm
 from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceRating, ResourceReport
+
+logger = logging.getLogger(__name__)
 
 # Which underlying resource_type values each hub page shows, and its label +
 # url name (used to send an uploader back to the right page afterwards).
@@ -140,15 +143,19 @@ def resource_download(request, pk):
         messages.error(request, 'This file is no longer on the server (free hosting clears uploads when the app restarts). Please ask the uploader to upload it again.')
         return redirect_back(request, 'dashboard')
 
+    # Open first: with cloud storage a row can point at a file that was lost in an earlier wipe,
+    # and that must show a friendly message, not a 500.
+    try:
+        handle = resource.file.open('rb')
+    except Exception:  # noqa: BLE001 - any storage failure means the file is not retrievable
+        logger.warning('Resource %s file could not be opened', pk, exc_info=True)
+        messages.error(request, 'This file is missing from storage (it was uploaded before permanent storage was turned on). Please ask the uploader to upload it again.')
+        return redirect_back(request, 'dashboard')
+
     Resource.objects.filter(pk=pk).update(
         download_count=F('download_count') + 1, last_downloaded_at=timezone.now()
     )
-    try:
-        return FileResponse(
-            resource.file.open('rb'), as_attachment=True, filename=os.path.basename(resource.file.name)
-        )
-    except FileNotFoundError:
-        raise Http404('File not found.')
+    return FileResponse(handle, as_attachment=True, filename=os.path.basename(resource.file.name))
 
 
 @login_required
