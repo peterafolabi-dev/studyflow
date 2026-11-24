@@ -268,6 +268,8 @@ def resource_ai_generate_cbt(request, pk):
     filename = resource.file.name.lower()
     if not filename.endswith('.pdf'):
         return JsonResponse({'error': 'CBT generation is only supported for PDF files.'}, status=400)
+    if not resource.file_available():
+        return JsonResponse({'error': 'This file is missing from storage, so the AI cannot read it. Please re-upload it and try again.'}, status=410)
 
     try:
         check_and_increment_rate_limit(request.user.id, bucket='pdf_ai')

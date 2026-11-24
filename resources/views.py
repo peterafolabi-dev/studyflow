@@ -308,6 +308,8 @@ def _extract_pdf_with_rate_limit(request, pk):
     filename = resource.file.name.lower()
     if not filename.endswith('.pdf'):
         return None, None, JsonResponse({'error': 'AI features are currently supported for PDF files only.'}, status=400)
+    if not resource.file_available():
+        return None, None, JsonResponse({'error': 'This file is missing from storage, so the AI cannot read it. Please re-upload it and try again.'}, status=410)
 
     try:
         check_and_increment_rate_limit(request.user.id)
