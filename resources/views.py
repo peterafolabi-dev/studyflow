@@ -308,7 +308,7 @@ def _extract_pdf_with_rate_limit(request, pk):
         return None, None, JsonResponse({'error': str(e)}, status=429)
 
     try:
-        text = extract_and_chunk_pdf(resource.file.path)
+        text = extract_and_chunk_pdf(resource.open_for_reading())
     except ScannedOrEmptyPDFError as e:
         return None, None, JsonResponse({'error': str(e)}, status=422)
     except PDFExtractionError as e:

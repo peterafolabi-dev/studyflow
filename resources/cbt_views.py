@@ -275,7 +275,7 @@ def resource_ai_generate_cbt(request, pk):
         return JsonResponse({'error': str(e)}, status=429)
 
     try:
-        text = extract_and_chunk_pdf(resource.file.path, max_chars=14000)
+        text = extract_and_chunk_pdf(resource.open_for_reading(), max_chars=14000)
     except ScannedOrEmptyPDFError as e:
         return JsonResponse({'error': str(e)}, status=422)
     except PDFExtractionError as e:
