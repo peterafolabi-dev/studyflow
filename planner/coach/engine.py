@@ -5,6 +5,7 @@ import re
 from datetime import timedelta
 
 from .actions import extract_cards, save_memory, split_reply
+from .campus import campus_news
 from .context import memory_notes, student_context
 from .prompt import PLAYBOOK_VERSION, build_system_prompt
 from .retrieval import search_library
@@ -51,6 +52,14 @@ def _clean_history(history):
     return out
 
 
+def _safe_campus_news():
+    try:
+        return campus_news()
+    except Exception:  # live campus items must never break the chat
+        logger.exception('Campus news failed')
+        return ''
+
+
 def _build(user, message, history, mode=''):
     """Returns (messages, links, truncated), sized to fit INPUT_CHAR_BUDGET."""
     try:
@@ -69,6 +78,7 @@ def _build(user, message, history, mode=''):
         student_context=student_context(user),
         memory_notes=memory_notes(user),
         library_hits=library_block,
+        campus_news=_safe_campus_news(),
         mode=mode,
     )
     # 1. Too big? Drop the oldest history first.
