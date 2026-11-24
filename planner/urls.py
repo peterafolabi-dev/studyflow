@@ -8,6 +8,7 @@ urlpatterns = [
     path('ai-chat/add-task/', coach_views.coach_add_task, name='coach_add_task'),
     path('ai-chat/save-cards/', coach_views.coach_save_cards, name='coach_save_cards'),
     path('ai-chat/feedback/', coach_views.coach_feedback, name='coach_feedback'),
+    path('ai-chat/suggest/', coach_views.coach_suggest, name='coach_suggest'),
     path('ai-chat/memory/', coach_views.coach_memory, name='coach_memory'),
     path('ai-chat/forget/', coach_views.coach_forget, name='coach_forget'),
     path('', views.dashboard, name='dashboard'),
@@ -38,6 +39,7 @@ urlpatterns = [
     path('flashcards/', views.flashcard_hubs, name='flashcards'),
     path('flashcards/<int:pk>/review/', views.flashcard_rate_review, name='flashcard_rate_review'),
     path('timetable/new/', views.timetable_create, name='timetable_create'),
+    path('timetable/<int:pk>/edit/', views.timetable_update, name='timetable_update'),
     path('timetable/<int:pk>/delete/', views.timetable_delete, name='timetable_delete'),
     path('calendar.ics', views.export_calendar, name='export_calendar'),
     # Phase 5

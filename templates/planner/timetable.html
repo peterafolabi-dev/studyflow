@@ -34,10 +34,13 @@
                       {% if e.location %}&middot; {{ e.location }}{% endif %}
                     </p>
                   </div>
-                  <form method="post" action="{% url 'timetable_delete' e.pk %}">
-                    {% csrf_token %}
-                    <button class="text-xs text-rose-500 hover:underline">Remove</button>
-                  </form>
+                  <div class="flex items-center gap-3 shrink-0">
+                    <a href="{% url 'timetable_update' e.pk %}" class="text-xs text-brand-600 dark:text-brand-300 hover:underline">Edit</a>
+                    <form method="post" action="{% url 'timetable_delete' e.pk %}">
+                      {% csrf_token %}
+                      <button class="text-xs text-rose-500 hover:underline">Remove</button>
+                    </form>
+                  </div>
                 </div>
               </div>
             {% endfor %}

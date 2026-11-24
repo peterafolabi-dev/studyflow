@@ -427,19 +427,51 @@ def weekly_plan(request):
     })
 
 
+def _save_timetable_entries(request, form, instance=None):
+    """Create one entry per chosen day (or update `instance` for the first day). Returns the entries."""
+    course = form.resolve_course()
+    title = (form.cleaned_data['title'] or '').strip() or (f'{course.code or course.name} Class' if course else 'Class')
+    days = sorted(int(d) for d in form.cleaned_data['days'])
+    saved = []
+    for i, day in enumerate(days):
+        fields = dict(course=course, title=title, end_time=form.cleaned_data['end_time'], location=form.cleaned_data['location'])
+        if instance is not None and i == 0:
+            for k, v in dict(fields, day_of_week=day, start_time=form.cleaned_data['start_time']).items():
+                setattr(instance, k, v)
+            instance.save()
+            saved.append(instance)
+        else:
+            entry, _ = TimetableEntry.objects.update_or_create(
+                user=request.user, day_of_week=day, start_time=form.cleaned_data['start_time'], title=title, defaults=fields)
+            saved.append(entry)
+    return saved
+
+
 @login_required
 def timetable_create(request):
     if request.method == 'POST':
         form = TimetableEntryForm(request.POST, user=request.user)
         if form.is_valid():
-            entry = form.save(commit=False)
-            entry.user = request.user
-            entry.save()
-            messages.success(request, f'Added "{entry.title}" to your timetable.')
+            saved = _save_timetable_entries(request, form)
+            messages.success(request, f'Added "{saved[0].title}" on {len(saved)} day{"s" if len(saved) != 1 else ""}.')
             return redirect('timetable')
     else:
         form = TimetableEntryForm(user=request.user)
-    return render(request, 'planner/timetable_form.html', {'form': form})
+    return render(request, 'planner/timetable_form.html', {'form': form, 'editing': False})
+
+
+@login_required
+def timetable_update(request, pk):
+    entry = get_object_or_404(TimetableEntry, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = TimetableEntryForm(request.POST, user=request.user, instance=entry)
+        if form.is_valid():
+            _save_timetable_entries(request, form, instance=entry)
+            messages.success(request, 'Timetable updated.')
+            return redirect('timetable')
+    else:
+        form = TimetableEntryForm(user=request.user, instance=entry, initial={'days': [str(entry.day_of_week)]})
+    return render(request, 'planner/timetable_form.html', {'form': form, 'editing': True, 'entry': entry})
 
 
 @login_required
