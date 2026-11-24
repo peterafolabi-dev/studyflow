@@ -58,9 +58,15 @@ class CloudStorageReadinessTests(MissingFileTests):
         data = self.good.open_for_reading().read()
         self.assertEqual(data, b'%PDF-1.4 test')
 
-    def test_with_cloud_storage_a_file_is_assumed_present_without_a_network_call(self):
-        with override_settings(USING_CLOUDINARY=True):
-            self.assertTrue(self.gone.file_available())      # cloud files survive restarts
+    def test_with_cloud_storage_the_real_check_is_used_and_cached(self):
+        from unittest import mock
+        from django.core.cache import cache
+        cache.clear()
+        with override_settings(USING_CLOUDINARY=True), \
+             mock.patch('django.core.files.storage.FileSystemStorage.exists', return_value=False) as ex:
+            self.assertFalse(self.gone.file_available())
+            self.assertFalse(self.gone.file_available())
+            self.assertEqual(ex.call_count, 1)            # second call served from cache
             self.assertFalse(Resource(title='no file').file_available())
 
 
@@ -81,3 +87,21 @@ class CloudMissingFileTests(TestCase):
             r = self.client.get(f'/resources/{res.pk}/download/', follow=True)
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, 'missing from storage')
+
+
+class AdminCleanupTests(TestCase):
+    def test_admin_action_deletes_only_entries_with_missing_files(self):
+        from unittest import mock
+        from .admin import ResourceAdmin
+        from django.contrib import admin as dj_admin
+        from django.test import RequestFactory
+        user = get_user_model().objects.create_superuser('boss', 'b@example.com', 'pw12345!x')
+        gone = Resource.objects.create(title='Gone', resource_type='notes', uploaded_by=user, file='resources/x/gone.pdf')
+        keep = Resource.objects.create(title='Keep', resource_type='notes', uploaded_by=user, file='resources/x/keep.pdf')
+        ma = ResourceAdmin(Resource, dj_admin.site)
+        req = RequestFactory().post('/'); req.user = user
+        req.session = {}; req._messages = mock.MagicMock()
+        with mock.patch.object(Resource, 'file_available', lambda self: self.pk == keep.pk):
+            ma.delete_missing_files(req, Resource.objects.all())
+        self.assertFalse(Resource.objects.filter(pk=gone.pk).exists())
+        self.assertTrue(Resource.objects.filter(pk=keep.pk).exists())

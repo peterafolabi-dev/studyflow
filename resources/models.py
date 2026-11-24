@@ -1,6 +1,7 @@
 import io
 
 from django.conf import settings
+from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
 
@@ -48,12 +49,16 @@ class Resource(models.Model):
         """True only if the file is really on the server. Free hosting wipes uploads on restart, so a row can outlive its file."""
         if not self.file:
             return False
+        def _exists():
+            try:
+                return bool(self.file.storage.exists(self.file.name))
+            except Exception:  # noqa: BLE001 - a storage hiccup must not break a page
+                return False
+
         if getattr(settings, 'USING_CLOUDINARY', False):
-            return True  # cloud files survive restarts; don't make a network call per file
-        try:
-            return self.file.storage.exists(self.file.name)
-        except Exception:  # noqa: BLE001 - a storage hiccup must not break a page
-            return False
+            # Cloud lookups are a network call, so remember the answer for a few minutes.
+            return cache.get_or_set(f'resource-file-ok:{self.pk}:{self.file.name}', _exists, 600)
+        return _exists()
 
     @property
     def is_research(self):

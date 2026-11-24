@@ -8,6 +8,16 @@ class ResourceAdmin(admin.ModelAdmin):
     list_display = ('title', 'resource_type', 'course_code', 'uploaded_by', 'download_count', 'created_at')
     list_filter = ('resource_type', 'course_code')
     search_fields = ('title', 'course_code', 'description')
+    actions = ['delete_missing_files']
+
+    @admin.action(description='Delete selected entries whose file is missing from storage')
+    def delete_missing_files(self, request, queryset):
+        gone = [r for r in queryset if r.file and not r.file_available()]
+        names = ', '.join(r.title for r in gone[:5])
+        count = len(gone)
+        for r in gone:
+            r.delete()
+        self.message_user(request, f'Deleted {count} entr{"y" if count == 1 else "ies"} with missing files. {names}'.strip())
 
 
 @admin.register(PhysicalHolding)
