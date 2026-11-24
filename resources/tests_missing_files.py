@@ -105,3 +105,18 @@ class AdminCleanupTests(TestCase):
             ma.delete_missing_files(req, Resource.objects.all())
         self.assertFalse(Resource.objects.filter(pk=gone.pk).exists())
         self.assertTrue(Resource.objects.filter(pk=keep.pk).exists())
+
+
+class AIMissingFileTests(TestCase):
+    def test_ai_endpoints_return_friendly_error_for_lost_file(self):
+        user = get_user_model().objects.create_user('aiu', 'a@example.com', 'pw12345!x')
+        res = Resource.objects.create(title='Lost', resource_type='notes', uploaded_by=user, file='resources/x/lost.pdf')
+        self.client.force_login(user)
+        for name in ('resource_ai_summarize', 'resource_ai_quiz', 'resource_ai_flashcards', 'resource_ai_generate_cbt'):
+            try:
+                url = reverse(name, args=[res.pk])
+            except Exception:
+                continue
+            r = self.client.post(url)
+            self.assertEqual(r.status_code, 410, name)
+            self.assertIn('missing from storage', r.json()['error'])
