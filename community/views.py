@@ -341,7 +341,6 @@ import json
 def global_chat(request):
     return render(request, 'community/global_chat.html')
 
-CHAT_EDIT_WINDOW = timedelta(minutes=15)
 CHAT_RATE_LIMIT = 12        # messages ...
 CHAT_RATE_WINDOW = 30       # ... per this many seconds, per student
 
@@ -371,7 +370,7 @@ def _serialize_chat(messages_qs, me):
             'time': timezone.localtime(m.created_at).strftime('%H:%M'), 'is_me': m.user_id == me.id,
             'deleted': m.is_deleted, 'edited': bool(m.edited_at), 'pinned': m.is_pinned,
             'reply': reply, 'reactions': reactions,
-            'can_edit': m.user_id == me.id and not m.is_deleted and timezone.now() - m.created_at <= CHAT_EDIT_WINDOW,
+            'can_edit': m.user_id == me.id and not m.is_deleted,
         })
     return out
 
@@ -424,8 +423,6 @@ def chat_edit(request, pk):
     msg = _chat_message_or_404(pk)
     if msg.user_id != request.user.id or msg.is_deleted:
         return JsonResponse({'status': 'error', 'error': 'You can only edit your own messages.'}, status=403)
-    if timezone.now() - msg.created_at > CHAT_EDIT_WINDOW:
-        return JsonResponse({'status': 'error', 'error': 'You can edit a message for 15 minutes after sending it.'}, status=403)
     try:
         text = str(json.loads(request.body).get('text', '')).strip()
     except (ValueError, AttributeError):

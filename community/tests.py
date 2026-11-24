@@ -100,16 +100,17 @@ class ChatUpgradeTests(TestCase):
         self.send('cross', reply_to=other_room.pk)
         self.assertIsNone(self.feed()['messages'][-1]['reply'])
 
-    def test_edit_own_message_marks_it_edited_and_has_a_time_limit(self):
+    def test_edit_own_message_marks_it_edited_with_no_time_limit(self):
         from datetime import timedelta
         from django.utils import timezone
         mid = self.send('typo').json()['id']
         self.assertEqual(self.act('chat_edit', mid, {'text': 'fixed'}).status_code, 200)
         m = self.feed()['messages'][0]
         self.assertEqual((m['text'], m['edited']), ('fixed', True))
-        ChatMessage.objects.filter(pk=mid).update(created_at=timezone.now() - timedelta(minutes=16))
-        self.assertEqual(self.act('chat_edit', mid, {'text': 'too late'}).status_code, 403)
-        self.assertFalse(self.feed()['messages'][0]['can_edit'])
+        ChatMessage.objects.filter(pk=mid).update(created_at=timezone.now() - timedelta(days=30))
+        self.assertEqual(self.act('chat_edit', mid, {'text': 'a month later'}).status_code, 200)
+        self.assertTrue(self.feed()['messages'][0]['can_edit'])
+        self.assertEqual(self.feed()['messages'][0]['text'], 'a month later')
 
     def test_cannot_edit_or_delete_someone_elses_message(self):
         theirs = ChatMessage.objects.create(user=self.amy, text='mine', room='global')
