@@ -7,9 +7,10 @@
     <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300">Admin Only</span>
   </div>
   <h1 class="font-display text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">📊 Analytics Dashboard</h1>
-  <p class="text-slate-500 dark:text-slate-400">Platform-wide stats and user feedback.</p>
+  <p class="text-slate-500 dark:text-slate-400">Platform-wide stats and user feedback. <span id="live-badge" class="ml-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">● Live</span></p>
 </div>
 
+<div id="live-dashboard">
 <!-- Top KPIs -->
 <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-4 mb-8 fade-in-up">
   <div class="rounded-2xl border border-brand-200 dark:border-brand-900/50 bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-950/40 dark:to-slate-900 p-5 text-center shadow-sm">
@@ -192,5 +193,53 @@
   <p class="text-center text-slate-400 dark:text-slate-500 py-10">No feedback yet.</p>
   {% endif %}
 </div>
+</div><!-- /#live-dashboard -->
+
+<script>
+  // Keeps the numbers fresh without a manual refresh: every 15 seconds (while this tab is open and visible)
+  // it fetches the page again and swaps in the new numbers. If the connection drops it says so and retries.
+  (function () {
+    var INTERVAL_MS = 15000;
+    var box = document.getElementById('live-dashboard');
+    var badge = document.getElementById('live-badge');
+    var busy = false;
+
+    function stamp(text, ok) {
+      if (!badge) return;
+      badge.textContent = text;
+      badge.className = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ' +
+        (ok ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300');
+    }
+
+    async function refresh() {
+      if (busy || document.hidden || !box) return;
+      busy = true;
+      try {
+        var res = await fetch(window.location.href, { credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch' }, cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        var fresh = doc.getElementById('live-dashboard');
+        if (!fresh) throw new Error('Dashboard missing from reply (signed out?)');
+        // keep the scroll position of the inner lists (recent logins, signups) so they don't jump
+        var scrolls = Array.prototype.map.call(box.querySelectorAll('.overflow-y-auto'), function (el) { return el.scrollTop; });
+        if (box.innerHTML !== fresh.innerHTML) {
+          box.innerHTML = fresh.innerHTML;
+          box.querySelectorAll('.overflow-y-auto').forEach(function (el, i) { if (scrolls[i]) el.scrollTop = scrolls[i]; });
+        }
+        stamp('● Live · updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }), true);
+      } catch (e) {
+        console.error('Dashboard refresh failed', e);
+        stamp('Reconnecting…', false);
+      } finally {
+        busy = false;
+      }
+    }
+
+    setInterval(refresh, INTERVAL_MS);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+    stamp('● Live · updates every 15 seconds', true);
+  })();
+</script>
 
 {% endblock %}
