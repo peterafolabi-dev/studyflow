@@ -15,7 +15,7 @@ from .models import Post, Thread, ChatMessage
 logger = logging.getLogger(__name__)
 
 CHAT_ROOMS = {'global', 'futminna'}
-CHAT_MAX_LENGTH = 500  # matches ChatMessage.text max_length
+CHAT_MAX_LENGTH = 1000  # matches ChatMessage.text max_length
 
 
 @login_required

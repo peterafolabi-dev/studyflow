@@ -70,7 +70,7 @@
                     <button type="button" class="p-3 text-slate-400 hover:text-brand-500 transition-colors shrink-0">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </button>
-                    <input type="text" id="chat-input" class="flex-1 bg-transparent border-none px-2 py-3 text-sm text-slate-900 dark:text-white focus:ring-0 placeholder-slate-400 dark:placeholder-slate-500" placeholder="Type your message..." autocomplete="off">
+                    <textarea id="chat-input" rows="1" maxlength="1000" style="max-height:8rem" class="flex-1 resize-none bg-transparent border-none px-2 py-3 text-sm text-slate-900 dark:text-white focus:ring-0 placeholder-slate-400 dark:placeholder-slate-500 overflow-y-auto" placeholder="Type your message..." autocomplete="off"></textarea>
                     <button type="submit" class="bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white p-3.5 rounded-2xl transition-transform hover:scale-105 shadow-lg shadow-brand-500/25 shrink-0 flex items-center justify-center">
                         <svg class="w-5 h-5 translate-x-[1px] translate-y-[-1px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     </button>
@@ -155,8 +155,7 @@
                     <div class="${msg.is_me 
                         ? 'bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20' 
                         : 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/50 dark:border-slate-700/50 text-slate-800 dark:text-slate-100 rounded-2xl rounded-tl-sm shadow-sm'} 
-                        px-4 py-3 text-sm leading-relaxed">
-                        ${escapeChat(msg.text)}
+                        px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words">${escapeChat(msg.text)}
                     </div>
                 </div>
             `).join('');
@@ -173,6 +172,19 @@
         }
     }
 
+    function growChatInput() {
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 128) + 'px';
+    }
+    chatInput.addEventListener('input', growChatInput);
+    chatInput.addEventListener('keydown', (e) => {
+        // Enter sends; Shift+Enter makes a new line
+        if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+            e.preventDefault();
+            chatForm.requestSubmit();
+        }
+    });
+
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = chatInput.value.trim();
@@ -185,13 +197,13 @@
         chatMessages.innerHTML += `
             <div class="flex flex-col max-w-[85%] sm:max-w-[75%] self-end items-end opacity-70 transition-opacity animate-in zoom-in-95 duration-200" id="temp-msg">
                 <span class="text-[10px] font-bold tracking-wide uppercase text-slate-400 dark:text-slate-500 mb-1.5 px-2">You <span class="mx-1 opacity-50">•</span> ${timeString}</span>
-                <div class="bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20 px-4 py-3 text-sm leading-relaxed">
-                    ${escapeChat(text)}
+                <div class="bg-gradient-to-br from-brand-500 to-brand-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-brand-500/20 px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap break-words">${escapeChat(text)}
                 </div>
             </div>
         `;
         chatMessages.scrollTop = chatMessages.scrollHeight;
         chatInput.value = '';
+        growChatInput();
         
         try {
             const res = await fetch("{% url 'chat_api' %}", {
@@ -206,7 +218,7 @@
             console.error(e);
             const temp = document.getElementById('temp-msg');
             if (temp) temp.remove();
-            chatInput.value = text;  // give the text back so nothing is lost
+            chatInput.value = text; growChatInput();  // give the text back so nothing is lost
             chatInput.placeholder = "Couldn't send. Check your connection and tap send again.";
         }
     });
