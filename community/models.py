@@ -67,9 +67,24 @@ class ChatMessage(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     text = models.CharField(max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
+    reply_to = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='replies')
+    edited_at = models.DateTimeField(null=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
+    is_pinned = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
+
+
+class ChatReaction(models.Model):
+    EMOJIS = ['👍', '❤️', '😂', '🙏', '🔥', '😮']
+
+    message = models.ForeignKey(ChatMessage, on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    emoji = models.CharField(max_length=8)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['message', 'user', 'emoji'], name='one_reaction_per_emoji_per_user')]
 
 
 # ── Phase 6: Moderation ──────────────────────────────────────────────────────

@@ -5,6 +5,10 @@ from . import views
 urlpatterns = [
     path('chat/', views.global_chat, name='global_chat'),
     path('chat/api/', views.chat_api, name='chat_api'),
+    path('chat/api/<int:pk>/edit/', views.chat_edit, name='chat_edit'),
+    path('chat/api/<int:pk>/delete/', views.chat_delete, name='chat_delete'),
+    path('chat/api/<int:pk>/react/', views.chat_react, name='chat_react'),
+    path('chat/api/<int:pk>/pin/', views.chat_pin, name='chat_pin'),
     path('study-groups/', views.thread_list, name='thread_list'),
     path('study-groups/new/', views.thread_create, name='thread_create'),
     path('study-groups/<int:pk>/', views.thread_detail, name='thread_detail'),
