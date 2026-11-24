@@ -275,7 +275,7 @@ def resource_ai_generate_cbt(request, pk):
         return JsonResponse({'error': str(e)}, status=429)
 
     try:
-        text = extract_and_chunk_pdf(resource.file.path, max_chars=14000)
+        text = extract_and_chunk_pdf(resource.file.path)
     except ScannedOrEmptyPDFError as e:
         return JsonResponse({'error': str(e)}, status=422)
     except PDFExtractionError as e:
@@ -286,7 +286,7 @@ def resource_ai_generate_cbt(request, pk):
     try:
         bank_data = generate_cbt_bank_from_pdf(text, title=resource.title, count=10)
     except AIProcessingError as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=getattr(e, 'status', 500))
 
     # AI output is untrusted: keep only well-formed questions and sane limits.
     valid_questions = []

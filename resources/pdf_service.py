@@ -14,7 +14,12 @@ class ScannedOrEmptyPDFError(PDFExtractionError):
     pass
 
 
-def extract_and_chunk_pdf(file_path_or_file, max_chars=12000):
+# Groq's free tier allows 8,000 tokens per minute for the whole app. About 8,000 characters of
+# PDF text is roughly 2,700 tokens, which leaves room for the prompt and the reply.
+AI_INPUT_CHARS = 8000
+
+
+def extract_and_chunk_pdf(file_path_or_file, max_chars=AI_INPUT_CHARS):
     """
     Extracts selectable text from a PDF file using pypdf.
     
@@ -69,23 +74,23 @@ def extract_and_chunk_pdf(file_path_or_file, max_chars=12000):
     if total_length <= max_chars:
         return "\n\n".join(f"[Page {pnum}]\n{text}" for pnum, text in extracted_pages)
 
-    # If document is longer than max_chars, chunk intelligently:
-    # Prioritize earlier pages and representative key sections
-    budget_per_page = max(300, max_chars // min(total_pages, 10))
+    # Longer than the budget: sample pages evenly across the WHOLE document, so the summary
+    # covers the start, middle and end instead of only the first few pages.
+    pages_that_fit = max(1, min(len(extracted_pages), max_chars // 600))
+    if pages_that_fit >= len(extracted_pages):
+        chosen = extracted_pages
+    else:
+        step = len(extracted_pages) / pages_that_fit
+        chosen = [extracted_pages[int(i * step)] for i in range(pages_that_fit)]
+    per_page = max_chars // len(chosen)
+
     selected_chunks = []
-    accumulated = 0
-
-    for pnum, text in extracted_pages:
-        if accumulated >= max_chars:
-            break
-        # Take up to budget_per_page from this page
-        remaining_budget = max_chars - accumulated
-        slice_len = min(len(text), budget_per_page, remaining_budget)
-        chunk = text[:slice_len].rsplit(' ', 1)[0] if slice_len < len(text) else text
+    for pnum, text in chosen:
+        chunk = text if len(text) <= per_page else text[:per_page].rsplit(' ', 1)[0]
         selected_chunks.append(f"[Page {pnum}]\n{chunk}")
-        accumulated += len(chunk)
 
-    combined = "\n\n".join(selected_chunks)
-    if accumulated < total_length:
-        combined += f"\n\n[... Note: Document has {total_pages} pages; first key sections analyzed ...]"
-    return combined
+    note = (
+        f"\n\n[Note: this document has {total_pages} pages. To fit the AI's limit, "
+        f"{len(chosen)} pages spread across the whole document were read.]"
+    )
+    return "\n\n".join(selected_chunks) + note

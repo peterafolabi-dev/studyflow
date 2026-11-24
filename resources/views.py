@@ -325,7 +325,7 @@ def resource_ai_summarize(request, pk):
         data = summarize_material(text, title=resource.title)
         return JsonResponse({'success': True, 'data': data})
     except AIProcessingError as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=getattr(e, 'status', 500))
 
 
 @login_required
@@ -349,7 +349,7 @@ def resource_ai_flashcards(request, pk):
             'default_deck_title': f"{resource.title} Cards"[:180]
         })
     except AIProcessingError as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=getattr(e, 'status', 500))
 
 
 @login_required
@@ -436,4 +436,4 @@ def resource_ai_quiz(request, pk):
             'questions': questions
         })
     except AIProcessingError as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=getattr(e, 'status', 500))

@@ -20,7 +20,13 @@ class RateLimitExceeded(Exception):
 
 
 class AIProcessingError(Exception):
+    status = 500
     pass
+
+
+class AIBusyError(AIProcessingError):
+    """The free AI quota is used up for this minute; trying again shortly will work."""
+    status = 503
 
 
 def check_and_increment_rate_limit(user_id, bucket='pdf_ai', max_requests=RATE_LIMIT_MAX_REQUESTS, window=RATE_LIMIT_WINDOW_SECONDS):
@@ -81,7 +87,53 @@ def parse_strict_json(raw_text):
     return json.loads(cleaned)
 
 
-def _call_groq_with_retry(messages, expected_schema_description, temperature=0.3):
+BUSY_MESSAGE = (
+    "The AI is busy right now (it is free and shared by all students). "
+    "Please wait about a minute and try again."
+)
+MAX_AUTO_WAIT_SECONDS = 15
+
+
+def _is_rate_limit_error(err):
+    return getattr(err, 'status_code', None) in (413, 429) or 'rate_limit' in str(err).lower()
+
+
+def _wait_seconds(err):
+    """Seconds Groq asks us to wait (Retry-After header, or 'try again in 3.2s' in the message)."""
+    headers = getattr(getattr(err, 'response', None), 'headers', None) or {}
+    value = headers.get('retry-after')
+    if value is None:
+        match = re.search(r'try again in ([0-9.]+)\s*(ms|s)', str(err))
+        if match:
+            value = float(match.group(1)) / (1000 if match.group(2) == 'ms' else 1)
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _create_completion(client, **kwargs):
+    """One Groq call. On a rate-limit error, waits briefly once if Groq says it will clear soon."""
+    try:
+        return client.chat.completions.create(**kwargs)
+    except Exception as err:
+        if not _is_rate_limit_error(err):
+            raise
+        wait = _wait_seconds(err)
+        if wait is None or wait > MAX_AUTO_WAIT_SECONDS:
+            logger.warning(f"Groq rate limit, not retrying: {err}")
+            raise AIBusyError(BUSY_MESSAGE)
+        time.sleep(wait + 0.5)
+        try:
+            return client.chat.completions.create(**kwargs)
+        except Exception as second:
+            logger.warning(f"Groq rate limit after waiting: {second}")
+            if _is_rate_limit_error(second):
+                raise AIBusyError(BUSY_MESSAGE)
+            raise
+
+
+def _call_groq_with_retry(messages, expected_schema_description, temperature=0.3, max_tokens=3000):
     """
     Calls Groq API, validates strict JSON parsing, and performs exactly 1 auto-retry
     if JSON parsing fails.
@@ -90,10 +142,12 @@ def _call_groq_with_retry(messages, expected_schema_description, temperature=0.3
     model = get_model_name()
 
     try:
-        response = client.chat.completions.create(
+        response = _create_completion(
+            client,
             model=model,
             messages=messages,
             temperature=temperature,
+            max_tokens=max_tokens,
         )
         content = response.choices[0].message.content
         return parse_strict_json(content)
@@ -111,10 +165,12 @@ def _call_groq_with_retry(messages, expected_schema_description, temperature=0.3
                 )
             }
         ]
-        retry_response = client.chat.completions.create(
+        retry_response = _create_completion(
+            client,
             model=model,
             messages=repair_messages,
             temperature=0.1,
+            max_tokens=max_tokens,
         )
         retry_content = retry_response.choices[0].message.content
         try:
@@ -122,9 +178,12 @@ def _call_groq_with_retry(messages, expected_schema_description, temperature=0.3
         except Exception as retry_err:
             logger.error(f"Retry JSON parse also failed: {retry_err}")
             raise AIProcessingError("Failed to parse structured response from AI after retry. Please try again.")
+    except AIProcessingError:
+        raise
     except Exception as e:
+        # Log the real error; never show raw provider errors (they can include account details).
         logger.error(f"Groq API error: {e}")
-        raise AIProcessingError(f"AI service error: {str(e)}")
+        raise AIProcessingError("The AI service had a problem. Please try again in a moment.")
 
 
 def summarize_material(text, title="Study Material"):
@@ -150,7 +209,7 @@ def summarize_material(text, title="Study Material"):
     ]
 
     schema_desc = '{"summary": "...", "key_points": ["...", "..."]}'
-    data = _call_groq_with_retry(messages, schema_desc, temperature=0.3)
+    data = _call_groq_with_retry(messages, schema_desc, temperature=0.3, max_tokens=2500)
     
     # Ensure standard dictionary keys
     summary = data.get("summary", "")
@@ -184,7 +243,7 @@ def generate_flashcards_from_material(text, title="Study Material", card_count=8
     ]
 
     schema_desc = '{"flashcards": [{"front": "...", "back": "..."}]}'
-    data = _call_groq_with_retry(messages, schema_desc, temperature=0.3)
+    data = _call_groq_with_retry(messages, schema_desc, temperature=0.3, max_tokens=2500)
     
     cards = data.get("flashcards", [])
     valid_cards = []
@@ -230,7 +289,7 @@ def generate_quiz_from_material(text, title="Study Material", question_count=5):
     ]
 
     schema_desc = '{"questions": [{"question": "...", "options": ["..."], "correct_index": 0, "explanation": "..."}]}'
-    data = _call_groq_with_retry(messages, schema_desc, temperature=0.3)
+    data = _call_groq_with_retry(messages, schema_desc, temperature=0.3, max_tokens=3000)
 
     raw_questions = data.get("questions", [])
     valid_questions = []
@@ -295,7 +354,7 @@ def generate_cbt_bank_from_pdf(text, title="Past Question", count=10, time_limit
     ]
 
     schema_desc = '{"title": "...", "time_limit_minutes": 15, "questions": [{"question": "...", "option_a": "...", "option_b": "...", "option_c": "...", "option_d": "...", "correct_option": "A", "explanation": "..."}]}'
-    data = _call_groq_with_retry(messages, schema_desc, temperature=0.2)
+    data = _call_groq_with_retry(messages, schema_desc, temperature=0.2, max_tokens=3500)
 
     raw_questions = data.get("questions", [])
     valid_questions = []
