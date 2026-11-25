@@ -120,7 +120,12 @@ def resource_upload(request):
         if form.is_valid():
             resource = form.save(commit=False)
             resource.uploaded_by = request.user
-            resource.save()
+            try:
+                resource.save()
+            except Exception:  # noqa: BLE001 - storage (Cloudinary/disk) failures must not become a 500
+                logger.exception('Resource upload failed while saving the file to storage')
+                form.add_error(None, 'We could not save your file right now (file storage problem). Nothing was uploaded. Please try again in a minute; if it keeps happening, tell the admin.')
+                return render(request, 'resources/upload.html', {'form': form, 'upload_config': upload_ctx}, status=503)
             messages.success(request, f'"{resource.title}" was added. Thanks for contributing!')
             reverse_type = 'thesis_paper' if resource.resource_type in ('thesis', 'paper') else resource.resource_type
             _, _, url_name = TYPE_GROUPS.get(reverse_type, (None, None, 'notes_list'))

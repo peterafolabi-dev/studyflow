@@ -302,6 +302,8 @@ LOGGING = {
         },
     },
     'loggers': {
+        'django.request': {'handlers': ['console'], 'level': 'ERROR'},
+        'resources': {'handlers': ['console'], 'level': 'INFO'},
         'allauth': {
             'handlers': ['console'],
             'level': 'DEBUG' if DEBUG else 'INFO',
