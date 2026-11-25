@@ -1,14 +1,25 @@
 from django.urls import path
 
-from . import views
+from . import chat_views, views
 
 urlpatterns = [
-    path('chat/', views.global_chat, name='global_chat'),
-    path('chat/api/', views.chat_api, name='chat_api'),
-    path('chat/api/<int:pk>/edit/', views.chat_edit, name='chat_edit'),
-    path('chat/api/<int:pk>/delete/', views.chat_delete, name='chat_delete'),
-    path('chat/api/<int:pk>/react/', views.chat_react, name='chat_react'),
-    path('chat/api/<int:pk>/pin/', views.chat_pin, name='chat_pin'),
+    path('chat/', chat_views.global_chat, name='global_chat'),
+    path('chat/api/', chat_views.chat_api, name='chat_api'),
+    path('chat/api/rooms/', chat_views.chat_rooms_meta, name='chat_rooms_meta'),
+    path('chat/api/upload/', chat_views.chat_upload, name='chat_upload'),
+    path('chat/api/users/', chat_views.chat_users, name='chat_users'),
+    path('chat/api/search/', chat_views.chat_search, name='chat_search'),
+    path('chat/api/saved/', chat_views.chat_saved, name='chat_saved'),
+    path('chat/api/saved/<int:pk>/delete/', chat_views.chat_unsave, name='chat_unsave'),
+    path('chat/api/poll/', chat_views.chat_poll_create, name='chat_poll_create'),
+    path('chat/api/poll/<int:option_id>/vote/', chat_views.chat_poll_vote, name='chat_poll_vote'),
+    path('chat/file/<int:pk>/', chat_views.chat_file, name='chat_file'),
+    path('chat/api/<int:pk>/edit/', chat_views.chat_edit, name='chat_edit'),
+    path('chat/api/<int:pk>/delete/', chat_views.chat_delete, name='chat_delete'),
+    path('chat/api/<int:pk>/react/', chat_views.chat_react, name='chat_react'),
+    path('chat/api/<int:pk>/pin/', chat_views.chat_pin, name='chat_pin'),
+    path('chat/api/<int:pk>/forward/', chat_views.chat_forward, name='chat_forward'),
+    path('chat/api/<int:pk>/save/', chat_views.chat_save, name='chat_save'),
     path('study-groups/', views.thread_list, name='thread_list'),
     path('study-groups/new/', views.thread_create, name='thread_create'),
     path('study-groups/<int:pk>/', views.thread_detail, name='thread_detail'),

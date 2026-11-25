@@ -160,3 +160,136 @@ class ChatUpgradeTests(TestCase):
         r = self.client.get(reverse('global_chat'))
         self.assertContains(r, 'id="reply-bar"')
         self.assertContains(r, 'id="chat-pinned"')
+
+
+class ChatTelegramFeatureTests(TestCase):
+    """Files, polls, mentions, search, forward, saved, room rules."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.sam = User.objects.create_user('sam', password='S7rong-pass-99')
+        self.ada = User.objects.create_user('ada', password='S7rong-pass-99')
+        self.admin = User.objects.create_user('boss', password='S7rong-pass-99', is_staff=True)
+        self.client.login(username='sam', password='S7rong-pass-99')
+
+    def jpost(self, name, payload, *args):
+        return self.client.post(reverse(name, args=args), data=payload, content_type='application/json')
+
+    def say(self, text, room='global'):
+        return self.jpost('chat_api', {'text': text, 'room': room})
+
+    def test_mention_notifies_once_and_not_self(self):
+        from accounts.models import Notification
+        self.say('hey @ada and @sam check this')
+        self.assertEqual(Notification.objects.filter(user=self.ada).count(), 1)
+        self.assertFalse(Notification.objects.filter(user=self.sam).exists())
+        mid = ChatMessage.objects.get().id
+        self.jpost('chat_edit', {'text': 'hey @ada and @sam check this again'}, mid)
+        self.assertEqual(Notification.objects.filter(user=self.ada).count(), 1)
+
+    def test_upload_image_and_download(self):
+        import io
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+        buf = io.BytesIO()
+        Image.new('RGB', (4, 4), 'red').save(buf, 'PNG')
+        up = SimpleUploadedFile('pic.png', buf.getvalue(), content_type='image/png')
+        r = self.client.post(reverse('chat_upload'), {'file': up, 'room': 'global', 'text': 'look'})
+        self.assertEqual(r.status_code, 200)
+        data = self.client.get(reverse('chat_api') + '?room=global').json()
+        att = data['messages'][0]['attachment']
+        self.assertEqual(att['kind'], 'image')
+        resp = self.client.get(att['url'])
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp['X-Content-Type-Options'], 'nosniff')
+        self.client.logout()
+        self.assertEqual(self.client.get(att['url']).status_code, 302)  # login required
+
+    def test_upload_rejects_bad_type_big_and_fake_image(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        bad = SimpleUploadedFile('run.exe', b'MZ', content_type='application/octet-stream')
+        self.assertEqual(self.client.post(reverse('chat_upload'), {'file': bad, 'room': 'global'}).status_code, 400)
+        fake = SimpleUploadedFile('x.png', b'not an image', content_type='image/png')
+        self.assertEqual(self.client.post(reverse('chat_upload'), {'file': fake, 'room': 'global'}).status_code, 400)
+        big = SimpleUploadedFile('big.pdf', b'0' * (5 * 1024 * 1024 + 1), content_type='application/pdf')
+        self.assertEqual(self.client.post(reverse('chat_upload'), {'file': big, 'room': 'global'}).status_code, 400)
+        self.assertFalse(ChatMessage.objects.exists())
+
+    def test_poll_create_vote_switch_and_remove(self):
+        r = self.jpost('chat_poll_create', {'room': 'global', 'question': 'Class holds?', 'options': ['Yes', 'No']})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.jpost('chat_poll_create', {'room': 'global', 'question': 'q', 'options': ['only one']}).status_code, 400)
+        poll = self.client.get(reverse('chat_api') + '?room=global').json()['messages'][0]['poll']
+        yes, no = poll['options'][0]['id'], poll['options'][1]['id']
+        self.jpost('chat_poll_vote', {}, yes)
+        self.jpost('chat_poll_vote', {}, no)            # switching moves the single vote
+        poll = self.client.get(reverse('chat_api') + '?room=global').json()['messages'][0]['poll']
+        self.assertEqual((poll['total'], poll['mine']), (1, no))
+        self.jpost('chat_poll_vote', {}, no)            # tap again removes
+        poll = self.client.get(reverse('chat_api') + '?room=global').json()['messages'][0]['poll']
+        self.assertEqual(poll['total'], 0)
+        mid = ChatMessage.objects.get().id
+        self.assertEqual(self.jpost('chat_edit', {'text': 'x'}, mid).status_code, 403)  # polls are not editable
+
+    def test_search_finds_messages_in_room_only(self):
+        self.say('Mapping test on friday')
+        self.say('Mapping in futminna', room='futminna')
+        hits = self.client.get(reverse('chat_search') + '?room=global&q=mapping').json()['results']
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(self.client.get(reverse('chat_search') + '?room=global&q=m').json()['results'], [])
+
+    def test_forward_labels_original_author(self):
+        self.client.logout(); self.client.login(username='ada', password='S7rong-pass-99')
+        self.say('great notes here')
+        mid = ChatMessage.objects.get().id
+        self.client.logout(); self.client.login(username='sam', password='S7rong-pass-99')
+        self.assertEqual(self.jpost('chat_forward', {'room': 'futminna'}, mid).status_code, 200)
+        fwd = ChatMessage.objects.get(room='futminna')
+        self.assertEqual((fwd.user, fwd.forwarded_from, fwd.text), (self.sam, 'ada', 'great notes here'))
+
+    def test_save_toggle_list_unsave(self):
+        self.say('keep me')
+        mid = ChatMessage.objects.get().id
+        self.assertTrue(self.jpost('chat_save', {}, mid).json()['saved'])
+        saved = self.client.get(reverse('chat_saved')).json()['saved']
+        self.assertEqual(saved[0]['text'], 'keep me')
+        self.assertTrue(self.client.get(reverse('chat_api') + '?room=global').json()['messages'][0]['saved'])
+        self.assertEqual(self.jpost('chat_unsave', {}, saved[0]['id']).status_code, 200)
+        self.assertEqual(self.client.get(reverse('chat_saved')).json()['saved'], [])
+
+    def test_saved_messages_are_private(self):
+        self.say('mine')
+        mid = ChatMessage.objects.get().id
+        self.jpost('chat_save', {}, mid)
+        sid = self.client.get(reverse('chat_saved')).json()['saved'][0]['id']
+        self.client.logout(); self.client.login(username='ada', password='S7rong-pass-99')
+        self.assertEqual(self.client.get(reverse('chat_saved')).json()['saved'], [])
+        self.assertEqual(self.jpost('chat_unsave', {}, sid).status_code, 404)
+
+    def test_announcements_room_is_staff_only(self):
+        r = self.say('hello', room='announcements')
+        self.assertEqual(r.status_code, 403)
+        self.assertFalse(self.client.get(reverse('chat_api') + '?room=announcements').json()['can_post'])
+        self.client.logout(); self.client.login(username='boss', password='S7rong-pass-99')
+        self.assertEqual(self.say('Exam timetable is out', room='announcements').status_code, 200)
+
+    def test_slow_mode_blocks_students_not_staff(self):
+        from .models import ChatRoomConfig
+        ChatRoomConfig.objects.create(slug='global', slow_mode_seconds=30)
+        self.assertEqual(self.say('one').status_code, 200)
+        r = self.say('two')
+        self.assertEqual(r.status_code, 429)
+        self.assertIn('Slow mode', r.json()['error'])
+        self.client.logout(); self.client.login(username='boss', password='S7rong-pass-99')
+        self.assertEqual(self.say('a').status_code, 200)
+        self.assertEqual(self.say('b').status_code, 200)
+
+    def test_rooms_meta_and_page_controls(self):
+        self.say('hi')
+        latest = self.client.get(reverse('chat_rooms_meta')).json()['latest']
+        self.assertGreater(latest['global'], 0)
+        self.assertEqual(latest['futminna'], 0)
+        r = self.client.get(reverse('global_chat'))
+        for el in ('id="btn-attach"', 'id="btn-poll"', 'id="btn-search"', 'id="btn-saved"', 'id="room-list"'):
+            self.assertContains(r, el)

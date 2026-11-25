@@ -71,6 +71,10 @@ class ChatMessage(models.Model):
     edited_at = models.DateTimeField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     is_pinned = models.BooleanField(default=False)
+    attachment = models.FileField(upload_to='chat/%Y/%m/', null=True, blank=True)
+    attachment_name = models.CharField(max_length=200, blank=True)
+    attachment_kind = models.CharField(max_length=10, blank=True)   # '', 'image' or 'file'
+    forwarded_from = models.CharField(max_length=150, blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -146,3 +150,48 @@ class Feedback(models.Model):
     def __str__(self):
         return f"{'⭐'*self.rating} from {self.user.username if self.user else 'anonymous'}"
 
+
+
+class ChatPoll(models.Model):
+    message = models.OneToOneField(ChatMessage, on_delete=models.CASCADE, related_name='poll')
+
+
+class ChatPollOption(models.Model):
+    poll = models.ForeignKey(ChatPoll, on_delete=models.CASCADE, related_name='options')
+    text = models.CharField(max_length=80)
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['position', 'id']
+
+
+class ChatPollVote(models.Model):
+    option = models.ForeignKey(ChatPollOption, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['option', 'user'], name='one_vote_per_option_per_user')]
+
+
+class SavedChat(models.Model):
+    """A private bookmark: a snapshot of a chat message, so it survives the original being deleted."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saved_chats')
+    source = models.ForeignKey(ChatMessage, null=True, blank=True, on_delete=models.SET_NULL, related_name='saved_by')
+    text = models.CharField(max_length=1000, blank=True)
+    author = models.CharField(max_length=150)
+    room = models.CharField(max_length=50, default='global')
+    attachment_name = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class ChatRoomConfig(models.Model):
+    """Admin-editable rules for a room. No row means normal open chat."""
+    slug = models.CharField(max_length=50, unique=True)
+    announcements_only = models.BooleanField(default=False, help_text='Only staff can post; everyone can read and react.')
+    slow_mode_seconds = models.PositiveSmallIntegerField(default=0, help_text='Seconds a student must wait between messages (0 = off). Staff are exempt.')
+
+    def __str__(self):
+        return self.slug

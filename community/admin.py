@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Post, Thread, Feedback, PostReport, MutedUser
+from .models import Post, Thread, Feedback, PostReport, MutedUser, ChatRoomConfig
 
 
 class PostInline(admin.TabularInline):
@@ -48,3 +48,9 @@ class PostReportAdmin(admin.ModelAdmin):
 class MutedUserAdmin(admin.ModelAdmin):
     list_display = ['muter', 'muted', 'created_at']
     search_fields = ['muter__username', 'muted__username']
+
+
+@admin.register(ChatRoomConfig)
+class ChatRoomConfigAdmin(admin.ModelAdmin):
+    list_display = ('slug', 'announcements_only', 'slow_mode_seconds')
+    list_editable = ('announcements_only', 'slow_mode_seconds')
