@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 
 from planner.models import Course, Flashcard, FlashcardDeck
@@ -601,3 +601,18 @@ class AIHardeningTests(TestCase):
         with patch.object(ai_service, 'get_groq_client', return_value=client):
             out = ai_service.explain_cbt_answer_with_ai('Q', 'a', 'b', 'c', 'd', 'A', 'B', base_explanation='Because B.')
         self.assertEqual(out, 'Because B.')
+
+
+class UploadStorageFailureTests(TransactionTestCase):  # real transactions: a failed save inside TestCase's atomic poisons it
+    def test_storage_error_shows_friendly_message_not_500(self):
+        from unittest import mock
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.contrib.auth import get_user_model
+        user = get_user_model().objects.create_user('up', password='S7rong-pass-99')
+        self.client.login(username='up', password='S7rong-pass-99')
+        pdf = SimpleUploadedFile('n.pdf', b'%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF', content_type='application/pdf')
+        with mock.patch('django.core.files.storage.FileSystemStorage.save', side_effect=OSError('boom')):
+            r = self.client.post(reverse('resource_upload'), {'title': 'T', 'course_code': 'BIO 101', 'resource_type': 'notes', 'description': 'd', 'file': pdf})
+        self.assertEqual(r.status_code, 503)
+        self.assertContains(r, 'file storage problem', status_code=503)
+        self.assertFalse(Resource.objects.exists())
