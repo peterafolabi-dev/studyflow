@@ -62,7 +62,7 @@ class CloudStorageReadinessTests(MissingFileTests):
         from unittest import mock
         from django.core.cache import cache
         cache.clear()
-        with override_settings(USING_CLOUDINARY=True), \
+        with override_settings(USING_CLOUD_STORAGE=True), \
              mock.patch('django.core.files.storage.FileSystemStorage.exists', return_value=False) as ex:
             self.assertFalse(self.gone.file_available())
             self.assertFalse(self.gone.file_available())
@@ -120,3 +120,27 @@ class AIMissingFileTests(TestCase):
             r = self.client.post(url)
             self.assertEqual(r.status_code, 410, name)
             self.assertIn('missing from storage', r.json()['error'])
+
+
+class StorageSelectionTests(TestCase):
+    """The storage backend is chosen from environment variables at startup."""
+
+    def _backend(self, env):
+        import os, subprocess, sys
+        full = {k: v for k, v in os.environ.items() if not k.startswith(('S3_', 'CLOUDINARY'))}
+        full.update(env)
+        code = ("import django,os;os.environ.setdefault('DJANGO_SETTINGS_MODULE','studyflow.settings');django.setup();"
+                "from django.core.files.storage import storages;d=storages['default'];print(type(d).__module__+'.'+type(d).__name__)")
+        return subprocess.run([sys.executable, '-c', code], env=full, capture_output=True, text=True, check=True).stdout.strip().splitlines()[-1]
+
+    S3 = {'S3_BUCKET_NAME': 'b', 'S3_ACCESS_KEY_ID': 'k', 'S3_SECRET_ACCESS_KEY': 's', 'S3_ENDPOINT_URL': 'https://example.supabase.co/storage/v1/s3'}
+
+    def test_s3_env_selects_s3_storage(self):
+        self.assertTrue(self._backend(self.S3).endswith('S3Storage'))
+
+    def test_s3_wins_over_cloudinary_and_default_is_local_disk(self):
+        self.assertTrue(self._backend({**self.S3, 'CLOUDINARY_URL': 'cloudinary://a:b@c'}).endswith('S3Storage'))
+        self.assertTrue(self._backend({}).endswith('FileSystemStorage'))
+
+    def test_incomplete_s3_settings_fall_back(self):
+        self.assertTrue(self._backend({'S3_BUCKET_NAME': 'b'}).endswith('FileSystemStorage'))
