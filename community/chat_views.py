@@ -96,21 +96,28 @@ def _snippet(msg):
     return ' '.join(msg.text.split())[:90] or (f'📎 {msg.attachment_name}' if msg.attachment_name else '')
 
 
-def _poll_payload(msg, me_id):
+def _poll_votes(msgs, me_id):
+    """One query for every poll on the page: {poll_id: ({option_id: count}, my_option_id)}."""
+    poll_ids = [m.poll.id for m in msgs if hasattr(m, 'poll')]
+    out = {pid: ({}, None) for pid in poll_ids}
+    if not poll_ids:
+        return out
+    for v in ChatPollVote.objects.filter(option__poll_id__in=poll_ids).values('option__poll_id', 'option_id', 'user_id'):
+        counts, mine = out[v['option__poll_id']]
+        counts[v['option_id']] = counts.get(v['option_id'], 0) + 1
+        out[v['option__poll_id']] = (counts, v['option_id'] if v['user_id'] == me_id else mine)
+    return out
+
+
+def _poll_payload(msg, votes):
     poll = getattr(msg, 'poll', None)
     if poll is None:
         return None
-    options = list(poll.options.all())
-    votes = {}
-    mine = None
-    for v in ChatPollVote.objects.filter(option__poll=poll).values('option_id', 'user_id'):
-        votes[v['option_id']] = votes.get(v['option_id'], 0) + 1
-        if v['user_id'] == me_id:
-            mine = v['option_id']
-    total = sum(votes.values())
+    counts, mine = votes.get(poll.id, ({}, None))
+    total = sum(counts.values())
     return {'total': total, 'mine': mine,
-            'options': [{'id': o.id, 'text': o.text, 'votes': votes.get(o.id, 0),
-                         'pct': round(100 * votes.get(o.id, 0) / total) if total else 0} for o in options]}
+            'options': [{'id': o.id, 'text': o.text, 'votes': counts.get(o.id, 0),
+                         'pct': round(100 * counts.get(o.id, 0) / total) if total else 0} for o in poll.options.all()]}
 
 
 def _serialize_chat(messages_qs, me):
@@ -122,6 +129,7 @@ def _serialize_chat(messages_qs, me):
         counts[r['message_id']][r['emoji']] += 1
         if r['user_id'] == me.id:
             mine.add((r['message_id'], r['emoji']))
+    poll_votes = _poll_votes(msgs, me.id)
     saved_ids = set(SavedChat.objects.filter(user=me, source_id__in=ids).values_list('source_id', flat=True))
     out = []
     for m in msgs:
@@ -139,7 +147,7 @@ def _serialize_chat(messages_qs, me):
             'deleted': m.is_deleted, 'edited': bool(m.edited_at), 'pinned': m.is_pinned,
             'reply': reply, 'reactions': reactions, 'attachment': attachment,
             'forwarded_from': m.forwarded_from, 'saved': m.id in saved_ids,
-            'poll': None if m.is_deleted else _poll_payload(m, me.id),
+            'poll': None if m.is_deleted else _poll_payload(m, poll_votes),
             'mentions_me': bool(not m.is_deleted and me.username in MENTION.findall(m.text)),
             'can_edit': m.user_id == me.id and not m.is_deleted and not hasattr(m, 'poll'),
         })
