@@ -791,3 +791,20 @@ class SocialLoginErrorPageTests(TestCase):
         # allauth answers an auth error with HTTP 401 and renders our template
         self.assertContains(response, "Google sign-in didn't finish", status_code=401)
         self.assertContains(response, 'Try signing in again', status_code=401)
+
+
+class LastUsedLoginBadgeTests(TestCase):
+    def test_login_page_marks_methods_and_loads_badge_script(self):
+        r = self.client.get(reverse('login'))
+        self.assertContains(r, 'data-login-method="google"')
+        self.assertContains(r, 'data-login-method="password"')
+        self.assertContains(r, 'data-login-record="password"')
+        self.assertContains(r, 'studyflow_last_login')
+
+    def test_signed_in_pages_promote_pending_method_without_badges(self):
+        from django.contrib.auth import get_user_model
+        get_user_model().objects.create_user('li', password='S7rong-pass-99')
+        self.client.login(username='li', password='S7rong-pass-99')
+        r = self.client.get(reverse('dashboard'))
+        self.assertContains(r, 'studyflow_pending_login')
+        self.assertNotContains(r, "createElement('span'); b.className")
