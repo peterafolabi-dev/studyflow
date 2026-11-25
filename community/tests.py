@@ -293,3 +293,44 @@ class ChatTelegramFeatureTests(TestCase):
         r = self.client.get(reverse('global_chat'))
         for el in ('id="btn-attach"', 'id="btn-poll"', 'id="btn-search"', 'id="btn-saved"', 'id="room-list"'):
             self.assertContains(r, el)
+
+
+class ChatQueryBudgetTests(TestCase):
+    def test_chat_poll_query_count_does_not_grow_with_number_of_polls(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        from .models import ChatPoll, ChatPollOption
+        u = User.objects.create_user('qb', password='S7rong-pass-99')
+        self.client.login(username='qb', password='S7rong-pass-99')
+
+        def make_polls(n):
+            for i in range(n):
+                m = ChatMessage.objects.create(user=u, room='global', text=f'poll {i}')
+                p = ChatPoll.objects.create(message=m)
+                ChatPollOption.objects.create(poll=p, text='a', position=0)
+                ChatPollOption.objects.create(poll=p, text='b', position=1)
+
+        self.client.get(reverse('chat_api'))  # warm up presence write
+        make_polls(1)
+        with CaptureQueriesContext(connection) as few:
+            self.client.get(reverse('chat_api') + '?room=global')
+        make_polls(6)
+        with CaptureQueriesContext(connection) as many:
+            self.client.get(reverse('chat_api') + '?room=global')
+        self.assertEqual(len(few), len(many))
+
+
+class ErrorPageTests(TestCase):
+    def test_branded_404_and_security_header(self):
+        from django.test import override_settings
+        with override_settings(DEBUG=False):
+            r = self.client.get('/definitely-not-a-page/')
+        self.assertEqual(r.status_code, 404)
+        self.assertContains(r, "We can't find that page", status_code=404)
+        self.assertIn('geolocation=()', r['Permissions-Policy'])
+
+    def test_500_template_is_standalone(self):
+        from django.template.loader import render_to_string
+        html = render_to_string('500.html')
+        self.assertIn('Something went wrong', html)
+        self.assertNotIn('{%', html)
