@@ -55,7 +55,7 @@ class Resource(models.Model):
             except Exception:  # noqa: BLE001 - a storage hiccup must not break a page
                 return False
 
-        if getattr(settings, 'USING_CLOUDINARY', False):
+        if getattr(settings, 'USING_CLOUD_STORAGE', False):
             # Cloud lookups are a network call, so remember the answer for a few minutes.
             return cache.get_or_set(f'resource-file-ok:{self.pk}:{self.file.name}', _exists, 600)
         return _exists()

@@ -229,7 +229,7 @@ def chat_file(request, pk):
     msg = get_object_or_404(ChatMessage, pk=pk, is_deleted=False)
     if not msg.attachment:
         raise Http404
-    if getattr(settings, 'USING_CLOUDINARY', False):
+    if getattr(settings, 'USING_CLOUD_STORAGE', False):
         return HttpResponseRedirect(msg.attachment.url)
     try:
         handle = msg.attachment.open('rb')

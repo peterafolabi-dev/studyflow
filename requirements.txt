@@ -15,3 +15,5 @@ requests-oauthlib
 pypdf
 cloudinary==1.47.0
 django-cloudinary-storage==0.3.0
+
+django-storages[s3]==1.14.6

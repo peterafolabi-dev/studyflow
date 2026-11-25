@@ -170,18 +170,40 @@ CACHES = {
     }
 }
 
-# Uploaded files (past questions, notes...). Render's free disk is wiped on every restart, so when
-# CLOUDINARY_URL is set (Render -> Environment) files are kept on Cloudinary instead. Without it we fall back to local disk.
-USING_CLOUDINARY = bool(os.environ.get('CLOUDINARY_URL'))
+# Uploaded files (past questions, notes, chat files...). Render's free disk is wiped on every restart, so files must
+# live on a cloud bucket. Options, in priority order:
+#   1. Any S3-compatible bucket (Supabase Storage, Cloudflare R2, Backblaze B2...): set S3_BUCKET_NAME,
+#      S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY and S3_ENDPOINT_URL (and optionally S3_REGION) in Render -> Environment.
+#   2. Cloudinary: set CLOUDINARY_URL.
+#   3. Neither: local disk (lost on every restart).
+USING_S3 = all(os.environ.get(k) for k in ('S3_BUCKET_NAME', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_ENDPOINT_URL'))
+USING_CLOUDINARY = (not USING_S3) and bool(os.environ.get('CLOUDINARY_URL'))
+USING_CLOUD_STORAGE = USING_S3 or USING_CLOUDINARY
+
+if USING_S3:
+    _default_storage = {
+        'BACKEND': 'storages.backends.s3.S3Storage',
+        'OPTIONS': {
+            'bucket_name': os.environ['S3_BUCKET_NAME'],
+            'access_key': os.environ['S3_ACCESS_KEY_ID'],
+            'secret_key': os.environ['S3_SECRET_ACCESS_KEY'],
+            'endpoint_url': os.environ['S3_ENDPOINT_URL'],
+            'region_name': os.environ.get('S3_REGION', 'auto'),
+            'addressing_style': 'path',
+            'signature_version': 's3v4',
+            'querystring_auth': True,       # private bucket: links are signed and expire
+            'querystring_expire': 3600,
+            'default_acl': None,
+            'file_overwrite': False,
+        },
+    }
+elif USING_CLOUDINARY:
+    _default_storage = {'BACKEND': 'cloudinary_storage.storage.RawMediaCloudinaryStorage'}
+else:
+    _default_storage = {'BACKEND': 'django.core.files.storage.FileSystemStorage'}
 
 STORAGES = {
-    'default': {
-        'BACKEND': (
-            'cloudinary_storage.storage.RawMediaCloudinaryStorage'
-            if USING_CLOUDINARY
-            else 'django.core.files.storage.FileSystemStorage'
-        ),
-    },
+    'default': _default_storage,
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
