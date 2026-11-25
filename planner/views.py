@@ -175,6 +175,38 @@ def course_create(request):
     return render(request, 'planner/course_form.html', {'form': form, 'heading': 'Add a course'})
 
 
+MAX_QUICK_COURSES = 20
+
+
+@login_required
+def course_quick_add(request):
+    """Add all of this semester's courses at once, one per line: 'EEE 301 Signals and Systems'."""
+    from .forms import find_or_create_course
+    demo = Course.objects.filter(user=request.user, code='DEMO 101').first()
+    if request.method == 'POST':
+        lines = [ln for ln in request.POST.get('courses', '').splitlines() if ln.strip()]
+        if not lines:
+            messages.error(request, 'Type at least one course, one per line.')
+        elif len(lines) > MAX_QUICK_COURSES:
+            messages.error(request, f'Please add at most {MAX_QUICK_COURSES} courses at a time.')
+        else:
+            added = skipped = 0
+            for line in lines:
+                course, created = find_or_create_course(request.user, line)
+                if course is None:
+                    continue
+                added += int(created)
+                skipped += int(not created)
+            if added and demo and request.POST.get('remove_demo') == '1':
+                demo.delete()
+            note = f' ({skipped} already on your list)' if skipped else ''
+            messages.success(request, f'Added {added} course{"s" if added != 1 else ""}{note}.')
+            return redirect('course_list')
+    return render(request, 'planner/course_quick_add.html', {
+        'demo': demo, 'text': request.POST.get('courses', ''), 'max_courses': MAX_QUICK_COURSES,
+    })
+
+
 @login_required
 def course_detail(request, pk):
     course = _user_course(request, pk)
@@ -313,6 +345,9 @@ def timetable(request):
     return render(request, 'planner/timetable.html', {'days': days})
 
 
+MAX_REVIEWS_PER_COURSE = 3
+
+
 @login_required
 def weekly_plan(request):
     """Build a lightweight weekly study plan around classes and deadlines."""
@@ -373,20 +408,26 @@ def weekly_plan(request):
             unscheduled.append(task)
 
     # Fill remaining capacity toward the user's weekly goal with course reviews.
-    courses = list(Course.objects.filter(user=request.user))
+    # Reviews are spread across different courses: at most one review of a course per day and
+    # a few per week, so one course never fills the whole plan. The onboarding demo course is
+    # only used when it is the student's only course.
+    all_courses = list(Course.objects.filter(user=request.user))
+    real_courses = [c for c in all_courses if c.code != 'DEMO 101']
+    courses = real_courses or all_courses
     courses.sort(key=lambda course: last_studied.get(course.pk, today - timedelta(days=365)))
     goal_blocks = min(21, max(1, profile.weekly_study_goal_hours * 60 // 50))
     planned_blocks = sum(len(items) for items in items_by_day.values())
+    reviews_per_course = {}
     course_index = 0
-    while courses and planned_blocks < goal_blocks:
-        added_block = False
-        for day in items_by_day:
-            if planned_blocks >= goal_blocks:
+    for day in items_by_day:
+        reviewed_today = {item['course'].pk for item in items_by_day[day] if item.get('course')}
+        for _ in range(len(courses)):
+            if planned_blocks >= goal_blocks or len(items_by_day[day]) >= 3 or not daily_slots[day]:
                 break
-            if len(items_by_day[day]) >= 3 or not daily_slots[day]:
-                continue
             course = courses[course_index % len(courses)]
             course_index += 1
+            if course.pk in reviewed_today or reviews_per_course.get(course.pk, 0) >= MAX_REVIEWS_PER_COURSE:
+                continue
             start, end = daily_slots[day].pop(0)
             items_by_day[day].append({
                 'start': start, 'end': end, 'title': f'Review {course.name}',
@@ -394,10 +435,9 @@ def weekly_plan(request):
                 'kind': 'review',
                 'note': 'Suggested course review',
             })
+            reviewed_today.add(course.pk)
+            reviews_per_course[course.pk] = reviews_per_course.get(course.pk, 0) + 1
             planned_blocks += 1
-            added_block = True
-        if not added_block:
-            break
 
     plan_days = [
         {
@@ -420,8 +460,10 @@ def weekly_plan(request):
         'overdue_count': sum(1 for task in open_tasks if task.due_date < today),
         'goal_hours': profile.weekly_study_goal_hours,
         'preferred_time': profile.get_preferred_study_time_display(),
-        'has_courses': bool(courses),
+        'has_courses': bool(real_courses),
         'has_tasks': bool(open_tasks),
+        'has_classes': bool(class_entries),
+        'course_count': len(real_courses),
     })
 
 
@@ -432,6 +474,8 @@ def timetable_create(request):
         if form.is_valid():
             entry = form.save(commit=False)
             entry.user = request.user
+            entry.course = form.cleaned_data.get('course')
+            entry.title = form.cleaned_data['title']
             entry.save()
             messages.success(request, f'Added "{entry.title}" to your timetable.')
             return redirect('timetable')

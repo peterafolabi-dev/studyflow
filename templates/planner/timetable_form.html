@@ -5,11 +5,12 @@
     <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200 mb-6">Add a class</h1>
     <form method="post" class="space-y-4">
       {% csrf_token %}
+      <p class="text-sm text-slate-500 dark:text-slate-400">Pick a course you already added, or type a new one and it will be added for you. Taking many courses? <a class="underline text-brand-600 dark:text-brand-400" href="{% url 'course_quick_add' %}">Add them all at once</a>.</p>
       {% for field in form %}
         <div>
           <label for="{{ field.id_for_label }}" class="block font-medium text-sm mb-1">{{ field.label }}</label>
-          <div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-2 [&_input]:text-sm
-                      [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-brand-200 dark:[&_select]:border-slate-700 [&_select]:bg-white dark:[&_select]:bg-slate-900 [&_select]:px-3 [&_select]:py-2 [&_select]:text-sm">
+          <div class="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-brand-200 dark:[&_input]:border-slate-700 [&_input]:bg-white dark:[&_input]:bg-slate-900 [&_input]:px-3 [&_input]:py-3 [&_input]:text-base [&_input]:min-h-[3rem]
+                      [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-brand-200 dark:[&_select]:border-slate-700 [&_select]:bg-white dark:[&_select]:bg-slate-900 [&_select]:px-3 [&_select]:py-3 [&_select]:text-base [&_select]:min-h-[3rem]">
             {{ field }}
           </div>
           {% if field.errors %}

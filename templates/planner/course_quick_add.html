@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Add my courses · StudyFlow{% endblock %}
+{% block content %}
+<div class="max-w-xl">
+  <h1 class="font-display text-2xl font-bold text-brand-800 dark:text-brand-200">Add my courses</h1>
+  <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">Type one course per line. A course code first is best, for example <strong>EEE 301 Signals and Systems</strong>. You can add up to {{ max_courses }} at a time, and courses you already have are skipped.</p>
+
+  <form method="post" class="mt-5 space-y-4">
+    {% csrf_token %}
+    <label for="courses" class="block font-medium text-sm">Your courses</label>
+    <textarea id="courses" name="courses" rows="8" required autofocus
+              placeholder="MTH 201 Engineering Mathematics&#10;EEE 301 Signals and Systems&#10;GST 211 Entrepreneurship"
+              class="w-full rounded-lg border border-brand-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-3 text-base">{{ text }}</textarea>
+    {% if demo %}
+    <label class="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-300">
+      <input type="checkbox" name="remove_demo" value="1" checked class="mt-1">
+      <span>Remove the demo course "{{ demo.name }}" once my courses are added</span>
+    </label>
+    {% endif %}
+    <div class="flex gap-2">
+      <button type="submit" class="rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-medium px-4 py-2 text-sm">Add courses</button>
+      <a href="{% url 'course_list' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
