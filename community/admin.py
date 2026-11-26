@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from studyflow.admin_export import export_as_csv
+
 from .models import Post, Thread, Feedback, PostReport, MutedUser, ChatRoomConfig
 
 
@@ -18,6 +20,8 @@ class ThreadAdmin(admin.ModelAdmin):
 
 @admin.register(Feedback)
 class FeedbackAdmin(admin.ModelAdmin):
+    actions = ['export_as_csv']
+    export_as_csv = export_as_csv
     list_display = ['user', 'rating', 'short_message', 'page', 'created_at']
     list_filter = ['rating', 'created_at']
     search_fields = ['user__username', 'message']

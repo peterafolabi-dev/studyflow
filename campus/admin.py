@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from studyflow.admin_export import export_as_csv
 from .models import (
     StudySpot, PowerVote, CourseNotice, LodgeReview, RoommateProfile,
     SIWESCompany, SIWESLogEntry, MarketplaceItem, EmergencyContact
@@ -18,6 +20,8 @@ class CourseNoticeAdmin(admin.ModelAdmin):
 
 @admin.register(LodgeReview)
 class LodgeReviewAdmin(admin.ModelAdmin):
+    actions = ['export_as_csv']
+    export_as_csv = export_as_csv
     list_display = ('lodge_name', 'area', 'rent_estimate', 'reviewer', 'created_at')
     list_filter = ('area',)
     search_fields = ('lodge_name', 'review_text')
