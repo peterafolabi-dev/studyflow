@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceReport
+from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceRating, ResourceReport
 
 
 @admin.register(Resource)
@@ -38,6 +38,14 @@ class LoanAdmin(admin.ModelAdmin):
 class ResourceCommentAdmin(admin.ModelAdmin):
     list_display = ('resource', 'user', 'created_at')
     search_fields = ('body', 'user__username')
+
+
+@admin.register(ResourceRating)
+class ResourceRatingAdmin(admin.ModelAdmin):
+    list_display = ('resource', 'user', 'stars', 'created_at')
+    list_filter = ('stars', 'created_at')
+    search_fields = ('resource__title', 'user__username')
+    ordering = ('-created_at',)
 
 
 @admin.register(ResourceReport)
