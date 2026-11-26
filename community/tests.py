@@ -353,3 +353,17 @@ class FeedbackDetailTests(TestCase):
     def test_student_gets_404(self):
         self.client.force_login(self.student)
         self.assertEqual(self.client.get(reverse('feedback_detail', args=[self.fb.pk])).status_code, 404)
+
+class FeedbackCsvExportTests(TestCase):
+    def test_admin_can_download_feedback_csv(self):
+        from django.contrib.auth import get_user_model
+        from .models import Feedback
+        User = get_user_model()
+        admin_user = User.objects.create_superuser('boss', 'b@example.com', 'pass12345!')
+        Feedback.objects.create(user=admin_user, rating=5, message='Great app')
+        self.client.force_login(admin_user)
+        resp = self.client.post('/admin/community/feedback/', {
+            'action': 'export_as_csv', '_selected_action': [Feedback.objects.first().pk]})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp['Content-Type'], 'text/csv')
+        self.assertIn('Great app', resp.content.decode())

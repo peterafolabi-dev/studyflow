@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from studyflow.admin_export import export_as_csv
+
 from .models import Loan, PhysicalHolding, Resource, ResourceComment, ResourceRating, ResourceReport
 
 
@@ -42,6 +44,8 @@ class ResourceCommentAdmin(admin.ModelAdmin):
 
 @admin.register(ResourceRating)
 class ResourceRatingAdmin(admin.ModelAdmin):
+    actions = ['export_as_csv']
+    export_as_csv = export_as_csv
     list_display = ('resource', 'user', 'stars', 'created_at')
     list_filter = ('stars', 'created_at')
     search_fields = ('resource__title', 'user__username')
