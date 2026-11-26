@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Delete account · StudyFlow{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-md px-4 py-10">
+  <h1 class="text-2xl font-bold">Delete your account</h1>
+  <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">This permanently removes your account, courses, tasks, flashcards and progress. It cannot be undone. You can <a class="underline" href="{% url 'export_my_data' %}">download your data</a> first.</p>
+  <form method="post" class="mt-6 space-y-3">
+    {% csrf_token %}
+    <label class="block text-sm font-medium" for="pw">Enter your password to confirm</label>
+    <input id="pw" type="password" name="password" required autocomplete="current-password" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 dark:bg-slate-900 px-3 py-2">
+    <div class="flex gap-2">
+      <button type="submit" class="rounded-lg bg-rose-600 text-white font-medium px-4 py-2 text-sm hover:bg-rose-700">Delete my account</button>
+      <a href="{% url 'profile' %}" class="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

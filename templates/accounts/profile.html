@@ -79,6 +79,9 @@
       <a href="{% url 'export_my_data' %}" class="rounded-lg border border-brand-200 dark:border-slate-700 font-medium px-4 py-2 text-sm hover:bg-brand-50 dark:hover:bg-slate-800">
         ⬇ Export my data
       </a>
+      <a href="{% url 'delete_account' %}" class="rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 font-medium px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
+        Delete account
+      </a>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit" class="rounded-lg border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-300 font-medium px-4 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20">

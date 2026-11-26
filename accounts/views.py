@@ -408,3 +408,23 @@ def invite(request):
         'remaining': max(0, BADGE_TARGET - joined),
         'whatsapp_url': 'https://wa.me/?text=' + quote(text),
     })
+
+
+@login_required
+def delete_account(request):
+    """Self-service account deletion. Asks for the password first; staff
+    accounts are not deletable here so the site cannot lose its last admin."""
+    if request.user.is_staff or request.user.is_superuser:
+        messages.error(request, 'Staff accounts cannot be deleted here. Ask another admin.')
+        return redirect('profile')
+    if request.method == 'POST':
+        if not request.user.check_password(request.POST.get('password', '')):
+            messages.error(request, 'That password is not correct, so nothing was deleted.')
+            return render(request, 'accounts/delete_account.html', status=400)
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, 'Your account and its data have been deleted.')
+        return redirect('/')
+    return render(request, 'accounts/delete_account.html')
+
