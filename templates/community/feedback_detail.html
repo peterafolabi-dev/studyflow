@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Feedback · StudyFlow{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-xl px-4 py-8">
+  <a href="{% url 'admin_dashboard' %}" class="text-sm text-slate-500 hover:underline">&larr; Back to analytics</a>
+  <div class="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+    <p class="text-sm text-slate-500">From</p>
+    <p class="font-bold text-lg">{{ fb.user.username|default:"Anonymous" }}{% if fb.user.email %} <span class="text-sm font-normal text-slate-500">({{ fb.user.email }})</span>{% endif %}</p>
+    <p class="mt-4 text-yellow-500 text-xl">{% for i in "12345" %}{% if forloop.counter <= fb.rating %}⭐{% endif %}{% endfor %}</p>
+    <p class="mt-4 whitespace-pre-line">{{ fb.message|default:"(no message)" }}</p>
+    <p class="mt-6 text-xs text-slate-500">{{ fb.created_at|date:"M j, Y, g:i A" }}{% if fb.page %} · {{ fb.page }}{% endif %}</p>
+  </div>
+</div>
+{% endblock %}
