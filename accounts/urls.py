@@ -39,6 +39,7 @@ urlpatterns = [
     path('user/<str:username>/', views.public_profile, name='public_profile'),
     path('notifications/', views.notifications_view, name='notifications'),
     path('presence/ping/', views.presence_ping, name='presence_ping'),
+    path('profile/delete/', views.delete_account, name='delete_account'),
     path('profile/export/', views.export_my_data, name='export_my_data'),
     # Logout only accepts POST, so the navbar uses a small form, not a link.
     path('logout/', views.logout_view, name='logout'),

@@ -808,3 +808,30 @@ class LastUsedLoginBadgeTests(TestCase):
         r = self.client.get(reverse('dashboard'))
         self.assertContains(r, 'studyflow_pending_login')
         self.assertNotContains(r, "createElement('span'); b.className")
+
+
+class DeleteAccountTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('leaver', 'l@example.com', 'pass12345!')
+        self.client.force_login(self.user)
+
+    def test_wrong_password_keeps_account(self):
+        resp = self.client.post(reverse('delete_account'), {'password': 'nope'})
+        self.assertEqual(resp.status_code, 400)
+        self.assertTrue(User.objects.filter(username='leaver').exists())
+
+    def test_correct_password_deletes_account(self):
+        resp = self.client.post(reverse('delete_account'), {'password': 'pass12345!'})
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(User.objects.filter(username='leaver').exists())
+
+    def test_staff_cannot_delete_here(self):
+        self.user.is_staff = True
+        self.user.save()
+        self.client.post(reverse('delete_account'), {'password': 'pass12345!'})
+        self.assertTrue(User.objects.filter(username='leaver').exists())
+
+    def test_login_required(self):
+        self.client.logout()
+        resp = self.client.get(reverse('delete_account'))
+        self.assertEqual(resp.status_code, 302)
