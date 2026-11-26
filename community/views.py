@@ -484,3 +484,15 @@ def admin_dashboard(request):
     }
     return render(request, 'community/admin_dashboard.html', context)
 
+
+
+@login_required
+def feedback_detail(request, pk):
+    """Staff-only page showing one feedback entry in full."""
+    from django.http import Http404
+    from django.shortcuts import get_object_or_404
+    from .models import Feedback
+    if not request.user.is_staff:
+        raise Http404
+    fb = get_object_or_404(Feedback.objects.select_related('user'), pk=pk)
+    return render(request, 'community/feedback_detail.html', {'fb': fb})

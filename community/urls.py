@@ -33,6 +33,7 @@ urlpatterns = [
     path('users/<str:username>/mute/', views.mute_user, name='mute_user'),
     # Phase 7 — Feedback & Analytics
     path('feedback/', views.submit_feedback, name='submit_feedback'),
+    path('analytics/feedback/<int:pk>/', views.feedback_detail, name='feedback_detail'),
     path('analytics/', views.admin_dashboard, name='admin_dashboard'),
 ]
 

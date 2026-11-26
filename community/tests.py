@@ -334,3 +334,22 @@ class ErrorPageTests(TestCase):
         html = render_to_string('500.html')
         self.assertIn('Something went wrong', html)
         self.assertNotIn('{%', html)
+
+
+class FeedbackDetailTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from .models import Feedback
+        User = get_user_model()
+        self.staff = User.objects.create_user('staffer', 's@example.com', 'pass12345!', is_staff=True)
+        self.student = User.objects.create_user('student', 'st@example.com', 'pass12345!')
+        self.fb = Feedback.objects.create(user=self.student, rating=5, message='A very long review ' * 20)
+
+    def test_staff_sees_full_message(self):
+        self.client.force_login(self.staff)
+        resp = self.client.get(reverse('feedback_detail', args=[self.fb.pk]))
+        self.assertContains(resp, 'A very long review ' * 20)
+
+    def test_student_gets_404(self):
+        self.client.force_login(self.student)
+        self.assertEqual(self.client.get(reverse('feedback_detail', args=[self.fb.pk])).status_code, 404)
