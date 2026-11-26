@@ -40,6 +40,7 @@
       <form method="post" class="space-y-4" novalidate>
         {% csrf_token %}
         {% include 'planner/_fields.html' %}
+        <p class="text-xs text-slate-500 dark:text-slate-400">Password tips: at least 8 characters, not only numbers, not a common password like "password123", and not similar to your username or email. Or just use Google sign-up above.</p>
         
         <button type="submit"
                 class="w-full bg-brand-600 hover:bg-brand-700 text-white rounded-lg py-2.5 font-semibold text-sm transition shadow-md shadow-brand-500/20 hover:shadow-lg hover:-translate-y-px mt-4">
