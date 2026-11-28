@@ -151,6 +151,7 @@
           </div>
 
           <a href="{% url 'global_chat' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800">Community</a>
+          {% if user.is_authenticated %}<a href="{% url 'dm_inbox' %}" class="px-3 py-2 rounded-lg hover:bg-slate-800">Messages{% if dm_unread_count %} <span class="ml-1 rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">{{ dm_unread_count }}</span>{% endif %}</a>{% endif %}
         </nav>
 
         <div class="flex items-center gap-3">
@@ -248,6 +249,7 @@
       </div>
 
       <a href="{% url 'global_chat' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Community</a>
+      {% if user.is_authenticated %}<a href="{% url 'dm_inbox' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Messages 💬{% if dm_unread_count %} <span class="ml-1 rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">{{ dm_unread_count }}</span>{% endif %}</a>{% endif %}
       <a href="{% url 'progress' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">My Progress 📈</a>
       <a href="{% url 'invite' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Invite friends 🎁</a>
       <a href="{% url 'weak_topics' %}" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-slate-200">Weak Topics 🎯</a>

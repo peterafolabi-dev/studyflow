@@ -142,6 +142,10 @@ class Feedback(models.Model):
     message = models.TextField(max_length=1000, blank=True)
     page = models.CharField(max_length=200, blank=True, help_text='URL path where feedback was submitted')
     created_at = models.DateTimeField(auto_now_add=True)
+    reply = models.TextField(max_length=1000, blank=True, help_text='Your reply. The student sees it and gets a notification.')
+    replied_at = models.DateTimeField(null=True, blank=True)
+    replied_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='feedback_replies')
 
     class Meta:
         ordering = ['-created_at']
@@ -195,3 +199,18 @@ class ChatRoomConfig(models.Model):
 
     def __str__(self):
         return self.slug
+
+
+class DirectMessage(models.Model):
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='dm_sent')
+    recipient = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='dm_received')
+    text = models.CharField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['id']
+        indexes = [models.Index(fields=['recipient', 'read_at']), models.Index(fields=['sender', 'recipient', 'id'])]
+
+    def __str__(self):
+        return f"{self.sender} -> {self.recipient}: {self.text[:30]}"

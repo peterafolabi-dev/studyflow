@@ -496,3 +496,26 @@ def feedback_detail(request, pk):
         raise Http404
     fb = get_object_or_404(Feedback.objects.select_related('user'), pk=pk)
     return render(request, 'community/feedback_detail.html', {'fb': fb})
+
+
+def feedback_reply(request, pk):
+    """Staff-only: reply to one feedback entry from the site."""
+    from django.http import Http404
+    from django.shortcuts import get_object_or_404, redirect
+    from django.contrib import messages
+    from .models import Feedback
+    from .feedback_reply import save_feedback_reply
+    if not request.user.is_staff or request.method != 'POST':
+        raise Http404
+    fb = get_object_or_404(Feedback, pk=pk)
+    save_feedback_reply(fb, request.user, request.POST.get('reply', ''))
+    messages.success(request, 'Reply saved' + (' and the student was notified.' if fb.user_id and fb.reply else '.'))
+    return redirect('feedback_detail', pk=pk)
+
+
+@login_required
+def my_feedback(request):
+    """A student's own feedback and any replies from the team."""
+    from .models import Feedback
+    items = Feedback.objects.filter(user=request.user).select_related('replied_by')[:50]
+    return render(request, 'community/my_feedback.html', {'items': items})

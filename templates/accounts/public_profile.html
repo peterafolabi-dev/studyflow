@@ -12,6 +12,9 @@
         {% if profile.level %}Level {{ profile.level }} • {% endif %}
         {{ profile.department|default:'No department set' }}
       </p>
+      {% if user.is_authenticated and user != target_user %}
+      <a href="{% url 'dm_thread' target_user.username %}" class="mt-3 inline-block rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">💬 Message</a>
+      {% endif %}
     </div>
   </div>
 </header>
