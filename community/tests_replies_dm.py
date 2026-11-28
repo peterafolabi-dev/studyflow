@@ -18,7 +18,7 @@ class FeedbackReplyTests(TestCase):
     def test_staff_reply_from_site_notifies_student(self):
         self.client.force_login(self.admin)
         r = self.client.post(reverse('feedback_reply', args=[self.fb.pk]), {'reply': 'Welcome aboard!'})
-        self.assertEqual(r.status_code, 302)
+        self.assertRedirects(r, reverse('admin_dashboard'), fetch_redirect_response=False)
         self.fb.refresh_from_db()
         self.assertEqual((self.fb.reply, self.fb.replied_by), ('Welcome aboard!', self.admin))
         self.assertTrue(Notification.objects.filter(user=self.stu, message__contains='replied').exists())
