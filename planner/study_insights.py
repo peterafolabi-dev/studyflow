@@ -146,4 +146,14 @@ def weekly_leaderboard(user, limit=20, today=None):
         if rank <= limit:
             rows.append(row)
     opted_in = not StudyStreak.objects.filter(user=user, show_on_leaderboard=False).exists()
-    return {'rows': rows, 'me': me, 'opted_in': opted_in, 'week_start': week_start}
+    my_week = XPLog.objects.filter(user=user, created_at__date__gte=week_start).aggregate(t=Sum('points'))['t'] or 0
+    my_total = XPLog.objects.filter(user=user).aggregate(t=Sum('points'))['t'] or 0
+    # Always tell the student where they stand, even when they are not on the board (no XP yet, or hidden).
+    if not opted_in:
+        status = 'hidden'
+    elif me:
+        status = 'ranked'
+    else:
+        status = 'no_xp'
+    return {'rows': rows, 'me': me, 'opted_in': opted_in, 'week_start': week_start, 'status': status,
+            'my_week_xp': my_week, 'my_total_xp': my_total, 'players': len(totals)}

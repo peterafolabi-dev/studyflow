@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}About StudyFlow{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <p class="text-sm font-semibold uppercase tracking-wider text-brand-600 dark:text-brand-400">About</p>
+  <h1 class="mt-1 font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">What is StudyFlow?</h1>
+  <p class="mt-3 text-lg text-slate-600 dark:text-slate-300">StudyFlow is a free study and campus app for Nigerian university students, built around life at FUT Minna. It brings your timetable, tasks, past questions, an AI study coach, practice exams and your campus community into one place you can install on your phone.</p>
+
+  <div class="mt-8 grid gap-4 sm:grid-cols-2">
+    {% for card in sections %}
+    <section class="rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+      <h2 class="font-semibold text-slate-900 dark:text-white">{{ card.icon }} {{ card.title }}</h2>
+      <ul class="mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-300 list-disc pl-5">
+        {% for item in card.items %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </section>
+    {% endfor %}
+  </div>
+
+  <section class="mt-8 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-5">
+    <h2 class="font-semibold text-slate-900 dark:text-white">🚧 Not here yet</h2>
+    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">We would rather be honest about what is missing. These are on the list:</p>
+    <ul class="mt-3 space-y-1.5 text-sm text-slate-600 dark:text-slate-300 list-disc pl-5">
+      {% for item in coming %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+    <p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Want something added? Use the feedback button inside the app and tell us.</p>
+  </section>
+
+  {% if not user.is_authenticated %}
+  <div class="mt-8 flex flex-wrap gap-3">
+    <a href="{% url 'signup' %}" class="rounded-xl bg-brand-600 px-5 py-3 font-semibold text-white hover:bg-brand-700">Sign up free</a>
+    <a href="{% url 'login' %}" class="rounded-xl border border-slate-300 dark:border-slate-700 px-5 py-3 font-semibold text-slate-700 dark:text-slate-200">Log in</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
