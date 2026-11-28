@@ -206,6 +206,8 @@ class XPLog(models.Model):
         ('flashcard', 'Flashcard reviewed'),
         ('quiz_done', 'Quiz completed'),
         ('streak_bonus', 'Streak bonus'),
+        ('game', 'Game played'),
+        ('game_bonus', 'Game bonus'),
     ]
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='xp_logs')
     reason = models.CharField(max_length=30, choices=REASONS)
@@ -356,3 +358,19 @@ class AttendanceRecord(models.Model):
 
     def __str__(self):
         return f'{self.course} {self.date} {"✓" if self.attended else "✗"}'
+
+
+class GameScore(models.Model):
+    """One finished play of a Game Zone game."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='game_scores')
+    game = models.CharField(max_length=20)
+    score = models.PositiveIntegerField()
+    is_daily = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [models.Index(fields=['game', 'created_at'])]
+
+    def __str__(self):
+        return f"{self.user} {self.game} {self.score}"

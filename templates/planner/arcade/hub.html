@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Game Zone · StudyFlow{% endblock %}
+{% block content %}
+<header class="mb-6">
+  <p class="text-xs uppercase tracking-widest font-bold text-brand-600 dark:text-brand-300">Take a break</p>
+  <h1 class="font-display text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mt-1">Game Zone 🎮</h1>
+  <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-2xl">Quick games between study sessions. Earn a little XP (up to {{ xp_cap }} a day), collect badges and climb the weekly boards.</p>
+</header>
+
+<a href="{% url 'arcade_game' challenge.slug %}" class="block mb-6 rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-5 hover:shadow-md transition">
+  <p class="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">Daily challenge</p>
+  <p class="font-display text-xl font-bold text-slate-900 dark:text-white mt-1">{{ challenge.icon }} Score {{ challenge.target }}+ in {{ challenge.name }}</p>
+  <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">{% if done_today %}✅ Done for today. Come back tomorrow for a new one.{% else %}Beat it for +20 bonus XP.{% endif %}</p>
+</a>
+
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  {% for c in cards %}
+  <a href="{% url 'arcade_game' c.slug %}" class="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 hover:shadow-md hover:border-brand-400 transition">
+    <p class="text-4xl">{{ c.icon }}</p>
+    <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mt-2">{{ c.name }}</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ c.blurb }}</p>
+    <p class="text-xs mt-3 font-semibold text-brand-600 dark:text-brand-300">{% if c.best is not None %}Your best: {{ c.best }}{% else %}Not played yet{% endif %}</p>
+  </a>
+  {% endfor %}
+  <a href="{% url 'break_room' %}" class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 p-5 hover:border-brand-400 transition">
+    <p class="text-4xl">🕹️</p>
+    <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white mt-2">Classic Arcade</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">2048, memory match and the academic speed typer.</p>
+  </a>
+</div>
+<p class="mt-6 text-xs text-slate-500 dark:text-slate-400">XP from games today: {{ xp_today }}/{{ xp_cap }}. Games never count as study time.</p>
+{% endblock %}
