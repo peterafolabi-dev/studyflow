@@ -510,7 +510,7 @@ def feedback_reply(request, pk):
     fb = get_object_or_404(Feedback, pk=pk)
     save_feedback_reply(fb, request.user, request.POST.get('reply', ''))
     messages.success(request, 'Reply saved' + (' and the student was notified.' if fb.user_id and fb.reply else '.'))
-    return redirect('feedback_detail', pk=pk)
+    return redirect('admin_dashboard')
 
 
 @login_required
