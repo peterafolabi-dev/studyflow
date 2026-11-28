@@ -1,9 +1,13 @@
 from django.urls import path
 
-from . import academic_views, coach_views, views
+from . import academic_views, coach_views, games, views
 
 urlpatterns = [
     path('break-room/', views.break_room, name='break_room'),
+    path('arcade/', games.arcade_hub, name='arcade_hub'),
+    path('arcade/submit/', games.arcade_submit, name='arcade_submit'),
+    path('arcade/quiz-questions/', games.arcade_quiz_questions, name='arcade_quiz_questions'),
+    path('arcade/<slug:slug>/', games.arcade_game, name='arcade_game'),
     path('ai-chat/', views.ai_chat_api, name='ai_chat'),
     path('ai-chat/add-task/', coach_views.coach_add_task, name='coach_add_task'),
     path('ai-chat/save-cards/', coach_views.coach_save_cards, name='coach_save_cards'),
