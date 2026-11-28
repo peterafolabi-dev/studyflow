@@ -189,3 +189,48 @@ class VoiceButtonTests(TestCase):
         self.assertIn('id="ai-chat-mic" hidden', html)
         self.assertIn('webkitSpeechRecognition', html)
         self.assertIn("rec.lang = 'en-NG'", html)
+
+
+class MyRankCardTests(TestCase):
+    def setUp(self):
+        self.me = User.objects.create_user('me', 'me@example.com', 'S7rong-pass-99')
+        self.other = User.objects.create_user('other', 'other@example.com', 'S7rong-pass-99')
+        self.client.force_login(self.me)
+
+    def test_no_xp_user_is_told_how_to_get_on_board(self):
+        XPLog.objects.create(user=self.other, reason='task_done', points=30)
+        board = weekly_leaderboard(self.me)
+        self.assertEqual((board['status'], board['my_week_xp'], board['players']), ('no_xp', 0, 1))
+        r = self.client.get(reverse('leaderboard'))
+        self.assertContains(r, 'not on the board yet')
+        self.assertContains(r, 'Pomodoro')
+
+    def test_ranked_user_sees_rank_and_all_time_xp(self):
+        XPLog.objects.create(user=self.other, reason='task_done', points=30)
+        log = XPLog.objects.create(user=self.me, reason='task_done', points=10)
+        old = XPLog.objects.create(user=self.me, reason='task_done', points=100)
+        XPLog.objects.filter(pk=old.pk).update(created_at=timezone.now() - timedelta(days=20))
+        board = weekly_leaderboard(self.me)
+        self.assertEqual((board['status'], board['me']['rank'], board['my_week_xp'], board['my_total_xp']), ('ranked', 2, 10, 110))
+        self.assertContains(self.client.get(reverse('leaderboard')), 'Your position this week')
+
+    def test_hidden_user_sees_hidden_notice_with_their_xp(self):
+        XPLog.objects.create(user=self.me, reason='task_done', points=40)
+        self.client.post(reverse('leaderboard_visibility'), {'show': '0'})
+        board = weekly_leaderboard(self.me)
+        self.assertEqual((board['status'], board['my_week_xp']), ('hidden', 40))
+        self.assertContains(self.client.get(reverse('leaderboard')), 'hidden from the board')
+
+
+class AboutPageTests(TestCase):
+    def test_public_about_page_lists_features_and_gaps(self):
+        r = self.client.get(reverse('about'))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'What is StudyFlow?')
+        self.assertContains(r, 'Game Zone')
+        self.assertContains(r, 'Not here yet')
+        self.assertContains(r, 'Push notifications')
+        self.assertContains(self.client.get(reverse('login')), 'href="/about/"')
+
+    def test_about_in_sitemap(self):
+        self.assertContains(self.client.get('/sitemap.xml'), '/about/')

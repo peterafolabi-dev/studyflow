@@ -5,6 +5,20 @@
   <h1 class="font-display text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Weekly leaderboard</h1>
   <p class="mt-2 text-slate-500 dark:text-slate-400">XP earned since Monday {{ week_start|date:"j M" }}. Only usernames are shown.</p>
 
+  <div class="mt-5 rounded-2xl border border-brand-500/30 bg-brand-500/10 p-4">
+    {% if status == 'ranked' %}
+      <p class="text-sm text-slate-500 dark:text-slate-400">Your position this week</p>
+      <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">#{{ me.rank }} <span class="text-base font-semibold text-brand-600 dark:text-brand-400">of {{ players }} · {{ me.xp }} XP</span></p>
+    {% elif status == 'hidden' %}
+      <p class="font-semibold text-slate-900 dark:text-white">You are hidden from the board.</p>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">You have {{ my_week_xp }} XP this week. Tap "Show me on the leaderboard" below to appear.</p>
+    {% else %}
+      <p class="font-semibold text-slate-900 dark:text-white">You are not on the board yet: 0 XP this week.</p>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Earn XP to appear: finish a task (+15), complete a Pomodoro (+20), review flashcards (+5 each) or play in the <a class="underline" href="{% url 'arcade_hub' %}">Game Zone</a>.</p>
+    {% endif %}
+    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">All-time XP: {{ my_total_xp }}</p>
+  </div>
+
   {% if rows %}
     <ol class="mt-6 divide-y divide-slate-200 dark:divide-slate-800 rounded-2xl border border-slate-200 dark:border-slate-800">
       {% for r in rows %}
