@@ -99,6 +99,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'resources.context_processors.overdue_loans',
+                'community.context_processors.dm_unread',
             ],
         },
     },

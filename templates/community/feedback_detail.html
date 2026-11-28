@@ -10,5 +10,12 @@
     <p class="mt-4 whitespace-pre-line">{{ fb.message|default:"(no message)" }}</p>
     <p class="mt-6 text-xs text-slate-500">{{ fb.created_at|date:"M j, Y, g:i A" }}{% if fb.page %} · {{ fb.page }}{% endif %}</p>
   </div>
+  <form method="post" action="{% url 'feedback_reply' fb.pk %}" class="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+    {% csrf_token %}
+    <label for="reply" class="font-bold">Your reply</label>
+    {% if fb.replied_at %}<p class="text-xs text-slate-500">Last replied {{ fb.replied_at|date:"M j, Y, g:i A" }}{% if fb.replied_by %} by {{ fb.replied_by.username }}{% endif %}</p>{% endif %}
+    <textarea id="reply" name="reply" maxlength="1000" rows="4" class="mt-2 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent p-3 text-sm" placeholder="Write a reply. {% if fb.user %}{{ fb.user.username }} will be notified.{% else %}This was anonymous, so nobody will be notified.{% endif %}">{{ fb.reply }}</textarea>
+    <button class="mt-3 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white">Send reply</button>
+  </form>
 </div>
 {% endblock %}

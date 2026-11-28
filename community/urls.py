@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import chat_views, views
+from . import chat_views, dm_views, views
 
 urlpatterns = [
     path('chat/', chat_views.global_chat, name='global_chat'),
@@ -20,6 +20,12 @@ urlpatterns = [
     path('chat/api/<int:pk>/pin/', chat_views.chat_pin, name='chat_pin'),
     path('chat/api/<int:pk>/forward/', chat_views.chat_forward, name='chat_forward'),
     path('chat/api/<int:pk>/save/', chat_views.chat_save, name='chat_save'),
+    path('messages/', dm_views.inbox, name='dm_inbox'),
+    path('messages/<str:username>/', dm_views.thread, name='dm_thread'),
+    path('messages/<str:username>/send/', dm_views.send, name='dm_send'),
+    path('messages/<str:username>/poll/', dm_views.poll, name='dm_poll'),
+    path('my-feedback/', views.my_feedback, name='my_feedback'),
+    path('feedback/<int:pk>/reply/', views.feedback_reply, name='feedback_reply'),
     path('study-groups/', views.thread_list, name='thread_list'),
     path('study-groups/new/', views.thread_create, name='thread_create'),
     path('study-groups/<int:pk>/', views.thread_detail, name='thread_detail'),

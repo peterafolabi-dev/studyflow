@@ -2,7 +2,10 @@ from django.contrib import admin
 
 from studyflow.admin_export import export_as_csv
 
-from .models import Post, Thread, Feedback, PostReport, MutedUser, ChatRoomConfig
+from django.utils import timezone
+
+from .models import Post, Thread, Feedback, PostReport, MutedUser, ChatRoomConfig, DirectMessage
+from .feedback_reply import save_feedback_reply
 
 
 class PostInline(admin.TabularInline):
@@ -22,10 +25,21 @@ class ThreadAdmin(admin.ModelAdmin):
 class FeedbackAdmin(admin.ModelAdmin):
     actions = ['export_as_csv']
     export_as_csv = export_as_csv
-    list_display = ['user', 'rating', 'short_message', 'page', 'created_at']
+    list_display = ['user', 'rating', 'short_message', 'replied', 'created_at']
     list_filter = ['rating', 'created_at']
-    search_fields = ['user__username', 'message']
-    readonly_fields = ['user', 'rating', 'message', 'page', 'created_at']
+    search_fields = ['user__username', 'message', 'reply']
+    readonly_fields = ['user', 'rating', 'message', 'page', 'created_at', 'replied_at', 'replied_by']
+    fields = ['user', 'rating', 'message', 'page', 'created_at', 'reply', 'replied_at', 'replied_by']
+
+    def replied(self, obj):
+        return bool(obj.reply)
+    replied.boolean = True
+
+    def save_model(self, request, obj, form, change):
+        if change and 'reply' in form.changed_data:
+            save_feedback_reply(obj, request.user, obj.reply)
+        else:
+            super().save_model(request, obj, form, change)
     ordering = ['-created_at']
 
     def short_message(self, obj):
@@ -58,3 +72,16 @@ class MutedUserAdmin(admin.ModelAdmin):
 class ChatRoomConfigAdmin(admin.ModelAdmin):
     list_display = ('slug', 'announcements_only', 'slow_mode_seconds')
     list_editable = ('announcements_only', 'slow_mode_seconds')
+
+
+@admin.register(DirectMessage)
+class DirectMessageAdmin(admin.ModelAdmin):
+    list_display = ('sender', 'recipient', 'short_text', 'created_at', 'read_at')
+    search_fields = ('sender__username', 'recipient__username', 'text')
+    readonly_fields = ('sender', 'recipient', 'text', 'created_at', 'read_at')
+
+    def short_text(self, obj):
+        return obj.text[:60]
+
+    def has_add_permission(self, request):
+        return False
