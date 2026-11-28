@@ -415,7 +415,8 @@ def weekly_plan(request):
             unscheduled.append(task)
 
     # Fill remaining capacity toward the user's weekly goal with course reviews.
-    courses = list(Course.objects.filter(user=request.user))
+    DEMO_CODE = 'DEMO 101'  # sample course created for every new account
+    courses = list(Course.objects.filter(user=request.user).exclude(code=DEMO_CODE))
     courses.sort(key=lambda course: last_studied.get(course.pk, today - timedelta(days=365)))
     goal_blocks = min(21, max(1, profile.weekly_study_goal_hours * 60 // 50))
     planned_blocks = sum(len(items) for items in items_by_day.values())
@@ -463,7 +464,8 @@ def weekly_plan(request):
         'goal_hours': profile.weekly_study_goal_hours,
         'preferred_time': profile.get_preferred_study_time_display(),
         'has_courses': bool(courses),
-        'has_tasks': bool(open_tasks),
+        'has_tasks': any(task.course.code != DEMO_CODE for task in open_tasks),
+        'has_timetable': bool(class_entries),
     })
 
 

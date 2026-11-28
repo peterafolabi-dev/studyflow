@@ -31,13 +31,28 @@
   </div>
 </div>
 
-{% if not has_courses %}
-<div class="mb-6 rounded-2xl border border-dashed border-brand-300 dark:border-brand-800 bg-brand-50/60 dark:bg-brand-950/30 p-5 flex flex-wrap items-center justify-between gap-3">
-  <p class="text-sm text-slate-600 dark:text-slate-300">Add a course or a task with a due date to get personalized study blocks.</p>
-  <a href="{% url 'course_create' %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm px-4 py-2 transition">Add a course</a>
-</div>
+{% if not has_courses or not has_timetable or not has_tasks %}
+<section class="mb-6 rounded-2xl border border-dashed border-brand-300 dark:border-brand-800 bg-brand-50/60 dark:bg-brand-950/30 p-5" id="start-guide">
+  <h2 class="font-display font-bold text-lg text-slate-900 dark:text-white">Start here: 3 quick steps</h2>
+  <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">Your plan is built from your courses, your classes and your deadlines. Add them and the study blocks appear automatically.</p>
+  <ol class="mt-4 space-y-3 text-sm">
+    <li class="flex flex-wrap items-center justify-between gap-2">
+      <span class="text-slate-800 dark:text-slate-100">{% if has_courses %}✅{% else %}1️⃣{% endif %} Add your courses</span>
+      {% if not has_courses %}<a href="{% url 'course_create' %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 transition">Add a course</a>{% endif %}
+    </li>
+    <li class="flex flex-wrap items-center justify-between gap-2">
+      <span class="text-slate-800 dark:text-slate-100">{% if has_timetable %}✅{% else %}2️⃣{% endif %} Add your class timetable</span>
+      {% if not has_timetable %}<a href="{% url 'timetable_create' %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 transition">Add a class</a>{% endif %}
+    </li>
+    <li class="flex flex-wrap items-center justify-between gap-2">
+      <span class="text-slate-800 dark:text-slate-100">{% if has_tasks %}✅{% else %}3️⃣{% endif %} Add a deadline (assignment, test or exam)</span>
+      {% if not has_tasks %}<a href="{% if has_courses %}{% url 'task_list' %}{% else %}{% url 'course_create' %}{% endif %}" class="rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 transition">Add a deadline</a>{% endif %}
+    </li>
+  </ol>
+</section>
 {% endif %}
 
+{% if has_courses or has_tasks %}
 <!-- Legend -->
 <div class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400" aria-hidden="true">
   <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span>Overdue</span>
@@ -71,6 +86,7 @@
   </li>
   {% endfor %}
 </ol>
+{% endif %}
 
 {% if unscheduled %}
 <section class="mt-6 rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50 dark:bg-amber-950/20 p-5">
